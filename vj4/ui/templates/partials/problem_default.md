@@ -29,16 +29,6 @@ One integer, the sum of x and y.
 
 # Hint
 
-## Free Pascal Code
-
-```pascal
-var a,b:longint;
-begin
-    readln(a,b);
-    writeln(a+b);
-end.
-```
-
 ## C Code
 
 ```c
@@ -66,10 +56,10 @@ int main()
 }
 ```
 
-## Python Code
+## Python3 Code
 
-```python
-a, b = [int(i) for i in raw_input().split()]
+```python3
+a, b = list(map(int, input().split()))
 print(a + b)
 ```
 
@@ -95,5 +85,3 @@ public class Main {
 ```
 
 # Source
-
-**Vijos Original**
