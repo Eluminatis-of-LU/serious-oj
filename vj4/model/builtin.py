@@ -265,14 +265,14 @@ DOMAIN_SYSTEM = {
               ROLE_MEMBER: DEFAULT_PERMISSIONS,
               ROLE_ADMIN: ADMIN_PERMISSIONS},
     'gravatar': '',
-    'name': 'serious-oj',
+    'name': 'SeriousOJ',
     'bulletin': ''
 }
 DOMAINS = [DOMAIN_SYSTEM]
 
 # Users.
 UID_SYSTEM = 0
-UNAME_SYSTEM = 'serious-oj'
+UNAME_SYSTEM = 'SeriousOJ'
 USER_SYSTEM = {
     '_id': UID_SYSTEM,
     'uname': UNAME_SYSTEM,
@@ -333,7 +333,7 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (1, 100)])
 
 # Footer extra HTMLs. TODO(iceboy): remove.
-FOOTER_EXTRA_HTMLS = ['© Serious-Oj Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get(),
+FOOTER_EXTRA_HTMLS = ['© SeriousOJ Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get(),
                       '<a href="https://beian.miit.gov.cn/" target="_blank" rel="nofollow">' +
                       '沪ICP备14040537号-1</a>']
 
