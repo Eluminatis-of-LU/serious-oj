@@ -181,7 +181,7 @@ PRIV_DELETE_FILE = 1 << 18
 PRIV_DELETE_FILE_SELF = 1 << 19
 PRIV_ALL = -1
 
-DEFAULT_PRIV = PRIV_USER_PROFILE | PRIV_CREATE_DOMAIN | PRIV_CREATE_FILE | PRIV_DELETE_FILE_SELF
+DEFAULT_PRIV = PRIV_USER_PROFILE | PRIV_DELETE_FILE_SELF
 JUDGE_PRIV = (PRIV_USER_PROFILE
               | PRIV_VIEW_ALL_DOMAIN
               | PRIV_READ_PROBLEM_DATA
@@ -372,9 +372,7 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (1, 100)])
 
 # Footer extra HTMLs. TODO(iceboy): remove.
-FOOTER_EXTRA_HTMLS = ['© SeriousOJ Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get(),
-                      '<a href="https://beian.miit.gov.cn/" target="_blank" rel="nofollow">' +
-                      '沪ICP备14040537号-1</a>']
+FOOTER_EXTRA_HTMLS = ['© SeriousOJ Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get()]
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
     ('Dynamic_Programming', [
@@ -398,16 +396,16 @@ DEFAULT_VNODES = collections.OrderedDict([
   ('OJ', [
     {'pic': None, 'name': 'CodeForces'},
     {'pic': None, 'name': 'TopCoder'},
-    {'pic': None, 'name': 'POJ'},
-    {'pic': None, 'name': 'BZOJ'},
-    {'pic': None, 'name': 'USACO'},
-    {'pic': None, 'name': 'RQNOJ'},
-    {'pic': None, 'name': 'UOJ'},
-    {'pic': None, 'name': 'LibreOJ'},
+    {'pic': None, 'name': 'LightOJ'},
+    {'pic': None, 'name': 'CodeChef'},
+    {'pic': None, 'name': 'AtCoder'},
+    {'pic': None, 'name': 'Toph'},
+    {'pic': None, 'name': 'UVA'},
   ]),
   ('Language', [
     {'pic': None, 'name': 'C'},
     {'pic': None, 'name': 'C++'},
+    {'pic': None, 'name': 'C#'},
     {'pic': None, 'name': 'Java'},
     {'pic': None, 'name': 'Python3'},
   ])
