@@ -1,3 +1,7 @@
+# **Limit**
+## *Time : 1 sec*
+## *Memory : 16 MB*
+
 # Background
 Special for beginners, ^_^
 
@@ -53,6 +57,18 @@ int main()
     cin >> a >> b;
     cout << a + b << endl;
     return 0;
+}
+```
+
+## C# Code
+```csharp
+using System;
+using System.Linq;
+
+class Program {
+    public static void Main(string[] args) {
+        Console.WriteLine(Console.ReadLine().Split().Select(int.Parse).Sum());
+    }
 }
 ```
 
