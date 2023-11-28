@@ -195,7 +195,7 @@ class UserDetailHandler(base.Handler, UserSettingsMixin):
 
     # check hidden problem
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'hidden': False}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}]}
     else:
       f = {}
     pdocs = problem.get_multi(domain_id=self.domain_id, owner_uid=uid, **f).sort([('_id', -1)])

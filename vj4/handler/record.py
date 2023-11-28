@@ -127,7 +127,8 @@ class RecordMainConnection(RecordMixin, base.Connection):
                                              problem.get(rdoc['domain_id'], rdoc['pid']))
     # check permission for visibility: hidden problem
     if pdoc.get('hidden', False) and (pdoc['domain_id'] != self.domain_id
-                                      or not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)):
+                                      or not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN) 
+                                      or not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE)):
       pdoc = None
     self.send(html=self.render_html('record_main_tr.html', rdoc=rdoc, udoc=udoc, dudoc=dudoc, pdoc=pdoc))
 
@@ -173,7 +174,7 @@ class RecordDetailHandler(RecordMixin, base.Handler):
     else:
       judge_udoc = None
     # check permission for visibility: hidden problem
-    if pdoc.get('hidden', False) and not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
+    if pdoc.get('hidden', False) and (not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN) or not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE)):
       pdoc = None
     url_prefix = '/d/{}'.format(urllib.parse.quote(self.domain_id))
     self.render('record_detail.html', rdoc=rdoc, udoc=udoc, dudoc=dudoc, pdoc=pdoc, tdoc=tdoc,
