@@ -70,7 +70,10 @@
           TestCases: TestCases<br>
 
           ValidatorType: 1: File Validator<br>
-          ValidatorType: 2: Custom Validator<br>
+          ValidatorType: 2: Line Validator<br>
+          ValidatorType: 3: Word Validator<br>
+          ValidatorType: 4: Float Validator<br>
+          ValidatorType: 5: Custom Validator // Not yet implemented<br>
 
           TestCases: Input: Input file name<br>
           TestCases: Output: Output file name<br>
@@ -82,6 +85,7 @@
             "TimeLimit": 2000,
             "MemoryLimit": 65536,
             "ValidatorType": 1,
+            "Epsilon": 1e-6, // Float Validator
             "TestCases": [
                 {
                     "Input": "input1.txt",
