@@ -208,7 +208,7 @@ class ProblemDetailHandler(base.OperationHandler):
   async def get(self, *, pid: document.convert_doc_id):
     uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
     pdoc = await problem.get(self.domain_id, pid, uid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
                                        domain.get_user(self.domain_id, pdoc['owner_uid']))
@@ -233,7 +233,7 @@ class ProblemDetailHandler(base.OperationHandler):
                                 numeric_pid: bool=False, hidden: bool=False):
     uid = self.user['_id']
     pdoc = await problem.get(self.domain_id, pid, uid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     ddoc, dudoc = await asyncio.gather(domain.get(dest_domain_id),
                                        domain.get_user(dest_domain_id, uid))
@@ -261,7 +261,7 @@ class ProblemSubmitHandler(base.Handler):
     # TODO(twd2): check status, eg. test, hidden problem, ...
     uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
     pdoc = await problem.get(self.domain_id, pid, uid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
                                        domain.get_user(self.domain_id, pdoc['owner_uid']))
@@ -294,7 +294,7 @@ class ProblemSubmitHandler(base.Handler):
   async def post(self, *, pid: document.convert_doc_id, lang: str, code: str):
     # TODO(twd2): check status, eg. test, hidden problem, ...
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     rid = await record.add(self.domain_id, pdoc['doc_id'], constant.record.TYPE_SUBMISSION,
                            self.user['_id'], lang, code)
@@ -371,7 +371,7 @@ class ProblemSolutionHandler(base.OperationHandler):
   async def get(self, *, pid: document.convert_doc_id, page: int=1):
     uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
     pdoc = await problem.get(self.domain_id, pid, uid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdocs, pcount, pscount = await pagination.paginate(
         problem.get_multi_solution(self.domain_id, pdoc['doc_id']),
@@ -402,7 +402,7 @@ class ProblemSolutionHandler(base.OperationHandler):
   @base.sanitize
   async def post_submit(self, *, pid: document.convert_doc_id, content: str):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     await problem.add_solution(self.domain_id, pdoc['doc_id'], self.user['_id'], content)
     self.json_or_redirect(self.url)
@@ -414,7 +414,7 @@ class ProblemSolutionHandler(base.OperationHandler):
   async def post_edit_solution(self, *, pid: document.convert_doc_id,
                                psid: document.convert_doc_id, content: str):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc = await problem.get_solution(self.domain_id, psid, pdoc['doc_id'])
     if not self.own(psdoc, builtin.PERM_EDIT_PROBLEM_SOLUTION_SELF):
@@ -430,7 +430,7 @@ class ProblemSolutionHandler(base.OperationHandler):
   async def post_delete_solution(self, *, pid: document.convert_doc_id,
                                  psid: document.convert_doc_id):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc = await problem.get_solution(self.domain_id, psid, pdoc['doc_id'])
     if not self.own(psdoc, builtin.PERM_DELETE_PROBLEM_SOLUTION_SELF):
@@ -447,7 +447,7 @@ class ProblemSolutionHandler(base.OperationHandler):
                             psid: document.convert_doc_id, psrid: document.convert_doc_id,
                             content: str):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc, psrdoc = await problem.get_solution_reply(self.domain_id, psid, psrid)
     if not psdoc or psdoc['parent_doc_id'] != pdoc['doc_id']:
@@ -464,7 +464,7 @@ class ProblemSolutionHandler(base.OperationHandler):
   async def post_delete_reply(self, *, pid: document.convert_doc_id,
                             psid: document.convert_doc_id, psrid: document.convert_doc_id):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc, psrdoc = await problem.get_solution_reply(self.domain_id, psid, psrid)
     if not psdoc or psdoc['parent_doc_id'] != pdoc['doc_id']:
@@ -486,7 +486,7 @@ class ProblemSolutionHandler(base.OperationHandler):
                             psid: document.convert_doc_id,
                             value: int):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc = await problem.get_solution(self.domain_id, psid, pdoc['doc_id'])
     psdoc, pssdoc = await problem.vote_solution(self.domain_id, psdoc['doc_id'],
@@ -506,7 +506,7 @@ class ProblemSolutionHandler(base.OperationHandler):
                        psid: document.convert_doc_id,
                        content: str):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc = await problem.get_solution(self.domain_id, psid, pdoc['doc_id'])
     await problem.reply_solution(self.domain_id, psdoc['doc_id'], self.user['_id'], content)
@@ -520,7 +520,7 @@ class ProblemSolutionRawHandler(base.Handler):
   @base.sanitize
   async def get(self, *, pid: document.convert_doc_id, psid: document.convert_doc_id):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc = await problem.get_solution(self.domain_id, psid, pdoc['doc_id'])
     self.response.content_type = 'text/markdown'
@@ -535,7 +535,7 @@ class ProblemSolutionReplyRawHandler(base.Handler):
   async def get(self, *, pid: document.convert_doc_id, psid: document.convert_doc_id,
                 psrid: objectid.ObjectId):
     pdoc = await problem.get(self.domain_id, pid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     psdoc, psrdoc = await problem.get_solution_reply(self.domain_id, psid, psrid)
     if not psdoc or psdoc['parent_doc_id'] != pdoc['doc_id']:
@@ -629,7 +629,7 @@ class ProblemCopyHandler(base.Handler):
           raise error.ProblemNotFoundError(src_domain_id, pid)
 
     for pdoc in pdocs:
-      if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+      if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
         if not self.dudoc_has_perm(ddoc=src_ddoc, dudoc=src_dudoc, udoc=self.user,
                                    perm=builtin.PERM_VIEW_PROBLEM_HIDDEN):
           # TODO: This is the source domain's PermissionError.
@@ -781,7 +781,7 @@ class ProblemStatisticsHandler(base.Handler):
     # TODO(twd2)
     uid = self.user['_id'] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
     pdoc = await problem.get(self.domain_id, pid, uid)
-    if pdoc.get('hidden', False) and not self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+    if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     udoc, dudoc = await asyncio.gather(user.get_by_uid(pdoc['owner_uid']),
                                        domain.get_user(self.domain_id, pdoc['owner_uid']))
