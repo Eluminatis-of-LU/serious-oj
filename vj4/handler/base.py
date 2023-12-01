@@ -105,6 +105,17 @@ class HandlerBase(setting.SettingMixin):
 
   def own(self, doc, perm=builtin.PERM_NONE, field='owner_uid', priv=builtin.PRIV_NONE):
     return (doc[field] == self.user['_id']) and self.has_perm(perm) and self.has_priv(priv)
+  
+  def can_see_pdoc(self, pdoc):
+    if not pdoc:
+      return False
+    if self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
+      return True
+    if self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+      return True
+    if pdoc['hidden']:
+      return False
+    return True
 
   async def update_session(self, *, new_saved=False, **kwargs):
     """Update or create session if necessary.

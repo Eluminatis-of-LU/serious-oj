@@ -366,6 +366,12 @@ async def ensure_indexes():
                            ('doc_id', 1)], sparse=True)
   await coll.create_index([('domain_id', 1),
                            ('doc_type', 1),
+                           ('hidden', 1),
+                           ('category', 1),
+                           ('doc_id', 1),
+                           ('owner_uid', 1)], sparse=True)
+  await coll.create_index([('domain_id', 1),
+                           ('doc_type', 1),
                            ('tag', 1),
                            ('doc_id', 1)], sparse=True)
   await coll.create_index([('domain_id', 1),
@@ -373,6 +379,12 @@ async def ensure_indexes():
                            ('hidden', 1),
                            ('tag', 1),
                            ('doc_id', 1)], sparse=True)
+  await coll.create_index([('domain_id', 1),
+                           ('doc_type', 1),
+                           ('hidden', 1),
+                           ('tag', 1),
+                           ('doc_id', 1),
+                           ('owner_uid', 1)], sparse=True)
   # for problem solution
   await coll.create_index([('domain_id', 1),
                            ('doc_type', 1),
@@ -396,6 +408,11 @@ async def ensure_indexes():
                            ('doc_type', 1),
                            ('hidden', 1),
                            ('doc_id', -1)], sparse=True)
+  await coll.create_index([('domain_id', 1),
+                           ('doc_type', 1),
+                           ('hidden', 1),
+                           ('doc_id', -1),
+                           ('owner_uid', 1)], sparse=True)
   # for contest
   await coll.create_index([('domain_id', 1),
                            ('doc_type', 1),
