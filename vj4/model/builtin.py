@@ -382,7 +382,7 @@ PROBLEM_CATEGORIES = collections.OrderedDict([
     ('Graph_Theory', ['DFS', 'BFS', 'Shortest_Path']),
     ('Math', ['Number_Theory', 'Combinatorics', 'Geometry', 'Basic_Math']),
     ('Implementation', ['Simulation', 'String_Processing', 'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
-    (;'Greedy', ['Greedy']),
+    ('Greedy', ['Greedy']),
     ('Data_Structure', ['Segment_Tree', 'Binary_Indexed_Tree', 'Disjoint_Set', 'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table']),
 ])
 PROBLEM_SUB_CATEGORIES = {}
