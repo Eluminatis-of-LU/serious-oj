@@ -375,7 +375,7 @@ LEVELS = collections.OrderedDict([(10, 1),
 FOOTER_EXTRA_HTMLS = ['© SeriousOJ Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get()[:7]]
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
-    ('Dynamic_Programming', [
+    ('DP', [
         'LCS',
         'LIS'
     ]),
