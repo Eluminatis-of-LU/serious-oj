@@ -28,9 +28,6 @@ One integer, the sum of x and y.
 623
 ```
 
-# Limitation
-1s, 1024KiB for each test case.
-
 # Hint
 
 ## C Code
