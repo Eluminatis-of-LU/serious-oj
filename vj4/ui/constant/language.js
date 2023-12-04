@@ -16,7 +16,11 @@ export const LANG_TEXTS = {
 
 export const LANG_HIGHLIGHT_ID = {
   c: 'c',
+  c11: 'c',
   cc: 'cpp',
+  cc11: 'cpp',
+  cc20: 'cpp',
+  ruby: 'ruby',
   cs: 'csharp',
   cs_bflat: 'csharp',
   java: 'java',
@@ -26,7 +30,11 @@ export const LANG_HIGHLIGHT_ID = {
 
 export const LANG_CODEMIRROR_MODES = {
   c: 'text/x-csrc',
+  c11: 'text/x-csrc',
   cc: 'text/x-c++src',
+  cc11: 'text/x-c++src',
+  cc20: 'text/x-c++src',
+  ruby: 'text/x-ruby',
   cs: 'text/x-csharp',
   cs_bflat: 'text/x-csharp',
   java: 'text/x-java',
