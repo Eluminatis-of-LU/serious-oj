@@ -2,7 +2,11 @@ import attachObjectMeta from './util/objectMeta';
 
 export const LANG_TEXTS = {
   c: 'C99 (GCC 11.4.0)',
-  cc: 'C++17 (GCC 11.4.0)',
+  c11: 'C11 (GCC 11.4.0)',
+  cc: 'C++17 (G++ 11.4.0)',
+  cc11: 'C++11 (G++ 11.4.0)',
+  cc20: 'C++20 (G++ 11.4.0)',
+  ruby: 'Ruby 3 (Ruby 3.0.2)',
   cs: 'C# 7 (Mono 6.8)',
   cs_bflat: 'C# 11 (Bflat .NET 7.0.2)',
   java: 'Java 8 (OpenJDK 1.8.0_392)',
