@@ -1,13 +1,13 @@
 import attachObjectMeta from './util/objectMeta';
 
 export const LANG_TEXTS = {
-  c: 'C',
-  cc: 'C++',
-  cs: 'C# (Mono 6.8)',
-  cs_bflat: 'C# (Bflat .NET 7.0.2)',
-  java: 'Java',
-  py3: 'Python 3',
-  js: 'JavaScript',
+  c: 'C99 (GCC 11.4.0)',
+  cc: 'C++17 (GCC 11.4.0)',
+  cs: 'C# 7 (Mono 6.8)',
+  cs_bflat: 'C# 11 (Bflat .NET 7.0.2)',
+  java: 'Java 8 (OpenJDK 1.8.0_392)',
+  py3: 'Python 3 (Python 3.10.12)',
+  js: 'JavaScript (Node.js v12.22.9)',
 };
 
 export const LANG_HIGHLIGHT_ID = {
