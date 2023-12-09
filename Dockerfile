@@ -1,4 +1,4 @@
-FROM node:12-buster AS stage-node
+FROM node:14-buster AS stage-node
 COPY . /app/src
 WORKDIR /app/src
 
@@ -6,7 +6,7 @@ RUN yarn \
     && yarn build:production
 
 # main
-FROM python:3.6-slim-buster
+FROM python:3.8-slim-buster
 COPY --from=stage-node /app/src/vj4 /app/vj4
 COPY --from=stage-node /app/src/LICENSE /app/src/README.md /app/src/requirements.txt /app/src/setup.py /app/
 WORKDIR /app
