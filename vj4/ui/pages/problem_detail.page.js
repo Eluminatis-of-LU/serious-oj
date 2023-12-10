@@ -8,6 +8,7 @@ import loadReactRedux from 'vj/utils/loadReactRedux';
 import delay from 'vj/utils/delay';
 import request from 'vj/utils/request';
 import i18n from 'vj/utils/i18n';
+import CountdownTimer from 'vj/components/countdown-timer/index';
 
 class ProblemPageExtender {
   constructor() {
@@ -118,6 +119,7 @@ class ProblemPageExtender {
 }
 
 const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], () => {
+  CountdownTimer.getOrConstruct($('#contest-countdown-timer'));
   let reactLoaded = false;
   let $floatingSidebar = null;
   let renderReact = null;

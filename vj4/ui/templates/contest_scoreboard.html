@@ -10,6 +10,16 @@
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
     </div>
+    {% if handler.is_ongoing(tdoc) or handler.is_done(tdoc) %}
+      <div class="" style="text-align: center; font-size: large;">
+        {% if handler.is_ongoing(tdoc) %}
+          <div style="margin: 0 auto;" id="contest-countdown-timer" data-end-at="{{ tdoc['end_at'] }}">
+          </div>
+        {% elif handler.is_done(tdoc) %}
+          <div style="margin: 0 auto;">Finished</div>
+        {% endif %}
+      </div>
+    {% endif %}
     <div class="section__body no-padding">
       <table class="data-table">
         <colgroup>
