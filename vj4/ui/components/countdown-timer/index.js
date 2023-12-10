@@ -40,9 +40,9 @@ export default class CountdownTimer extends DOMAttachedObject {
       const timeRemaining = this.targetDate - currentDate;
 
       // Calculate days, hours, minutes, and seconds
-      const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+      const hours = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60)));
+      const minutes = Math.max(0, Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60)));
+      const seconds = Math.max(0, Math.floor((timeRemaining % (1000 * 60)) / 1000));
 
       // Return an object with the calculated values
       return {
