@@ -692,7 +692,9 @@ class ProblemSettingsHandler(base.Handler):
         (self.translate('problem_main'), self.reverse_url('problem_main')),
         (pdoc['title'], self.reverse_url('problem_detail', pid=pdoc['doc_id'])),
         (self.translate('problem_settings'), None))
-    self.render('problem_settings.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
+    shared_uids = pdoc['shared_uids']
+    shared_users = await user.get_dict(shared_uids)
+    self.render('problem_settings.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc, shared_users=shared_users,
                 categories=problem.get_categories(),
                 page_title=pdoc['title'], path_components=path_components)
 
@@ -734,6 +736,31 @@ class ProblemSettingsHandler(base.Handler):
     await job.difficulty.update_problem(self.domain_id, pdoc['doc_id'])
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
+@app.route('/p/{pid}/settings/users', 'problem_settings_users')
+class ProblemSettingsUserHandler(base.Handler):
+  @base.require_priv(builtin.PRIV_USER_PROFILE)
+  @base.route_argument
+  @base.post_argument
+  @base.require_csrf_token
+  @base.sanitize
+  async def post(self, *, uid: int, pid: document.convert_doc_id):
+    pdoc = await problem.get(self.domain_id, pid)
+    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
+      self.check_perm(builtin.PERM_EDIT_PROBLEM)
+    await problem.share(self.domain_id, pdoc['doc_id'], uid)
+    self.json_or_redirect(self.url)
+  
+  @base.require_priv(builtin.PRIV_USER_PROFILE)
+  @base.route_argument
+  @base.post_argument
+  @base.require_csrf_token
+  @base.sanitize
+  async def delete(self, *, uid: int, pid: document.convert_doc_id):
+    pdoc = await problem.get(self.domain_id, pid)
+    if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
+      self.check_perm(builtin.PERM_EDIT_PROBLEM)
+    await problem.unshare(self.domain_id, pdoc['doc_id'], uid)
+    self.json_or_redirect(self.url)
 
 @app.route('/p/{pid}/upload', 'problem_upload')
 class ProblemUploadHandler(base.Handler):

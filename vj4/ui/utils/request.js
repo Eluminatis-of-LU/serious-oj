@@ -63,6 +63,37 @@ const request = {
 
   /**
    * @param {string} url
+   * @param {JQueryStatic | Node | string | object} dataOrForm
+   * @param {object} options
+   */
+  delete(url, dataOrForm = {}, options = {}) {
+    let postData;
+    if (dataOrForm instanceof jQuery && dataOrForm.is('form')) {
+      // $form
+      postData = dataOrForm.serialize();
+    } else if (dataOrForm instanceof Node && $(dataOrForm).is('form')) {
+      // form
+      postData = $(dataOrForm).serialize();
+    } else if (typeof dataOrForm === 'string') {
+      // foo=bar&box=boz
+      postData = dataOrForm;
+    } else {
+      // {foo: 'bar'}
+      postData = $.param({
+        csrf_token: UiContext.csrf_token,
+        ...dataOrForm,
+      }, true);
+    }
+    return request.ajax({
+      url,
+      method: 'delete',
+      data: postData,
+      ...options,
+    });
+  },
+
+  /**
+   * @param {string} url
    * @param {object} qs
    * @param {object} options
    */

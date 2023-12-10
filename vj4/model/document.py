@@ -140,6 +140,28 @@ async def inc_and_set(domain_id: str, doc_type: int, doc_id: convert_doc_id,
 
 
 @argmethod.wrap
+async def push_element(domain_id: str, doc_type: int, doc_id: convert_doc_id, key: str, element):
+  coll = db.coll('document')
+  obj_id = objectid.ObjectId()
+  doc = await coll.find_one_and_update(filter={'domain_id': domain_id,
+                                               'doc_type': doc_type,
+                                               'doc_id': doc_id},
+                                       update={'$push': {key: element}},
+                                       return_document=ReturnDocument.AFTER)
+  return doc, obj_id
+
+@argmethod.wrap
+async def add_element_to_set(domain_id: str, doc_type: int, doc_id: convert_doc_id, key: str, element):
+  coll = db.coll('document')
+  obj_id = objectid.ObjectId()
+  doc = await coll.find_one_and_update(filter={'domain_id': domain_id,
+                                               'doc_type': doc_type,
+                                               'doc_id': doc_id},
+                                       update={'$addToSet': {key: element}},
+                                       return_document=ReturnDocument.AFTER)
+  return doc, obj_id
+
+@argmethod.wrap
 async def push(domain_id: str, doc_type: int, doc_id: convert_doc_id, key: str,
                content: str, owner_uid: int, **kwargs):
   coll = db.coll('document')
