@@ -61,7 +61,7 @@ class ProblemMainHandler(base.OperationHandler):
   async def get(self, *, page: int=1):
     # TODO(iceboy): projection.
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': {'$in': [self.user['_id']]}}]}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
     pdocs, ppcount, pcount = await pagination.paginate(problem.get_multi(domain_id=self.domain_id,
@@ -97,7 +97,7 @@ class ProblemRandomHandler(base.Handler):
   @base.sanitize
   async def get(self):
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': {'$in': [self.user['_id']]}}]}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
     pid = await problem.get_random_id(self.domain_id, **f)
@@ -141,7 +141,7 @@ class ProblemCategoryHandler(base.OperationHandler):
   async def get(self, *, category: str, page: int=1):
     # TODO(iceboy): projection.
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': {'$in': [self.user['_id']]}}]}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
     query = ProblemCategoryHandler.build_query(category)
@@ -174,7 +174,7 @@ class ProblemCategoryRandomHandler(base.Handler):
   @base.sanitize
   async def get(self, *, category: str):
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': {'$in': [self.user['_id']]}}]}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
     query = ProblemCategoryHandler.build_query(category)
