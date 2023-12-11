@@ -35,51 +35,51 @@
       </div>
       <div class="section__body">
         <button class="primary rounded button" name="add_user">{{ _('Share problem with user') }}</button>
+      </div>
         {{ noscript_note.render() }}
-        <div class="section__body no-padding problem-shared-users">
-          <table class="data-table">
-            <colgroup>
-              <col class="col--checkbox">
-              <col class="col--uid">
-              <col class="col--user">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="col--checkbox">
-                  <label class="compact checkbox">
-                    <input type="checkbox" name="select_all" data-checkbox-toggle="user">
-                  </label>
-                </th>
-                <th class="col--uid">{{ _('User ID') }}</th>
-                <th class="col--user">{{ _('Username') }}</th>
-                <th class="col--user">{{ _('Display Name') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for uid in shared_users %}
-              <tr data-uid="{{ uid }}">
-                <td class="col--checkbox">
-                  <label class="compact checkbox">
-                    <input type="checkbox" data-checkbox-group="user" data-checkbox-range>
-                  </label>
-                </td>
-                <td class="col--uid">
-                  {{ uid }}
-                </td>
-                <td class="col--user">
-                  {{ user.render_inline(shared_users[uid], badge=false) }}
-                </td>
-                <td class="col--name-alias">
-                  {{ shared_users[uid]['display_name']|default('') }}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="section__body">
-          <button class="rounded button" name="remove_selected">{{ _('Remove Selected User from problem') }}</button>
-        </div>
+      <div class="section__body no-padding problem-shared-users">
+        <table class="data-table">
+          <colgroup>
+            <col class="col--checkbox">
+            <col class="col--uid">
+            <col class="col--user">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--checkbox">
+                <label class="compact checkbox">
+                  <input type="checkbox" name="select_all" data-checkbox-toggle="user">
+                </label>
+              </th>
+              <th class="col--uid">{{ _('User ID') }}</th>
+              <th class="col--user">{{ _('Username') }}</th>
+              <th class="col--user">{{ _('Display Name') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for uid in shared_users %}
+            <tr data-uid="{{ uid }}">
+              <td class="col--checkbox">
+                <label class="compact checkbox">
+                  <input type="checkbox" data-checkbox-group="user" data-checkbox-range>
+                </label>
+              </td>
+              <td class="col--uid">
+                {{ uid }}
+              </td>
+              <td class="col--user">
+                {{ user.render_inline(shared_users[uid], badge=false) }}
+              </td>
+              <td class="col--name-alias">
+                {{ shared_users[uid]['display_name']|default('') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected User from problem') }}</button>
       </div>
     </div>
     <div class="section">
