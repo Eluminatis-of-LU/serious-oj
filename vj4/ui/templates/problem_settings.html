@@ -1,5 +1,20 @@
 {% extends "layout/basic.html" %}
 {% block content %}
+<div style="display: none" class="dialog__body--add-user">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Add User') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label>
+          {{ _('Username / UID') }}
+          <input name="user" type="text" class="textbox" autocomplete="off" data-autofocus>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
@@ -12,6 +27,59 @@
         {% if pdoc and (handler.own(pdoc, vj4.model.builtin.PERM_READ_PROBLEM_DATA_SELF) or handler.has_perm(vj4.model.builtin.PERM_READ_PROBLEM_DATA) or handler.has_priv(vj4.model.builtin.PRIV_READ_PROBLEM_DATA)) %}
         <p><a href="{{ reverse_url('problem_data', pid=pdoc['doc_id']) }}" class="expanded button">{{ _('Download Dataset') }}</a></p>
         {% endif %}
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Share') }}</h1>
+      </div>
+      <div class="section__body">
+        <button class="primary rounded button" name="add_user">{{ _('Share problem with user') }}</button>
+      </div>
+        {{ noscript_note.render() }}
+      <div class="section__body no-padding problem-shared-users">
+        <table class="data-table">
+          <colgroup>
+            <col class="col--checkbox">
+            <col class="col--uid">
+            <col class="col--user">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--checkbox">
+                <label class="compact checkbox">
+                  <input type="checkbox" name="select_all" data-checkbox-toggle="user">
+                </label>
+              </th>
+              <th class="col--uid">{{ _('User ID') }}</th>
+              <th class="col--user">{{ _('Username') }}</th>
+              <th class="col--user">{{ _('Display Name') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for uid in shared_users %}
+            <tr data-uid="{{ uid }}">
+              <td class="col--checkbox">
+                <label class="compact checkbox">
+                  <input type="checkbox" data-checkbox-group="user" data-checkbox-range>
+                </label>
+              </td>
+              <td class="col--uid">
+                {{ uid }}
+              </td>
+              <td class="col--user">
+                {{ user.render_inline(shared_users[uid], badge=false) }}
+              </td>
+              <td class="col--name-alias">
+                {{ shared_users[uid]['display_name']|default('') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected User from problem') }}</button>
       </div>
     </div>
     <div class="section">

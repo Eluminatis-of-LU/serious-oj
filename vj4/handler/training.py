@@ -109,7 +109,7 @@ class TrainingDetailHandler(base.OperationHandler, TrainingMixin):
     pids = self.get_pids(tdoc)
     # TODO(twd2): check status, eg. test, hidden problem, ...
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}]}
+      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
     owner_udoc, owner_dudoc, pdict = await asyncio.gather(

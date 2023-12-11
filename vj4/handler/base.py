@@ -113,6 +113,8 @@ class HandlerBase(setting.SettingMixin):
       return True
     if self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
       return True
+    if 'shared_uids' in pdoc and self.user['_id'] in pdoc['shared_uids']:
+      return True
     if pdoc['hidden']:
       return False
     return True

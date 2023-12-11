@@ -343,6 +343,13 @@ async def update_status(domain_id: str, pid: document.convert_doc_id, uid: int,
   except errors.DuplicateKeyError:
     return None
 
+@argmethod.wrap
+async def share(domain_id: str, pid: document.convert_doc_id, uid: int):
+  return await document.add_element_to_set(domain_id, document.TYPE_PROBLEM, pid, 'shared_uids', uid)
+
+@argmethod.wrap
+async def unshare(domain_id: str, pid: document.convert_doc_id, uid: int):
+  return await document.pull(domain_id, document.TYPE_PROBLEM, pid, 'shared_uids', [uid])
 
 if __name__ == '__main__':
   argmethod.invoke_by_args()
