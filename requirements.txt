@@ -4,7 +4,6 @@ sockjs>=0.7.0,<0.10.0
 misaka
 accept
 aioamqp
-git+https://github.com/LukeXuan/aiosmtplib # custom aiosmtlib with ssl support
 pytz
 coloredlogs
 httpagentparser
@@ -14,3 +13,4 @@ PyYAML
 git+https://github.com/iceboy233/aiomongo
 yarl
 aiohttp-sentry
+aiosmtplib<3.0.0
