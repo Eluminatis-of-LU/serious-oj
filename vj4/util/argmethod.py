@@ -2,10 +2,10 @@
 
 Usage example:
 
-    python3.5 -m vj4.model.user --help
-    python3.5 -m vj4.model.user -- --help
-    python3.5 -m vj4.model.user get -1
-    python3.5 -m vj4.model.user --db-name=prod get -1
+    python3.9 -m vj4.model.user --help
+    python3.9 -m vj4.model.user -- --help
+    python3.9 -m vj4.model.user get -1
+    python3.9 -m vj4.model.user --db-name=prod get -1
 """
 import collections
 
