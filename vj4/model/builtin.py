@@ -372,7 +372,7 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (1, 100)])
 
 # Footer extra HTMLs. TODO(iceboy): remove.
-FOOTER_EXTRA_HTMLS = ['© SeriousOJ Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get()[:7]]
+FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/ajami1331/vj4">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get()[:7]]
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
     ('DP', [
