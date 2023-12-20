@@ -36,7 +36,7 @@
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
-                <a class="profile-header__contact-item" href="{{ reverse_url('home_messages') }}?target_uid={{ udoc['_id'] }}" target="_blank" data-tooltip="{{ _('Send Message') }}">
+                <a class="profile-header__contact-item" href="{{ reverse_url('home_messages') }}?target_uid={{ udoc['_id'] }}" target="_blank" rel="noopener noreferrer" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
               {% if handler.can_view(udoc, 'mail') and udoc['mail'] %}
