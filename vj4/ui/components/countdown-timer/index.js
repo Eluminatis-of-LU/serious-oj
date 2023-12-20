@@ -1,4 +1,4 @@
-import _, { min } from 'lodash';
+import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 
 export default class CountdownTimer extends DOMAttachedObject {
