@@ -94,54 +94,84 @@ PERMS = [
     Permission('perm_general', PERM_VIEW, 'View this domain'),
     Permission('perm_general', PERM_EDIT_PERM, 'Edit permissions of a role'),
     Permission('perm_general', PERM_MOD_BADGE, 'Show MOD badge'),
-    Permission('perm_general', PERM_EDIT_DESCRIPTION, 'Edit description of this domain'),
+    Permission('perm_general', PERM_EDIT_DESCRIPTION,
+               'Edit description of this domain'),
     Permission('perm_problem', PERM_CREATE_PROBLEM, 'Create problems'),
     Permission('perm_problem', PERM_EDIT_PROBLEM, 'Edit problems'),
     Permission('perm_problem', PERM_EDIT_PROBLEM_SELF, 'Edit own problems'),
     Permission('perm_problem', PERM_VIEW_PROBLEM, 'View problems'),
-    Permission('perm_problem', PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
+    Permission('perm_problem', PERM_VIEW_PROBLEM_HIDDEN,
+               'View hidden problems'),
     Permission('perm_problem', PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM_READ_PROBLEM_DATA, 'Read data of problem'),
-    Permission('perm_problem', PERM_READ_PROBLEM_DATA_SELF, 'Read data of own problems'),
+    Permission('perm_problem', PERM_READ_PROBLEM_DATA_SELF,
+               'Read data of own problems'),
     Permission('perm_record', PERM_READ_RECORD_CODE, 'Read record codes'),
     Permission('perm_record', PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
     Permission('perm_record', PERM_REJUDGE, 'Rejudge records'),
-    Permission('perm_problem_solution', PERM_VIEW_PROBLEM_SOLUTION, 'View problem solutions'),
-    Permission('perm_problem_solution', PERM_CREATE_PROBLEM_SOLUTION, 'Create problem solutions'),
-    Permission('perm_problem_solution', PERM_VOTE_PROBLEM_SOLUTION, 'Vote problem solutions'),
-    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION, 'Edit problem solutions'),
-    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION_SELF, 'Edit own problem solutions'),
-    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION, 'Delete problem solutions'),
-    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_SELF, 'Delete own problem solutions'),
-    Permission('perm_problem_solution', PERM_REPLY_PROBLEM_SOLUTION, 'Reply problem solutions'),
-    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION_REPLY, 'Edit problem solution replies'),
-    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF, 'Edit own problem solution replies'),
-    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_REPLY, 'Delete problem solution replies'),
-    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF, 'Delete own problem solution replies'),
+    Permission('perm_problem_solution', PERM_VIEW_PROBLEM_SOLUTION,
+               'View problem solutions'),
+    Permission('perm_problem_solution', PERM_CREATE_PROBLEM_SOLUTION,
+               'Create problem solutions'),
+    Permission('perm_problem_solution', PERM_VOTE_PROBLEM_SOLUTION,
+               'Vote problem solutions'),
+    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION,
+               'Edit problem solutions'),
+    Permission('perm_problem_solution',
+               PERM_EDIT_PROBLEM_SOLUTION_SELF, 'Edit own problem solutions'),
+    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION,
+               'Delete problem solutions'),
+    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_SELF,
+               'Delete own problem solutions'),
+    Permission('perm_problem_solution', PERM_REPLY_PROBLEM_SOLUTION,
+               'Reply problem solutions'),
+    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION_REPLY,
+               'Edit problem solution replies'),
+    Permission('perm_problem_solution', PERM_EDIT_PROBLEM_SOLUTION_REPLY_SELF,
+               'Edit own problem solution replies'),
+    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_REPLY,
+               'Delete problem solution replies'),
+    Permission('perm_problem_solution', PERM_DELETE_PROBLEM_SOLUTION_REPLY_SELF,
+               'Delete own problem solution replies'),
     Permission('perm_discussion', PERM_VIEW_DISCUSSION, 'View discussions'),
-    Permission('perm_discussion', PERM_CREATE_DISCUSSION, 'Create discussions'),
-    Permission('perm_discussion', PERM_HIGHLIGHT_DISCUSSION, 'Highlight discussions'),
+    Permission('perm_discussion', PERM_CREATE_DISCUSSION,
+               'Create discussions'),
+    Permission('perm_discussion', PERM_HIGHLIGHT_DISCUSSION,
+               'Highlight discussions'),
     Permission('perm_discussion', PERM_EDIT_DISCUSSION, 'Edit discussions'),
-    Permission('perm_discussion', PERM_EDIT_DISCUSSION_SELF, 'Edit own discussions'),
-    Permission('perm_discussion', PERM_DELETE_DISCUSSION, 'Delete discussions'),
-    Permission('perm_discussion', PERM_DELETE_DISCUSSION_SELF, 'Delete own discussions'),
+    Permission('perm_discussion', PERM_EDIT_DISCUSSION_SELF,
+               'Edit own discussions'),
+    Permission('perm_discussion', PERM_DELETE_DISCUSSION,
+               'Delete discussions'),
+    Permission('perm_discussion', PERM_DELETE_DISCUSSION_SELF,
+               'Delete own discussions'),
     Permission('perm_discussion', PERM_REPLY_DISCUSSION, 'Reply discussions'),
-    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY, 'Edit discussion replies'),
-    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY_SELF, 'Edit own discussion replies'),
-    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION, 'Edit discussion replies of own discussion'),
-    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY, 'Delete discussion replies'),
-    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY_SELF, 'Delete own discussion replies'),
-    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION, 'Delete discussion replies of own discussion'),
+    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY,
+               'Edit discussion replies'),
+    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY_SELF,
+               'Edit own discussion replies'),
+    Permission('perm_discussion', PERM_EDIT_DISCUSSION_REPLY_SELF_DISCUSSION,
+               'Edit discussion replies of own discussion'),
+    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY,
+               'Delete discussion replies'),
+    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY_SELF,
+               'Delete own discussion replies'),
+    Permission('perm_discussion', PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION,
+               'Delete discussion replies of own discussion'),
     Permission('perm_contest', PERM_VIEW_CONTEST, 'View contests'),
-    Permission('perm_contest', PERM_VIEW_CONTEST_SCOREBOARD, 'View contest scoreboard'),
-    Permission('perm_contest', PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD, 'View hidden contest submission status and scoreboard'),
+    Permission('perm_contest', PERM_VIEW_CONTEST_SCOREBOARD,
+               'View contest scoreboard'),
+    Permission('perm_contest', PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD,
+               'View hidden contest submission status and scoreboard'),
     Permission('perm_contest', PERM_CREATE_CONTEST, 'Create contests'),
     Permission('perm_contest', PERM_ATTEND_CONTEST, 'Attend contests'),
     Permission('perm_contest', PERM_EDIT_CONTEST, 'Edit any contests'),
     Permission('perm_contest', PERM_EDIT_CONTEST_SELF, 'Edit own contests'),
     Permission('perm_homework', PERM_VIEW_HOMEWORK, 'View homework'),
-    Permission('perm_homework', PERM_VIEW_HOMEWORK_SCOREBOARD, 'View homework scoreboard'),
-    Permission('perm_homework', PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD, 'View hidden homework submission status and scoreboard'),
+    Permission('perm_homework', PERM_VIEW_HOMEWORK_SCOREBOARD,
+               'View homework scoreboard'),
+    Permission('perm_homework', PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD,
+               'View hidden homework submission status and scoreboard'),
     Permission('perm_homework', PERM_CREATE_HOMEWORK, 'Create homework'),
     Permission('perm_homework', PERM_ATTEND_HOMEWORK, 'Claim homework'),
     Permission('perm_homework', PERM_EDIT_HOMEWORK, 'Edit any homework'),
@@ -149,7 +179,8 @@ PERMS = [
     Permission('perm_training', PERM_VIEW_TRAINING, 'View training plans'),
     Permission('perm_training', PERM_CREATE_TRAINING, 'Create training plans'),
     Permission('perm_training', PERM_EDIT_TRAINING, 'Edit training plans'),
-    Permission('perm_training', PERM_EDIT_TRAINING_SELF, 'Edit own training plans'),
+    Permission('perm_training', PERM_EDIT_TRAINING_SELF,
+               'Edit own training plans'),
     Permission('perm_ranking', PERM_VIEW_RANKING, 'View ranking'),
 ]
 
@@ -372,7 +403,8 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (1, 100)])
 
 # Footer extra HTMLs. TODO(iceboy): remove.
-FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/ajami1331/vj4">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>', version.get()[:7]]
+FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/ajami1331/vj4">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>',
+                      '<a href=https://github.com/ajami1331/vj4/commit/' + version.get()[:7] + '/>' + version.get()[:7] + '</a>']
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
     ('DP', [
@@ -381,37 +413,39 @@ PROBLEM_CATEGORIES = collections.OrderedDict([
     ]),
     ('Graph_Theory', ['DFS', 'BFS', 'Shortest_Path']),
     ('Math', ['Number_Theory', 'Combinatorics', 'Geometry', 'Basic_Math']),
-    ('Implementation', ['Simulation', 'String_Processing', 'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
+    ('Implementation', ['Simulation', 'String_Processing',
+     'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
     ('Greedy', ['Greedy']),
-    ('Data_Structure', ['Segment_Tree', 'Binary_Indexed_Tree', 'Disjoint_Set', 'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table']),
+    ('Data_Structure', ['Segment_Tree', 'Binary_Indexed_Tree', 'Disjoint_Set',
+     'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table']),
 ])
 PROBLEM_SUB_CATEGORIES = {}
 for category, sub_categories in PROBLEM_CATEGORIES.items():
-  assert ' ' not in category
-  assert ',' not in category
-  for sub_category in sub_categories:
-    assert ' ' not in sub_category
-    assert ',' not in sub_category
-    assert sub_category not in PROBLEM_SUB_CATEGORIES
-    PROBLEM_SUB_CATEGORIES[sub_category] = category
+    assert ' ' not in category
+    assert ',' not in category
+    for sub_category in sub_categories:
+        assert ' ' not in sub_category
+        assert ',' not in sub_category
+        assert sub_category not in PROBLEM_SUB_CATEGORIES
+        PROBLEM_SUB_CATEGORIES[sub_category] = category
 
 
 VNODE_MISSING = {'title': '(missing)'}
 DEFAULT_VNODES = collections.OrderedDict([
-  ('OJ', [
-    {'pic': None, 'name': 'CodeForces'},
-    {'pic': None, 'name': 'TopCoder'},
-    {'pic': None, 'name': 'LightOJ'},
-    {'pic': None, 'name': 'CodeChef'},
-    {'pic': None, 'name': 'AtCoder'},
-    {'pic': None, 'name': 'Toph'},
-    {'pic': None, 'name': 'UVA'},
-  ]),
-  ('Language', [
-    {'pic': None, 'name': 'C'},
-    {'pic': None, 'name': 'C++'},
-    {'pic': None, 'name': 'C#'},
-    {'pic': None, 'name': 'Java'},
-    {'pic': None, 'name': 'Python3'},
-  ])
+    ('OJ', [
+        {'pic': None, 'name': 'CodeForces'},
+        {'pic': None, 'name': 'TopCoder'},
+        {'pic': None, 'name': 'LightOJ'},
+        {'pic': None, 'name': 'CodeChef'},
+        {'pic': None, 'name': 'AtCoder'},
+        {'pic': None, 'name': 'Toph'},
+        {'pic': None, 'name': 'UVA'},
+    ]),
+    ('Language', [
+        {'pic': None, 'name': 'C'},
+        {'pic': None, 'name': 'C++'},
+        {'pic': None, 'name': 'C#'},
+        {'pic': None, 'name': 'Java'},
+        {'pic': None, 'name': 'Python3'},
+    ])
 ])

@@ -9,6 +9,7 @@ RUN yarn \
 FROM python:3.9-slim-buster
 COPY --from=stage-node /app/src/vj4 /app/vj4
 COPY --from=stage-node /app/src/LICENSE /app/src/README.md /app/src/requirements.txt /app/src/setup.py /app/
+COPY --from=stage-node /app/src/.git /app/.git
 WORKDIR /app
 
 RUN apt-get update && \
