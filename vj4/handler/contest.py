@@ -294,7 +294,6 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
                 pids=contest._format_pids([1000, 1001]))
 
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_perm(builtin.PERM_EDIT_PROBLEM)
   @base.require_perm(builtin.PERM_CREATE_CONTEST)
   @base.post_argument
   @base.require_csrf_token
@@ -302,6 +301,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
   async def post(self, *, title: str, content: str, rule: int,
                  begin_at_date: str, begin_at_time: str, duration: float,
                  pids: str):
+    if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
+      self.check_perm(builtin.PERM_EDIT_PROBLEM)
     try:
       begin_at = datetime.datetime.strptime(begin_at_date + ' ' + begin_at_time, '%Y-%m-%d %H:%M')
       begin_at = self.timezone.localize(begin_at).astimezone(pytz.utc).replace(tzinfo=None)
@@ -344,7 +345,6 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
 
   @base.route_argument
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_perm(builtin.PERM_EDIT_PROBLEM)
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
@@ -352,6 +352,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
                  begin_at_date: str=None, begin_at_time: str=None, duration: float,
                  pids: str):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
+      self.check_perm(builtin.PERM_EDIT_PROBLEM)
     if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
       self.check_perm(builtin.PERM_EDIT_CONTEST)
     try:

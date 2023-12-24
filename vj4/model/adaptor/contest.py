@@ -556,10 +556,21 @@ class ContestCommonOperationMixin(object):
 
   async def verify_problems(self, pids):
     pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': pids},
-                                    fields={'doc_id': 1}) \
+                                    fields={'doc_id': 1, 'hidden': 1, 'owner_uid': 1, 'shared_uids': 1}) \
                          .sort('doc_id', 1) \
                          .to_list()
-    exist_pids = [pdoc['doc_id'] for pdoc in pdocs]
+    can_edit_all_problems = self.has_perm(builtin.PERM_EDIT_PROBLEM)
+    exist_pids = []
+    for pdoc in pdocs:
+      if can_edit_all_problems:
+        exist_pids.append(pdoc['doc_id'])
+        continue
+      if self.own(pdoc, builtin.PERM_READ_PROBLEM_DATA_SELF, 'owner_uid', builtin.PRIV_USER_PROFILE):
+        exist_pids.append(pdoc['doc_id'])
+        continue
+      if pdoc['hidden'] and self.can_see_pdoc(pdoc):
+        exist_pids.append(pdoc['doc_id'])
+        continue
     if len(pids) != len(exist_pids):
       for pid in pids:
         if pid not in exist_pids:
