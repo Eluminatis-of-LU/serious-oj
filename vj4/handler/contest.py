@@ -322,7 +322,6 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
 class ContestEditHandler(contest.ContestMixin, base.Handler):
   @base.route_argument
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_perm(builtin.PERM_EDIT_CONTEST)
   @base.sanitize
   async def get(self, *, tid: objectid.ObjectId):
     rules = list(map(lambda i: (i, constant.contest.RULE_TEXTS[i]),
@@ -346,7 +345,6 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
   @base.route_argument
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_EDIT_PROBLEM)
-  @base.require_perm(builtin.PERM_EDIT_CONTEST)
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
