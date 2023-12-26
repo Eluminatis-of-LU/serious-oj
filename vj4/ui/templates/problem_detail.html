@@ -87,7 +87,7 @@
           </blockquote>
         {% endif %}
           {{ pdoc['content']|markdown }}
-        {% if 'samples' in pdoc %}
+        {% if 'samples' in pdoc and pdoc['samples'] is not none %}
           <h2>{{ _('Sample') }}</h2>
           <table class="data-table">
             <thead>
