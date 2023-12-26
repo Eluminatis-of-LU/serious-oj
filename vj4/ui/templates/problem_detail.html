@@ -87,6 +87,25 @@
           </blockquote>
         {% endif %}
           {{ pdoc['content']|markdown }}
+        {% if 'samples' in pdoc %}
+          <h2>{{ _('Sample') }}</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ _('Input') }}</th>
+                <th>{{ _('Output') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in pdoc['samples'] %}
+              <tr>
+                <td><pre>{{ sample['input']|markdown }}</pre></td>
+                <td><pre>{{ sample['output']|markdown }}</pre></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
         </div>
       </div></div>
     </div>
