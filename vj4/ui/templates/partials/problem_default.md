@@ -97,4 +97,11 @@ public class Main {
 }
 ```
 
+## Ruby Code
+
+```ruby
+a, b = gets.split.map(&:to_i)
+puts(a + b)
+```
+
 # Source
