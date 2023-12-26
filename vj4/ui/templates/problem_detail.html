@@ -76,6 +76,16 @@
         {% endif %}{# handler.is_homework_extended(tdoc) #}
         {% endif %}{# tdoc['doc_type'] == vj4.model.document.TYPE_CONTEST #}
         {% endif %}{# tdoc #}
+        {% if 'time_limit_ms' in pdoc or 'memory_limit_kb' in pdoc %}
+          <blockquote class="note">
+            {% if 'time_limit_ms' in pdoc %}
+              <h2>{{ _('Time Limit: ') }} {{ pdoc['time_limit_ms'] | format_time_limit }}</h2>
+            {% endif %}
+            {% if 'memory_limit_kb' in pdoc %}
+              <h2>{{ _('Memory Limit: ') }} {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2>
+            {% endif %}
+          </blockquote>
+        {% endif %}
           {{ pdoc['content']|markdown }}
         </div>
       </div></div>

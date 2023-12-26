@@ -105,3 +105,14 @@ def dedupe(list):
     result.append(i)
     result_set.add(i)
   return result
+
+def format_memory_limit(str):
+  memory_limit_kb = int(str)
+  memory_limit_mb = round(memory_limit_kb / 1024, 2)
+  return '{0} MB'.format(memory_limit_mb)
+
+def format_time_limit(str):
+  time_limit_ms = int(str)
+  time_limit_s = round(time_limit_ms / 1000, 2)
+  return '{0} s'.format(time_limit_s) 
+  
