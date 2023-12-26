@@ -580,12 +580,12 @@ class ProblemCreateHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, title: str, content: str, hidden: bool=False, numeric_pid: bool=False):
+  async def post(self, *, title: str, content: str, hidden: bool=False, numeric_pid: bool=False, dataset_hint: str):
     pid = None
     if numeric_pid:
       pid = await domain.inc_pid_counter(self.domain_id)
     pid = await problem.add(self.domain_id, title, content, self.user['_id'],
-                            hidden=hidden, pid=pid)
+                            hidden=hidden, pid=pid, dataset_hint=dataset_hint)
     self.json_or_redirect(self.reverse_url('problem_settings', pid=pid))
 
 
@@ -668,11 +668,11 @@ class ProblemEditHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, title: str, content: str):
+  async def post(self, *, pid: document.convert_doc_id, title: str, content: str, dataset_hint: str):
     pdoc = await problem.get(self.domain_id, pid)
     if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
-    await problem.edit(self.domain_id, pdoc['doc_id'], title=title, content=content)
+    await problem.edit(self.domain_id, pdoc['doc_id'], title=title, content=content, dataset_hint=dataset_hint)
     self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
 
 

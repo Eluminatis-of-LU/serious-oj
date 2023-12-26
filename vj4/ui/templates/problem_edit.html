@@ -37,6 +37,10 @@
               {{ _('Content') }}
               <textarea name="content" class="textbox" data-markdown style="height: 500px">{% if pdoc %}{{ pdoc['content'] }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
             </label>
+            <label>
+              {{ _('Hint') }}
+              <textarea name="dataset_hint" class="textbox" data-markdown style="height: 250px">{% if pdoc and 'dataset_hint' in pdoc %}{{ pdoc['dataset_hint'] }}{% else %}{{ '' }}{% endif %}</textarea>
+            </label>
           </div></div>
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">

@@ -106,6 +106,9 @@
             </tbody>
           </table>
         {% endif %}
+        {% if 'dataset_hint' in pdoc and pdoc['dataset_hint'] is not none %}
+          {{ pdoc['dataset_hint']|markdown }}
+        {% endif %}
         </div>
       </div></div>
     </div>
