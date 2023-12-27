@@ -104,6 +104,10 @@ def is_content(s):
   return isinstance(s, str) and 0 < len(s.strip()) < 65536
 
 
+def check_dataset_hint(s):
+  if s and not is_content(s):
+    raise error.ValidationError('dataset_hint')
+
 def check_content(s):
   if not is_content(s):
     raise error.ValidationError('content')

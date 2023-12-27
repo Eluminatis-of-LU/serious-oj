@@ -39,8 +39,7 @@ async def add(domain_id: str, title: str, content: str, owner_uid: int,
               category: list=[], tag: list=[], hidden: bool=False, ac_msg='', dataset_hint: str=None):
   validator.check_title(title)
   validator.check_content(content)
-  if dataset_hint:
-    validator.check_content(dataset_hint)
+  validator.check_dataset_hint(dataset_hint)
   pid = await document.add(domain_id, content, owner_uid, document.TYPE_PROBLEM,
                            pid, title=title, data=data, category=category, tag=tag,
                            hidden=hidden, num_submit=0, num_accept=0, ac_msg=ac_msg, dataset_hint=dataset_hint)
@@ -86,8 +85,8 @@ async def edit(domain_id: str, pid: document.convert_doc_id, **kwargs):
       validator.check_title(kwargs['title'])
   if 'content' in kwargs:
       validator.check_content(kwargs['content'])
-  if 'dataset_hint' in kwargs and kwargs['dataset_hint']:
-      validator.check_content(kwargs['dataset_hint'])
+  if 'dataset_hint' in kwargs:
+      validator.check_dataset_hint(kwargs['dataset_hint'])
   pdoc = await document.set(domain_id, document.TYPE_PROBLEM, pid, **kwargs)
   if not pdoc:
     raise error.DocumentNotFoundError(domain_id, document.TYPE_PROBLEM, pid)
