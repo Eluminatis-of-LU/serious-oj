@@ -580,7 +580,7 @@ class ProblemCreateHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, title: str, content: str, hidden: bool=False, numeric_pid: bool=False, dataset_hint: str):
+  async def post(self, *, title: str, content: str, hidden: bool=False, numeric_pid: bool=False, dataset_hint: str=None):
     pid = None
     if numeric_pid:
       pid = await domain.inc_pid_counter(self.domain_id)
@@ -668,7 +668,7 @@ class ProblemEditHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, title: str, content: str, dataset_hint: str):
+  async def post(self, *, pid: document.convert_doc_id, title: str, content: str, dataset_hint: str=None):
     pdoc = await problem.get(self.domain_id, pid)
     if not self.own(pdoc, builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)

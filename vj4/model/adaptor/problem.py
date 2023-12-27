@@ -86,7 +86,7 @@ async def edit(domain_id: str, pid: document.convert_doc_id, **kwargs):
       validator.check_title(kwargs['title'])
   if 'content' in kwargs:
       validator.check_content(kwargs['content'])
-  if 'dataset_hint' in kwargs:
+  if 'dataset_hint' in kwargs and kwargs['dataset_hint']:
       validator.check_content(kwargs['dataset_hint'])
   pdoc = await document.set(domain_id, document.TYPE_PROBLEM, pid, **kwargs)
   if not pdoc:
