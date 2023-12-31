@@ -9,7 +9,7 @@ export default class CountdownTimer extends DOMAttachedObject {
       this.options = {
         ...options,
       };
-      this.targetDate = new Date($dom.data('end-at'));
+      this.targetDate = new Date($dom.data('end-at') + 'Z');
       this.startCountDown();
     }
 

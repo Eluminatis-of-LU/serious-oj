@@ -89,7 +89,11 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-      <dt>{{ _('Time remaing') }}<dd id="contest-countdown-timer" data-end-at="{{tdoc['end_at']}}"></dd>
+      {% if handler.is_ongoing(tdoc) %}
+        <dt>{{ _('Running') }}<dd id="contest-countdown-timer" data-end-at="{{tdoc['end_at']}}"></dd>
+      {% elif not handler.is_done(tdoc) %}
+        <dt>{{ _('Before start') }}<dd id="contest-countdown-timer" data-end-at="{{tdoc['begin_at']}}"></dd>
+      {% endif %}
       <dt>{{ _('Status') }}</dt><dd>{{ _(handler.status_text(tdoc)) }}</dd>
       <dt>{{ _('Rule') }}</dt><dd>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
