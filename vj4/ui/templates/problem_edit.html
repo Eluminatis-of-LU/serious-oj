@@ -39,7 +39,7 @@
             </label>
             <label>
               {{ _('Hint') }}
-              <textarea name="dataset_hint" class="textbox" data-markdown style="height: 250px">{% if pdoc and 'dataset_hint' in pdoc %}{{ pdoc['dataset_hint'] }}{% else %}{{ '' }}{% endif %}</textarea>
+              <textarea name="dataset_hint" class="textbox" data-markdown style="height: 250px">{% if pdoc and 'dataset_hint' in pdoc %}{{ pdoc['dataset_hint'] }}{% else %}{% include 'partials/problem_default_hint.md' %}{% endif %}</textarea>
             </label>
           </div></div>
           <div class="row"><div class="columns">
