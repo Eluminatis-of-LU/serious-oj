@@ -75,7 +75,9 @@
           ValidatorType: 2: Line Validator<br>
           ValidatorType: 3: Word Validator<br>
           ValidatorType: 4: Float Validator<br>
-          ValidatorType: 5: Custom Validator // Not yet implemented<br>
+          ValidatorType: 5: Custom Validator<br>
+
+          Samples: Array<int> // Index of sample testcases <br>
 
           TestCases: Input: Input file name<br>
           TestCases: Output: Output file name<br>
@@ -88,11 +90,27 @@
             "MemoryLimit": 65536,
             "ValidatorType": 1,
             "Epsilon": 1e-6, // Float Validator
+            "Samples": [0, 3], // Index of sample testcases
             "TestCases": [
                 {
                     "Input": "input1.txt",
                     "Output": "output1.txt",
-                    "Score": 10
+                    "Score": 0
+                },
+                {
+                  "Input": "input2.txt",
+                  "Output": "output2.txt",
+                  "Score": 50
+                },
+                {
+                  "Input": "input3.txt",
+                  "Output": "output3.txt",
+                  "Score": 50
+                },
+                {
+                  "Input": "input4.txt",
+                  "Output": "output4.txt",
+                  "Score": 0
                 }
             ]
         }
