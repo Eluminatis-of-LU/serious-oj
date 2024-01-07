@@ -84,3 +84,5 @@ can_be_extended_for: এক্সটেনশন
 my_domains: আমার ডোমেইন
 my_profile: আমার প্রোফাইল
 service_status: সার্ভিস স্ট্যাটাস
+language: ভাষা
+selected_language: বাংলা

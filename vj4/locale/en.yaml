@@ -84,3 +84,5 @@ can_be_extended_for: Extension
 my_domains: My Domains
 my_profile: My Profile
 service_status: Service Status
+language: Language
+selected_language: English
