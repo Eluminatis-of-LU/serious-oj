@@ -80,4 +80,7 @@ page.training_detail.invalid_when_not_enrolled: You cannot view problem details 
 page.problem_detail.sidebar.show_category: Click to Show
 setting_info_domain: Personal Info
 display_name: Display Name
-Can be Extended For: Extension
+can_be_extended_for: Extension
+my_domains: My Domains
+my_profile: My Profile
+service_status: Service Status
