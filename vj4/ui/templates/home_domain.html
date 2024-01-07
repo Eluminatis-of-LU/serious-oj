@@ -2,7 +2,7 @@
 {% block home_content %}
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('My Domains') }}</h1>
+    <h1 class="section__title">{{ _('my_domains') }}</h1>
     <div class="section__tools">
     {% if handler.has_priv(vj4.model.builtin.PRIV_CREATE_DOMAIN) %}
       <a class="primary rounded button" href="{{ reverse_url('home_domain_create') }}"><span class="icon icon-add"></span> {{ _('Create Domain') }}</a>

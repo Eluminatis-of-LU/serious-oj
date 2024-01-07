@@ -1,0 +1,86 @@
+#বাংলা
+---
+contest_main: প্রতিযোগিতা
+contest_create: প্রতিযোগিতা তৈরি করুন
+contest_edit: প্রতিযোগিতা সম্পাদনা
+contest_scoreboard: স্কোরবোর্ড
+contest_detail_problem_submit: প্রতিযোগিতার সমস্যা সমাধান জমা দিন
+discussion_create: আলোচনা তৈরি করুন
+discussion_main: আলোচনা
+discussion_node: আলোচনা
+home_account: অ্যাকাউন্ট সেটিংস
+home_domain_account: প্রোফাইল @ ডোমেইন
+home_preference: পছন্দ
+home_messages: বার্তা
+home_security: নিরাপত্তা
+home_domain: আমার ডোমেইন
+homework_main: হোমওয়ার্ক
+homework_create: হোমওয়ার্ক তৈরি করুন
+homework_edit: হোমওয়ার্ক সম্পাদনা
+homework_scoreboard: স্কোরবোর্ড
+homework_detail_problem_submit: হোমওয়ার্ক সমস্যার সমাধান জমা দিন
+judge_playground: প্লেগ্রাউন্ড
+main: হোম
+pager_first: « প্রথম
+pager_last: শেষ »
+pager_next: পরবর্তী ›
+pager_previous: ‹ পূর্ববর্তী
+problem_create: সমস্যা তৈরি করুন
+problem_edit: সমস্যা সম্পাদনা
+problem_main: সমস্যা সেট
+problem_solution: সমাস্যার সমাধান
+problem_submit: সমস্যা জমা সমাধান দিন
+problem_settings: সমস্যা সেটিংস
+problem_statistics: সমস্যা পরিসংখ্যান
+record_detail: রেকর্ড বিশদ
+record_main: বিচারক কিউ
+setting_function: ফাংশন
+setting_info: ব্যাক্তিগত তথ্য
+setting_preference: পছন্দ
+setting_privacy: গোপনীয়তা
+setting_customize: কাস্টমাইজ করুন
+training_main: প্রশিক্ষণ
+training_edit: প্রশিক্ষণ সম্পাদনা
+training_create: প্রশিক্ষণ তৈরি করুন
+ranking_main: র‍্যাঙ্কিং
+user_detail: ব্যবহারকারীর বিবরণ
+user_login: লগইন
+user_logout: লগআউট
+user_lostpass: পাসওয়ার্ড হারিয়ে গেছে
+user_register: নিবন্ধন করুন
+home_domain_create: ডোমেইন তৈরি করুন
+domain_main: মুখ্য
+domain_manage: ডোমেইন ম্যানেজ করুন
+domain_manage_dashboard: ড্যাশবোর্ড
+domain_manage_discussion: আলোচনা নোডস
+domain_manage_edit: তথ্য সম্পাদনা করুন
+domain_manage_join_applications: যোগদান আবেদন
+domain_manage_role: ডোমেইন রোলসমূহ
+domain_manage_user: ডোমেইন ব্যবহারকারী
+domain_manage_permission: ডোমেইন অনুমতি
+timeago_locale: en_US
+perm_general: সাধারণ
+perm_problem: সমস্যা
+perm_record: রেকর্ড
+perm_problem_solution: সমস্যার সমাধান
+perm_discussion: আলোচনা
+perm_contest: প্রতিযোগিতা
+perm_training: প্রশিক্ষণ
+perm_ranking: র‍্যাঙ্কিং
+discussion_edit: আলোচনা সম্পাদনা
+wiki_help: সাহায্য
+no_translation_warn: <blockquote class="warn">বিষয়বস্তুর এই অংশটি অনুবাদের অধীনে রয়েছে।</blockquote>
+problem-category-delim: '|'
+problem-subcategory-delim: ', '
+setting_display: ডিসপ্লে পছন্দ
+setting_usage: ব্যবহারের পছন্দ
+home_file: আমার ফাইলগুলো
+fs_upload: ফাইল আপলোড
+page.training_detail.invalid_when_not_enrolled: নথিভুক্ত না হওয়া পর্যন্ত আপনি সমস্যার বিবরণ দেখতে পারবেন না।
+page.problem_detail.sidebar.show_category: দেখানোর জন্য ক্লিক করুন
+setting_info_domain: ব্যাক্তিগত তথ্য
+display_name: ডিসপ্লে নাম
+can_be_extended_for: এক্সটেনশন
+my_domains: আমার ডোমেইন
+my_profile: আমার প্রোফাইল
+service_status: সার্ভিস স্ট্যাটাস

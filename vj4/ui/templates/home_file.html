@@ -2,7 +2,7 @@
 {% block home_content %}
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('My Files') }}</h1>
+    <h1 class="section__title">{{ _('home_file') }}</h1>
     <div class="section__tools">
     {% if handler.has_priv(vj4.model.builtin.PRIV_CREATE_FILE) %}
       <a class="primary rounded button" href="{{ reverse_url('fs_upload') }}" target="_blank" rel="noopener noreferrer"><span class="icon icon-add"></span> {{ _('Upload File') }}</a>
