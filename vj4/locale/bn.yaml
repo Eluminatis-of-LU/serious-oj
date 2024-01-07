@@ -90,3 +90,9 @@ create_contest: প্রতিযোগিতা তৈরি করুন
 open_source: ওপেন সোর্স
 categories: ক্যাটাগরি
 dataset: ডেটাসেট
+status: স্ট্যাটাস
+development: ডেভেলপমেন্ট
+support: সাপোর্ট
+dataset_format: ডেটাসেট বিন্যাস
+discussion_nodes: আলোচনাসমূহ
+recommended: দেখতে পারেন

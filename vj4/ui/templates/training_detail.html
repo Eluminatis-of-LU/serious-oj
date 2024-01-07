@@ -90,7 +90,7 @@
               <thead>
                 <tr>
                 {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
-                  <th class="col--status record-status--border">{{ _('Status') }}</th>
+                  <th class="col--status record-status--border">{{ _('status') }}</th>
                 {% endif %}
                   <th class="col--name">{{ _('Problem') }}</th>
                   <th class="col--submit_n">{{ _('Submit') }}</th>
@@ -189,7 +189,7 @@
       <div class="section__body typo">
         <dl class="large horizontal">
         {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
-          <dt>{{ _('Status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
+          <dt>{{ _('status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
         {% endif %}
           {% if tsdoc['enroll'] %}
           <dt>{{ _('Progress') }}</dt><dd>{{ _('Completed') }} {{ (100 * tsdoc['done_pids']|length / pids|length)|round|int }}%</dd>

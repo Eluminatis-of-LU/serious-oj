@@ -78,7 +78,7 @@
                 <h1 class="homework__title"><a href="{{ reverse_url('homework_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
                 <ul class="supplementary list">
                   <li>
-                    {{ _('Status') }}: <span class="homework-status--text {{ handler.get_status(tdoc) }}">{{ _(handler.status_text(tdoc)) }}</span>
+                    {{ _('status') }}: <span class="homework-status--text {{ handler.get_status(tdoc) }}">{{ _(handler.status_text(tdoc)) }}</span>
                   </li>
                   <li>
                     {{ _('Open Since') }}: {{ datetime_span(tdoc['begin_at']) }}
@@ -170,7 +170,7 @@
   {% if domain_id == vj4.model.builtin.DOMAIN_ID_SYSTEM %}
     <div class="section side">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Recommended') }}</h1>
+        <h1 class="section__title">{{ _('recommended') }}</h1>
       </div>
       <div class="section__body"><ul class="group-list">
         <li class="group-list__item">

@@ -94,7 +94,7 @@
       {% elif not handler.is_done(tdoc) %}
         <dt>{{ _('Before start') }}<dd id="contest-countdown-timer" data-end-at="{{tdoc['begin_at']}}"></dd>
       {% endif %}
-      <dt>{{ _('Status') }}</dt><dd>{{ _(handler.status_text(tdoc)) }}</dd>
+      <dt>{{ _('status') }}</dt><dd>{{ _(handler.status_text(tdoc)) }}</dd>
       <dt>{{ _('Rule') }}</dt><dd>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
       <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tdoc['begin_at']) }}</dd>

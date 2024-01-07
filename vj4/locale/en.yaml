@@ -90,3 +90,9 @@ create_contest: Create Contest
 open_source: Open Source
 categories: Categories
 dataset: Dataset
+status: Status
+development: Development
+support: Support
+dataset_format: Dataset Format
+discussion_nodes: Discussion Nodes
+recommended: Recommended
