@@ -86,3 +86,7 @@ my_profile: My Profile
 service_status: Service Status
 language: Language
 selected_language: English
+create_contest: Create Contest
+open_source: Open Source
+categories: Categories
+dataset: Dataset
