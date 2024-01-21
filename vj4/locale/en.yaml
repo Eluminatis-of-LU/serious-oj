@@ -98,3 +98,8 @@ discussion_nodes: Discussion Nodes
 recommended: Recommended
 sign_up: Sign Up
 login: Login
+time_limit: Time Limit
+memory_limit: Memory Limit
+problem_is_hidden: Problem is hidden
+hidden: Hidden
+no_dataset_at_present: No dataset at present.

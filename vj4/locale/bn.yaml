@@ -98,3 +98,8 @@ discussion_nodes: আলোচনাসমূহ
 recommended: দেখতে পারেন
 sign_up: নিবন্ধন করুন
 login: লগইন
+time_limit: সময় লিমিট
+memory_limit: মেমরি লিমিট
+problem_is_hidden: সমস্যা হিডেন করা
+hidden: লুকানো
+no_dataset_at_present: বর্তমানে কোনো ডেটাসেট নেই।

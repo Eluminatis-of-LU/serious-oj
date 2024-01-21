@@ -20,7 +20,7 @@
             <input type="checkbox" name="numeric_pid" checked>{{ _('Numeric PID') }}
           </label>
           <label class="checkbox">
-            <input type="checkbox" name="hidden">{{ _('Hidden') }}
+            <input type="checkbox" name="hidden">{{ _('hidden') }}
           </label>
         </label>
       </div>
@@ -47,9 +47,14 @@
           <h1>{{ pdoc['title'] }}</h1>
         </div>
         <div class="section__body typo">
+        {% if 'hidden' in pdoc and pdoc['hidden'] %}
+          <blockquote class="warn">
+            <span class="text-orange">{{ _('problem_is_hidden') }}</span>
+          </blockquote>
+        {% endif %}
         {% if not pdoc['data'] %}
           <blockquote class="warn">
-            <p>{{ _('No dataset at present.') }}</p>
+            <p>{{ _('no_dataset_at_present') }}</p>
           </blockquote>
         {% endif %}
         {% if pdoc['data'] is mapping %}
@@ -79,10 +84,10 @@
         {% if 'time_limit_ms' in pdoc or 'memory_limit_kb' in pdoc %}
           <blockquote class="note">
             {% if 'time_limit_ms' in pdoc %}
-              <h2>{{ _('Time Limit: ') }} {{ pdoc['time_limit_ms'] | format_time_limit }}</h2>
+              <h2>{{ _('time_limit') }}: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2>
             {% endif %}
             {% if 'memory_limit_kb' in pdoc %}
-              <h2>{{ _('Memory Limit: ') }} {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2>
+              <h2>{{ _('memory_limit') }}: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2>
             {% endif %}
           </blockquote>
         {% endif %}
