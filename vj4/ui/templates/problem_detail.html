@@ -52,6 +52,11 @@
             <span class="text-orange">{{ _('problem_is_hidden') }}</span>
           </blockquote>
         {% endif %}
+        {% if 'dataset_status' in pdoc and pdoc['dataset_status'] %}
+          <blockquote class="warn">
+            <p>{{ _(pdoc['dataset_status']) }}</p>
+          </blockquote>
+        {% endif %}
         {% if not pdoc['data'] %}
           <blockquote class="warn">
             <p>{{ _('no_dataset_at_present') }}</p>
