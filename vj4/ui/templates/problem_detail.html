@@ -54,7 +54,7 @@
         {% endif %}
         {% if 'dataset_status' in pdoc and pdoc['dataset_status'] %}
           <blockquote class="warn">
-            <p>{{ _(pdoc['dataset_status']) }}</p>
+            <p>{{ _('dataset_issue') }}: {{ _(pdoc['dataset_status']) }}</p>
           </blockquote>
         {% endif %}
         {% if not pdoc['data'] %}
