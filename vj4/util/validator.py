@@ -143,11 +143,16 @@ def check_bulletin(s):
 def is_lang(i):
   return i in constant.language.LANG_TEXTS
 
+def is_lang_alltime(i):
+  return i in constant.language.LANG_TEXTS_ALLTIME
 
 def check_lang(i):
   if not is_lang(i):
     raise error.ValidationError('lang')
 
+def check_lang_alltime(i):
+  if not is_lang_alltime(i):
+    raise error.ValidationError('lang')
 
 def is_domain_invitation_code(s):
   return bool(DOMAIN_INVITATION_CODE_RE.fullmatch(s))

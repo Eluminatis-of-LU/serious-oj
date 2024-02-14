@@ -14,6 +14,20 @@ export const LANG_TEXTS = {
   ruby: 'Ruby 3 (Ruby 3.0.2)',
 };
 
+export const LANG_TEXTS_ALLTIME = {
+  c: 'C99 (GCC 11.4.0)',
+  c11: 'C11 (GCC 11.4.0)',
+  cc11: 'C++11 (G++ 11.4.0)',
+  cc: 'C++17 (G++ 11.4.0)',
+  cc20: 'C++20 (G++ 11.4.0)',
+  cs: 'C# 7 (Mono 6.8)',
+  cs_bflat: 'C# 11 (Bflat .NET 7.0.2)',
+  java: 'Java 8 (OpenJDK 1.8.0_392)',
+  js: 'JavaScript (Node.js v12.22.9)',
+  py3: 'Python 3 (Python 3.10.12)',
+  ruby: 'Ruby 3 (Ruby 3.0.2)',
+};
+
 export const LANG_HIGHLIGHT_ID = {
   c: 'c',
   c11: 'c',
