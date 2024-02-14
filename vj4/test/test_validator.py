@@ -142,6 +142,8 @@ class Test(unittest.TestCase):
     self.assertTrue(validator.is_domain_invitation_code('helloworld'))
     self.assertFalse(validator.is_domain_invitation_code(''))
 
+  def test_language_list(self):
+    self.assertTrue(validator.is_valid_language_lists())
 
 if __name__ == '__main__':
   unittest.main()

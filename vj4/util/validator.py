@@ -161,3 +161,6 @@ def is_domain_invitation_code(s):
 def check_domain_invitation_code(s):
   if not is_domain_invitation_code(s):
     raise error.ValidationError('invitation_code')
+
+def is_valid_language_lists():
+  return constant.language.LANG_TEXTS.items() <= constant.language.LANG_TEXTS_ALLTIME.items()
