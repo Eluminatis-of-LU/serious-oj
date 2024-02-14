@@ -25,9 +25,22 @@ export default class Tab extends DOMAttachedObject {
     super($dom);
     this.attached = false;
     this.attach();
+    const searchParams = new URLSearchParams(window.location.search);
+    const targetIndex = searchParams.get('tabIndex');
+    this.switchToTab(targetIndex ? parseInt(targetIndex, 10) : 0);
+  }
+
+  insertUrlParam(key, value) {
+    if (window.history.pushState) {
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set(key, value);
+      const newurl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?${searchParams.toString()}`;
+      window.history.pushState({ path: newurl }, '', newurl);
+    }
   }
 
   async switchToTab(idx) {
+    this.insertUrlParam('tabIndex', idx);
     if (idx === this.currentIndex) {
       return;
     }
