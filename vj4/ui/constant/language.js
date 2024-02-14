@@ -7,7 +7,6 @@ export const LANG_TEXTS = {
   cc: 'C++17 (G++ 11.4.0)',
   cc20: 'C++20 (G++ 11.4.0)',
   cs: 'C# 7 (Mono 6.8)',
-  cs_bflat: 'C# 11 (Bflat .NET 7.0.2)',
   java: 'Java 8 (OpenJDK 1.8.0_392)',
   js: 'JavaScript (Node.js v12.22.9)',
   py3: 'Python 3 (Python 3.10.12)',
