@@ -15,15 +15,13 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y \
-        git build-essential python3-dev libffi-dev
+        git
 
 RUN /install_uv_and_restore.sh
 
 RUN rm /install_uv_and_restore.sh
 
-RUN apt-get purge -y \
-        build-essential && \
-    apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV GIT_PYTHON_REFRESH=quiet
 ENV VJ_LISTEN=http://0.0.0.0:8888
@@ -36,4 +34,3 @@ ENTRYPOINT [ "bash", "cli_entrypoint_uv.sh" ]
 
 EXPOSE 8888
 CMD ["run_server_uv.sh"]
-# CMD [ "vj4.server" ]
