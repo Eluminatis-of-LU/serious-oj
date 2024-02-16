@@ -2,27 +2,15 @@ import base64
 import hashlib
 import jinja2
 import markupsafe
-import misaka
+import mistune
 import re
 from urllib import parse
 
 from vj4.util import options
 
-
-MARKDOWN_EXTENSIONS = (misaka.EXT_TABLES |  # Parse PHP-Markdown style tables.
-                       misaka.EXT_FENCED_CODE |  # Parse fenced code blocks.
-                       misaka.EXT_AUTOLINK |  # Automatically turn safe URLs into links.
-                       misaka.EXT_NO_INTRA_EMPHASIS |  # Disable emphasis_between_words.
-                       misaka.EXT_MATH |  # Parse TeX $$math$$ syntax, Kramdown style.
-                       misaka.EXT_SPACE_HEADERS |  # Require a space after '#' in headers.
-                       misaka.EXT_MATH_EXPLICIT |  # Instead of guessing by context, parse $inline math$ and $$always block math$$ (requires EXT_MATH).
-                       misaka.EXT_DISABLE_INDENTED_CODE)  # Don't parse indented code blocks.
-MARKDOWN_RENDER_FLAGS = (misaka.HTML_ESCAPE |  # Escape all HTML.
-                         misaka.HTML_HARD_WRAP)  # Render each linebreak as <br>.
-
+markdown_parser = mistune.create_markdown(escape=True, hard_wrap=True, renderer='html', plugins=['table', 'url', 'math'])
 
 FS_RE = re.compile(r'\(vijos\:\/\/fs\/([0-9a-f]{40,})\)')
-
 
 def nl2br(text):
   markup = markupsafe.escape(text)
@@ -36,8 +24,7 @@ def fs_replace(m):
 
 def markdown(text):
   text = FS_RE.sub(fs_replace, text)
-  return markupsafe.Markup(misaka.html(
-      text, extensions=MARKDOWN_EXTENSIONS, render_flags=MARKDOWN_RENDER_FLAGS))
+  return markupsafe.Markup(markdown_parser(text))
 
 
 def gravatar_url(gravatar, size=200):

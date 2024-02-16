@@ -1,7 +1,7 @@
 aiohttp>=3.6.0,<3.8.0
 jinja2>=2.9.0
 sockjs>=0.7.0,<0.10.0
-misaka
+mistune
 accept
 aioamqp
 pytz
@@ -10,7 +10,7 @@ httpagentparser
 geoip2
 GitPython
 PyYAML
-git+https://github.com/iceboy233/aiomongo
+aiomongo @ git+https://github.com/iceboy233/aiomongo
 yarl
 aiohttp-sentry
 aiosmtplib<3.0.0
