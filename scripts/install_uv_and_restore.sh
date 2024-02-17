@@ -1,8 +1,8 @@
 #!/bin/bash
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# curl -LsSf https://astral.sh/uv/install.sh | sh
 
-source $HOME/.cargo/env
+python3 -m pip install uv
 
 uv venv
 
