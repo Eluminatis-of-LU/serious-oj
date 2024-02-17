@@ -30,7 +30,7 @@ ADD docker-entrypoint.py /app/
 ADD ./scripts/run_server_uv.sh /app/
 ADD ./scripts/cli_entrypoint_uv.sh /app/
 
-ENTRYPOINT [ "cli_entrypoint_uv.sh" ]
+ENTRYPOINT [ "/app/cli_entrypoint_uv.sh" ]
 
 EXPOSE 8888
 CMD ["run_server_uv.sh"]
