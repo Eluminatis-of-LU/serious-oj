@@ -4,4 +4,8 @@ source $HOME/.cargo/env
 
 source .venv/bin/activate
 
-python3 docker-entrypoint.py
+echo "..."
+
+echo $0
+
+docker-entrypoint.py
