@@ -452,16 +452,33 @@ async def recalc_status(domain_id: str, doc_type: int, tid: objectid.ObjectId):
       await document.rev_set_status(domain_id, doc_type, tid, tsdoc['uid'], tsdoc['rev'],
                                     return_doc=False, journal=journal, **stats)
 
+@argmethod.wrap
+async def get_scoreboard_details(domain_id: str, doc_type: int, tid: objectid.ObjectId, filter_no_submission: bool=True, is_export: bool=False):
+    if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
+      raise error.InvalidArgumentError('doc_type')
+    tdoc, tsdocs = await get_and_list_status(domain_id, doc_type, tid)
+    udict, dudict, pdict = await asyncio.gather(
+        user.get_dict([tsdoc['uid'] for tsdoc in tsdocs]),
+        domain.get_dict_user_by_uid(domain_id, [tsdoc['uid'] for tsdoc in tsdocs]),
+        problem.get_dict(domain_id, tdoc['pids']))
+    if filter_no_submission:
+      tsdocs = filter(lambda d: len(d['journal']) > 0, tsdocs)
+    ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
+    rows = RULES[tdoc['rule']].scoreboard_func(is_export, lambda s: s, tdoc,
+                                                       ranked_tsdocs, udict, dudict, pdict)
+    return tdoc, rows, udict
+
+@argmethod.wrap
+async def get_scoreboard_rows(domain_id: str, doc_type: int, tid: objectid.ObjectId, filter_no_submission: bool=True, is_export: bool=False):
+    tdoc, rows, udict = await get_scoreboard_details(domain_id, doc_type, tid, filter_no_submission, is_export)
+    return rows
 
 def _parse_pids(pids_str):
   pids = misc.dedupe(map(document.convert_doc_id, pids_str.split(',')))
   return pids
 
-
 def _format_pids(pids_list):
   return ','.join([str(pid) for pid in pids_list])
-
-
 
 class ContestStatusMixin(object):
   @property
