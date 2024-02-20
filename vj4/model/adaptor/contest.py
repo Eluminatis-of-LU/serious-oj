@@ -462,7 +462,7 @@ async def get_scoreboard_details(domain_id: str, doc_type: int, tid: objectid.Ob
         domain.get_dict_user_by_uid(domain_id, [tsdoc['uid'] for tsdoc in tsdocs]),
         problem.get_dict(domain_id, tdoc['pids']))
     if filter_no_submission:
-      tsdocs = filter(lambda d: len(d['journal']) > 0, tsdocs)
+      tsdocs = filter(lambda d: 'journal' in d and len(d['journal']) > 0, tsdocs)
     ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
     rows = RULES[tdoc['rule']].scoreboard_func(is_export, lambda s: s, tdoc,
                                                        ranked_tsdocs, udict, dudict, pdict)
