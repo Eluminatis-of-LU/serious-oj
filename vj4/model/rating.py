@@ -65,12 +65,12 @@ async def count(**kwargs):
 @argmethod.wrap
 async def ensure_indexes():
   coll = db.coll('rating')
-  coll.create_index([('domain_id', 1), ('contest_id', 1)], unique=True)
+  await coll.create_index([('domain_id', 1), ('contest_id', 1)], unique=True)
   coll = db.coll('rating_changes')
-  coll.create_index([('rating_id', 1), ('uid', 1)], unique=True)
-  coll.create_index([('domain_id', 1), ('uid', 1)])
+  await coll.create_index([('rating_id', 1), ('uid', 1)], unique=True)
+  await coll.create_index([('domain_id', 1), ('uid', 1)])
   coll = db.coll('domain.user')
-  coll.create_index([('domain_id', 1), ('uid', 1), ('rating', 1)])
+  await coll.create_index([('domain_id', 1), ('uid', 1), ('rating', 1)])
 
 if __name__ == '__main__':
   argmethod.invoke_by_args()
