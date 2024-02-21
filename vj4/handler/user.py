@@ -1,5 +1,7 @@
 import asyncio
 import datetime
+import plotly
+import plotly.graph_objs as G
 
 from vj4 import app
 from vj4 import constant
@@ -10,6 +12,7 @@ from vj4.model import record
 from vj4.model import system
 from vj4.model import token
 from vj4.model import user
+from vj4.model import rating
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import problem
 from vj4.model.adaptor import setting
@@ -17,7 +20,6 @@ from vj4.util import misc
 from vj4.util import options
 from vj4.util import validator
 from vj4.handler import base
-
 
 class UserSettingsMixin(object):
   def can_view(self, udoc, key):
@@ -174,7 +176,32 @@ class UserLogoutHandler(base.Handler):
   async def post(self):
     await self.delete_session()
     self.json_or_redirect(self.referer_or_main)
-
+    
+@app.route('/user/{uid:-?\d+}/ratingchart', 'user_rating_chart')
+class UserRatingChartHandler(base.Handler):
+  @base.route_argument
+  @base.sanitize
+  @base.limit_rate('user_rating_chart', 600, 120)
+  async def get(self, *, uid: int):
+    rating_changes = await rating.get_user_rating_changes(self.domain_id, uid)
+    rating_changes = sorted(rating_changes, key=lambda x: x['attend_at'])
+    
+    x = [r['attend_at'] for r in rating_changes]
+    y = [r['new_rating'] for r in rating_changes]
+    
+    # create a line chart
+    chart = G.Scatter(x=x, y=y, mode='lines+markers')
+    
+    # create a layout, and add a title
+    layout = G.Layout(title='Rating Chart')
+    
+    # create a figure, and plot the chart
+    
+    fig = G.Figure(data=[chart], layout=layout)
+    
+    # convert the figure to png
+    img = plotly.io.to_image(fig, format='png')
+    await self.binary(img, 'image/png', 'rating_chart.png')
 
 @app.route('/user/{uid:-?\d+}', 'user_detail')
 class UserDetailHandler(base.Handler, UserSettingsMixin):

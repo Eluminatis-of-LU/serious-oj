@@ -14,3 +14,5 @@ aiomongo @ git+https://github.com/iceboy233/aiomongo
 yarl
 aiohttp-sentry
 aiosmtplib<3.0.0
+plotly
+kaleido

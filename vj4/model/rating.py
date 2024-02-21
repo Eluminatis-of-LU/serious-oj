@@ -22,7 +22,15 @@ async def add(domain_id: str, contest_id: str, rating_changes, attend_at: dateti
   coll_rating_changes = db.coll('rating_changes')
   bulk_rating_changes = coll_rating_changes.initialize_unordered_bulk_op()
   for rating_change in rating_changes:
-    bulk_rating_changes.insert({'rating_id': obj_id, 'uid': rating_change['uid'], 'new_rating': rating_change['new_rating'], 'previous_rating': rating_change['previous_rating'], 'delta': rating_change['delta']})
+    bulk_rating_changes.insert({
+      'domain_id': domain_id,
+      'rating_id': obj_id,
+      'uid': rating_change['uid'],
+      'new_rating': rating_change['new_rating'],
+      'previous_rating': rating_change['previous_rating'],
+      'delta': rating_change['delta'],
+      'attend_at': attend_at
+    })
   await bulk_rating_changes.execute()
   bulk_domain_users = db.coll('domain.user').initialize_unordered_bulk_op()
   for rating_change in rating_changes:
@@ -43,7 +51,7 @@ async def clear_all_ratings(domain_id: str):
   await coll.update_many({'domain_id': domain_id}, {'$unset': {'rating': ''}})
 
 @argmethod.wrap
-async def get_users_rating_changes(domain_id: str, uid: int):
+async def get_user_rating_changes(domain_id: str, uid: int):
   coll = db.coll('rating_changes')
   return await coll.find({'domain_id': domain_id, 'uid': uid}).to_list()
 
