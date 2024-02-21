@@ -9,6 +9,7 @@ from typing import List, Tuple, Dict
 from vj4 import db
 from vj4 import error
 from vj4.model import document
+from vj4.model import rating as rating_model
 from vj4.model.adaptor import contest
 from vj4.util import argmethod
 
@@ -36,7 +37,7 @@ def get_seed(contestants, rating, seed_cache):
         return seed_cache[rating]
 
     extra = Contestant(None, 0, rating)
-    result = 0.5
+    result = 1
     for other in contestants:
         result += get_elo_win_probability(other.rating, extra.rating)
     seed_cache[rating] = result
@@ -118,9 +119,13 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
     tdoc, rows, udict = await contest.get_scoreboard_details(domain_id, document.TYPE_CONTEST, tid, True, False)
     previous_rating = {}
     
-    for u in udict:
-        previous_rating[u] = 0
+    previous_rating_changes = await rating_model.get_latest_rating_changes(domain_id, [u for u in udict])
+       
+    for u in previous_rating_changes:
+        previous_rating[u['uid']] = u['rating'] if 'rating' in u else 400
     contestants: List[Contestant] = []
+    
+    print('previous_rating:', previous_rating)
     
     for row in rows[1:]:
         uid = row[1]['raw']['_id']
@@ -129,9 +134,13 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
         c = Contestant(uid, rank, prev_rating)
         contestants.append(c)
         
-    rating_changes = calculate_rating_changes(contestants)
-    for uid in rating_changes:
-        print(uid, '->', rating_changes[uid])
+    rating_delta = calculate_rating_changes(contestants)
+    rating_changes = []
+    for uid in rating_delta:
+        print(uid, '->', rating_delta[uid])
+        rating_changes.append({'uid': uid, 'new_rating': previous_rating[uid] + rating_delta[uid], 'delta': rating_delta[uid], 'previous_rating': previous_rating[uid]})
+        
+    await rating_model.add(domain_id, tid, rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())
 
     return rating_changes
 
