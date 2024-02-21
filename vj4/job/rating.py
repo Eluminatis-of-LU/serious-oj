@@ -12,18 +12,8 @@ from vj4.model import document
 from vj4.model.adaptor import contest
 from vj4.util import argmethod
 
-class Party:
-    handles: Tuple[int]
-    
-    def __init__(self, handles: Tuple[int]):
-        self.handles = handles
-    
-class StandingsRow:
-    party: Party
-    rank: int
-
 class Contestant:
-    party: Party
+    uid: int
     rank: int
     rating: int  # previous rating
 
@@ -31,8 +21,8 @@ class Contestant:
     need_rating: int
     delta: int
 
-    def __init__(self, party, rank, previous_rating):
-        self.party = party
+    def __init__(self, uid, rank, previous_rating):
+        self.uid = uid
         self.rank = rank
         self.rating = previous_rating
 
@@ -114,13 +104,13 @@ def process(contestants):
     adjust_sum()
 
 
-def calculate_rating_changes(contestants: List[Contestant]) -> Dict[Party, int]:
+def calculate_rating_changes(contestants: List[Contestant]) -> Dict[int, int]:
     # List will be modified by process function (passed by reference)
     process(contestants)
     
     rating_changes = {}
     for c in contestants:
-        rating_changes[c.party] = c.delta
+        rating_changes[c.uid] = c.delta
     return rating_changes
 
 @argmethod.wrap
@@ -133,15 +123,15 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
     contestants: List[Contestant] = []
     
     for row in rows[1:]:
-        party = Party([row[1]['raw']['_id']])
+        uid = row[1]['raw']['_id']
         rank = row[0]['value']
-        prev_rating = previous_rating[party.handles[0]]
-        c = Contestant(party, rank, prev_rating)
+        prev_rating = previous_rating[uid]
+        c = Contestant(uid, rank, prev_rating)
         contestants.append(c)
         
     rating_changes = calculate_rating_changes(contestants)
-    for party in rating_changes:
-        print(party.handles, '->', rating_changes[party])
+    for uid in rating_changes:
+        print(uid, '->', rating_changes[uid])
 
     return rating_changes
 
