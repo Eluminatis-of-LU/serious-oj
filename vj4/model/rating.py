@@ -9,14 +9,14 @@ from vj4 import db
 from vj4 import error
 from vj4.util import argmethod
 
-async def add(domain_id: str, contest_id: str, rating_changes, attend_at: datetime.datetime, calcuated_at: datetime.datetime):
+async def add(domain_id: str, contest_id: str, rating_changes, attend_at: datetime.datetime, calculated_at: datetime.datetime):
   coll = db.coll('rating')
   obj_id = objectid.ObjectId()
   rating_doc = { '_id': obj_id,
                 'domain_id': domain_id,
                 'contest_id': contest_id,
                 'attend_at': attend_at,
-                'calcuated_at': calcuated_at}
+                'calculated_at': calculated_at}
   inserted_doc = await coll.insert_one(rating_doc)
   print(rating_doc)
   coll_rating_changes = db.coll('rating_changes')
@@ -29,7 +29,8 @@ async def add(domain_id: str, contest_id: str, rating_changes, attend_at: dateti
       'new_rating': rating_change['new_rating'],
       'previous_rating': rating_change['previous_rating'],
       'delta': rating_change['delta'],
-      'attend_at': attend_at
+      'attend_at': attend_at,
+      'calculated_at': calculated_at
     })
   await bulk_rating_changes.execute()
   bulk_domain_users = db.coll('domain.user').initialize_unordered_bulk_op()
