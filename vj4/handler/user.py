@@ -200,8 +200,8 @@ class UserRatingChartHandler(base.Handler):
     fig = G.Figure(data=[chart], layout=layout)
     
     # convert the figure to png
-    img = plotly.io.to_image(fig, format='png')
-    await self.binary(img, 'image/png', 'rating_chart.png')
+    img = plotly.io.to_image(fig, format='jpg')
+    await self.binary(img, 'image/jpg', 'rating_chart.jpg')
 
 @app.route('/user/{uid:-?\d+}', 'user_detail')
 class UserDetailHandler(base.Handler, UserSettingsMixin):
