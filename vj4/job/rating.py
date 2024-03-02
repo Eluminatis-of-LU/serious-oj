@@ -140,7 +140,7 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
         print(uid, '->', rating_delta[uid])
         rating_changes.append({'uid': uid, 'new_rating': previous_rating[uid] + rating_delta[uid], 'delta': rating_delta[uid], 'previous_rating': previous_rating[uid]})
         
-    await rating_model.add(domain_id, tid, rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())
+    await rating_model.add(domain_id, tid, tdoc['title'], rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())
 
     return rating_changes
 

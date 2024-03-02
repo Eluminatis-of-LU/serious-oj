@@ -188,9 +188,10 @@ class UserRatingChartHandler(base.Handler):
     
     x = [r['attend_at'] for r in rating_changes]
     y = [r['new_rating'] for r in rating_changes]
+    text_label = [r['contest_title'] for r in rating_changes]
     
     # create a line chart
-    chart = G.Scatter(x=x, y=y, mode='lines+markers')
+    chart = G.Scatter(x=x, y=y, text=text_label, textposition="top center", mode='lines+markers+text')
     
     # create a layout, and add a title
     layout = G.Layout(title='Rating Chart')
