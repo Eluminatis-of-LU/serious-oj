@@ -143,7 +143,8 @@ class ProblemCategoryHandler(base.OperationHandler):
     query = ProblemCategoryHandler.build_query(category)
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
       query['$or'].append({'hidden': False})
-      query['$or'].append({'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']})
+      query['$or'].append({'owner_uid': self.user['_id']})
+      query['$or'].append({'shared_uids': self.user['_id']})
     pdocs, ppcount, pcount = await pagination.paginate(problem.get_multi(domain_id=self.domain_id,
                                                                          **query) \
                                                               .sort([('doc_id', 1)]),
@@ -174,7 +175,8 @@ class ProblemCategoryRandomHandler(base.Handler):
     query = ProblemCategoryHandler.build_query(category)
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
       query['$or'].append({'hidden': False})
-      query['$or'].append({'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']})
+      query['$or'].append({'owner_uid': self.user['_id']})
+      query['$or'].append({'shared_uids': self.user['_id']})
     pid = await problem.get_random_id(self.domain_id, **query)
     if pid:
       self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
