@@ -140,14 +140,12 @@ class ProblemCategoryHandler(base.OperationHandler):
   @base.sanitize
   async def get(self, *, category: str, page: int=1):
     # TODO(iceboy): projection.
-    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
-    else:
-      f = {}
     query = ProblemCategoryHandler.build_query(category)
+    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
+      query['$or'].append({'hidden': False})
+      query['$or'].append({'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']})
     pdocs, ppcount, pcount = await pagination.paginate(problem.get_multi(domain_id=self.domain_id,
-                                                                         **query,
-                                                                         **f) \
+                                                                         **query) \
                                                               .sort([('doc_id', 1)]),
                                                        page, self.PROBLEMS_PER_PAGE)
     if self.has_priv(builtin.PRIV_USER_PROFILE):
@@ -173,12 +171,11 @@ class ProblemCategoryRandomHandler(base.Handler):
   @base.route_argument
   @base.sanitize
   async def get(self, *, category: str):
-    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
-    else:
-      f = {}
     query = ProblemCategoryHandler.build_query(category)
-    pid = await problem.get_random_id(self.domain_id, **query, **f)
+    if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
+      query['$or'].append({'hidden': False})
+      query['$or'].append({'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']})
+    pid = await problem.get_random_id(self.domain_id, **query)
     if pid:
       self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
     else:
