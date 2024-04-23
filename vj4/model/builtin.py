@@ -447,7 +447,7 @@ FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/ajami1331/vj4">SeriousOJ</
                       '<a href=https://github.com/ajami1331/vj4/commit/' + version.get()[:7] + '/>' + version.get()[:7] + '</a>']
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
-    ('Beginners'), 
+    ('Beginners', ['Beginners']), 
     ('DP', [
         'LCS',
         'LIS'
