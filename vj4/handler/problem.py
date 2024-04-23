@@ -140,11 +140,15 @@ class ProblemCategoryHandler(base.OperationHandler):
   @base.sanitize
   async def get(self, *, category: str, page: int=1):
     # TODO(iceboy): projection.
-    query = ProblemCategoryHandler.build_query(category)
+    category_query = ProblemCategoryHandler.build_query(category)
+    visibility_query = {'$or': []}
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      query['$or'].append({'hidden': False})
-      query['$or'].append({'owner_uid': self.user['_id']})
-      query['$or'].append({'shared_uids': self.user['_id']})
+      visibility_query['$or'].append({'hidden': False})
+      visibility_query['$or'].append({'owner_uid': self.user['_id']})
+      visibility_query['$or'].append({'shared_uids': self.user['_id']})
+
+    query['$and'].append(category_query)
+    query['$and'].append(visibility_query)
     pdocs, ppcount, pcount = await pagination.paginate(problem.get_multi(domain_id=self.domain_id,
                                                                          **query) \
                                                               .sort([('doc_id', 1)]),
@@ -172,11 +176,15 @@ class ProblemCategoryRandomHandler(base.Handler):
   @base.route_argument
   @base.sanitize
   async def get(self, *, category: str):
-    query = ProblemCategoryHandler.build_query(category)
+    category_query = ProblemCategoryHandler.build_query(category)
+    visibility_query = {'$or': []}
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
-      query['$or'].append({'hidden': False})
-      query['$or'].append({'owner_uid': self.user['_id']})
-      query['$or'].append({'shared_uids': self.user['_id']})
+      visibility_query['$or'].append({'hidden': False})
+      visibility_query['$or'].append({'owner_uid': self.user['_id']})
+      visibility_query['$or'].append({'shared_uids': self.user['_id']})
+
+    query['$and'].append(category_query)
+    query['$and'].append(visibility_query)
     pid = await problem.get_random_id(self.domain_id, **query)
     if pid:
       self.json_or_redirect(self.reverse_url('problem_detail', pid=pid))
