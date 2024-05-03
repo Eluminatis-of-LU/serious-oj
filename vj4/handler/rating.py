@@ -17,7 +17,7 @@ class RatingClearHandler(base.Handler):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
     self.redirect(self.referer_or_main)
 
-@app.route('/rating/{tid}', 'rating_calculate')
+@app.route('/rating/{tid:\w{24}}', 'rating_calculate')
 class RatingCalculationHandler(base.Handler):
   
   @base.require_perm(builtin.PERM_PROCESS_RATING)
