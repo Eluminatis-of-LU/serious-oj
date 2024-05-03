@@ -16,7 +16,7 @@ class RatingClearHandler(base.Handler):
   @base.sanitize
   async def get(self):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
-    self.redirect(self.referer_or_main)
+    self.redirect(self.reverse_url('domain_main'))
 
 @app.route('/rating/{tid:\w{24}}', 'rating_calculate')
 class RatingCalculationHandler(base.Handler):
@@ -27,7 +27,7 @@ class RatingCalculationHandler(base.Handler):
   @base.sanitize
   async def get(self, *, tid: objectid.ObjectId):
     rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=tid)
-    self.redirect(self.referer_or_main)
+    self.redirect(self.reverse_url('contest_detail', tid=tid))
 
 @app.route('/rating/rollback', 'rating_rollback_last')
 class RatingRollbackHandler(base.Handler):
@@ -36,4 +36,4 @@ class RatingRollbackHandler(base.Handler):
   @base.get_argument
   @base.sanitize
   async def get(self):  
-    self.redirect(self.referer_or_main)
+    self.redirect(self.reverse_url('domain_main'))
