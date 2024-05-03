@@ -24,7 +24,7 @@ class RatingCalculationHandler(base.Handler):
   @base.get_argument
   @base.route_argument
   @base.sanitize
-  async def get(self, *, tid: str):
+  async def get(self, *, tid: objectid.ObjectId):
     rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=tid)
     self.redirect(self.referer_or_main)
 
