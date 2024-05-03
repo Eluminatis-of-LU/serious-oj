@@ -28,12 +28,3 @@ class RatingCalculationHandler(base.Handler):
   async def get(self, *, tid: objectid.ObjectId):
     rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=tid)
     self.redirect(self.reverse_url('contest_detail', tid=tid))
-
-@app.route('/rating/rollback', 'rating_rollback_last')
-class RatingRollbackHandler(base.Handler):
-  
-  @base.require_perm(builtin.PERM_PROCESS_RATING)
-  @base.get_argument
-  @base.sanitize
-  async def get(self):  
-    self.redirect(self.reverse_url('domain_main'))
