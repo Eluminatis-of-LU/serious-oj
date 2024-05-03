@@ -25,7 +25,7 @@ class RatingCalculationHandler(base.Handler):
   @base.route_argument
   @base.sanitize
   async def get(self, *, tid: str):
-    rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=tid)
+    rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=objectid.ObjectId(tid))
     self.redirect(self.referer_or_main)
 
 @app.route('/rating/rollback', 'rating_rollback_last')
