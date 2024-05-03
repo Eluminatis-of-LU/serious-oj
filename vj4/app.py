@@ -97,6 +97,7 @@ class Application(web.Application):
     from vj4.handler import record
     from vj4.handler import training
     from vj4.handler import ranking
+    from vj4.handler import rating
     from vj4.handler import user
     from vj4.handler import i18n
     if options.static:
