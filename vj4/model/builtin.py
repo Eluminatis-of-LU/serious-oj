@@ -443,8 +443,8 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (1, 100)])
 
 # Footer extra HTMLs. TODO(iceboy): remove.
-FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/ajami1331/vj4">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>',
-                      '<a href=https://github.com/ajami1331/vj4/commit/' + version.get()[:7] + '/>' + version.get()[:7] + '</a>']
+FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/Eluminatis-of-LU/serious-oj">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>',
+                      '<a href=https://github.com/Eluminatis-of-LU/serious-oj/commit/' + version.get()[:7] + '/>' + version.get()[:7] + '</a>']
 
 PROBLEM_CATEGORIES = collections.OrderedDict([
     ('Beginners', ['Beginners']), 
