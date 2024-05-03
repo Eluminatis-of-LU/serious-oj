@@ -85,6 +85,9 @@ PERM_EDIT_TRAINING_SELF = 1 << 49
 # Ranking.
 PERM_VIEW_RANKING = 1 << 59
 
+# Rating.
+PERM_PROCESS_RATING = 1 << 60
+
 PERM_ALL = -1
 
 Permission = collections.namedtuple('Permission',
@@ -182,6 +185,7 @@ PERMS = [
     Permission('perm_training', PERM_EDIT_TRAINING_SELF,
                'Edit own training plans'),
     Permission('perm_ranking', PERM_VIEW_RANKING, 'View ranking'),
+    Permission('perm_rating', PERM_PROCESS_RATING, 'Process rating'),
 ]
 
 PERMS_BY_FAMILY = collections.OrderedDict(
