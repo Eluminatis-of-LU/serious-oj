@@ -1,4 +1,4 @@
-{% extends "layout/basic.html" %}
+y_{% extends "layout/basic.html" %}
 {% block content %}
 <div style="display: none" class="dialog__body--copy-to">
   <div>
@@ -89,10 +89,10 @@
         {% if 'time_limit_ms' in pdoc or 'memory_limit_kb' in pdoc %}
           <blockquote class="note">
             {% if 'time_limit_ms' in pdoc %}
-              <h2 id='time_limit'>{{ _('time_limit') }}: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2>
+              <h2>{{ _('time_limit') }}: <span id='time_limit'>{{ pdoc['time_limit_ms'] | format_time_limit }}</span></h2>
             {% endif %}
             {% if 'memory_limit_kb' in pdoc %}
-              <h2 id='memory_limit'>{{ _('memory_limit') }}: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2>
+              <h2>{{ _('memory_limit') }}: <span id='memory_limit'>{{ pdoc['memory_limit_kb'] | format_memory_limit }}</span></h2>
             {% endif %}
           </blockquote>
         {% endif %}
