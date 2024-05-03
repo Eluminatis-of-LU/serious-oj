@@ -6,6 +6,7 @@ from vj4.model import rating as rating_model
 from vj4.job import rating as rating_job
 from vj4.util import pagination
 from vj4.handler import base
+from bson import objectid
 
 @app.route('/rating/clearall', 'rating_clear_all')
 class RatingClearHandler(base.Handler):
@@ -24,8 +25,8 @@ class RatingCalculationHandler(base.Handler):
   @base.get_argument
   @base.route_argument
   @base.sanitize
-  async def get(self, *, tid: str):
-    rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=objectid.ObjectId(tid))
+  async def get(self, *, tid: objectid.ObjectId):
+    rating_changes = await rating_job.process_contest_rating(domain_id=self.domain_id, tid=tid)
     self.redirect(self.referer_or_main)
 
 @app.route('/rating/rollback', 'rating_rollback_last')
