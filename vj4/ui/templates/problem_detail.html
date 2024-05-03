@@ -109,8 +109,8 @@ y_{% extends "layout/basic.html" %}
             <tbody>
               {% for sample in pdoc['samples'] %}
               <tr>
-                <td><pre>{{ sample['input']|markdown }}</pre></td>
-                <td><pre>{{ sample['output']|markdown }}</pre></td>
+                <td><pre class="test-case-input">{{ sample['input']|markdown }}</pre></td>
+                <td><pre class="test-case-output">{{ sample['output']|markdown }}</pre></td>
               </tr>
               {% endfor %}
             </tbody>
