@@ -4,6 +4,7 @@ from vj4.model import domain
 from vj4.model import user
 from vj4.model import rating as rating_model
 from vj4.job import rating as rating_job
+from vj4.job import rank as rank_job
 from vj4.util import pagination
 from vj4.handler import base
 from bson import objectid
@@ -16,6 +17,7 @@ class RatingPurgeHandler(base.Handler):
   @base.sanitize
   async def get(self):
     await rating_model.purge_all_ratings(domain_id=self.domain_id)
+    await rank_job.run(domain_id=self.domain_id)
     self.redirect(self.reverse_url('domain_main'))
 
 @app.route('/rating/clear', 'rating_clear_all')
@@ -26,6 +28,7 @@ class RatingClearHandler(base.Handler):
   @base.sanitize
   async def get(self):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
+    await rank_job.run(domain_id=self.domain_id)
     self.redirect(self.reverse_url('domain_main'))
 
 @app.route('/rating/{tid:\w{24}}/add', 'rating_add')
@@ -59,4 +62,5 @@ class RatingProcessHandler(base.Handler):
   async def get(self):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
     await rating_job.process_all_contest_ratings(domain_id=self.domain_id)
+    await rank_job.run(domain_id=self.domain_id, keyword='rating')
     self.redirect(self.reverse_url('domain_main'))
