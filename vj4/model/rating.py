@@ -84,10 +84,14 @@ async def count(**kwargs):
   coll = db.coll('rating')
   return await coll.find({**kwargs}).count()
 
+async def get_sorted_by_attend_at(domain_id: str):
+  coll = db.coll('rating')
+  return await coll.find({'domain_id': domain_id}).sort('attend_at', -1).to_list()
+
 @argmethod.wrap
 async def ensure_indexes():
   coll = db.coll('rating')
-  await coll.create_index([('domain_id', 1)])
+  await coll.create_index([('domain_id', 1), (attend_at, 1)])
   await coll.create_index([('domain_id', 1), ('contest_id', 1)], unique=True)
   coll = db.coll('rating_changes')
   await coll.create_index([('rating_id', 1), ('uid', 1)], unique=True)

@@ -133,7 +133,7 @@ async def delete_rating(domain_id: str, tid: objectid.ObjectId):
 
 @argmethod.wrap
 async def process_all_contest_ratings(domain_id: str):
-    contests = await rating_model.list({'domain_id': domain_id})
+    contests = await rating_model.get_sorted_by_attend_at(domain_id)
     for contest in contests:
         await process_contest_rating(domain_id, contest['_id'])
 
