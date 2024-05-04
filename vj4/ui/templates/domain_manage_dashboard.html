@@ -19,9 +19,9 @@
     </dl>
     {% if handler.has_perm(vj4.model.builtin.PERM_PROCESS_RATING) %}
     <div class="large horizontal">
-      <a class="rounded primary button" href="{{ reverse_url('rating_process_all') }}">{{ _('Process All Rating') }}</button>
-      <a class="rounded primary button" href="{{ reverse_url('rating_clear_all') }}">{{ _('Clear All Rating') }}</button>
-      <a class="rounded button" href="{{ reverse_url('rating_purge_all') }}">{{ _('Purge All Rating') }}</button>
+      <a class="rounded primary button" href="{{ reverse_url('rating_process_all') }}">{{ _('Process All Rating') }}</a>
+      <a class="rounded primary button" href="{{ reverse_url('rating_clear_all') }}">{{ _('Clear All Rating') }}</a>
+      <a class="rounded button" href="{{ reverse_url('rating_purge_all') }}">{{ _('Purge All Rating') }}</a>
     </div>
     {% endif %}
   </div>
