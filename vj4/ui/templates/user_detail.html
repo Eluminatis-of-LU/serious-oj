@@ -29,7 +29,7 @@
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, RP: {1} (No. {2}), Rating: {3}').format(dudoc['num_accept']|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?'), dudoc['rating']|default('unrated')) }}</p>
+              <p>{{ _('Solved {0} problems, RP: {1} (No. {2}), Rating: {3}').format(dudoc['num_accept']|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
               <div class="profile-header__contact-bar">
               {% if is_self_profile %}
                 <a class="profile-header__contact-item" href="{{ reverse_url('home_account') }}#setting_info" data-tooltip="{{ _('Edit Profile') }}">
