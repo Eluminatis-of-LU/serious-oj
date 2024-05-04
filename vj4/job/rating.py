@@ -115,6 +115,28 @@ def calculate_rating_changes(contestants: List[Contestant]) -> Dict[int, int]:
     return rating_changes
 
 @argmethod.wrap
+async def clear_all_ratings(domain_id: str):
+    await rating_model.clear_all_ratings(domain_id)
+
+@argmethod.wrap
+async def purge_all_ratings(domain_id: str):
+    await rating_model.purge_all_ratings(domain_id)
+
+@argmethod.wrap
+async def add_contest_to_rating(domain_id: str, tid: objectid.ObjectId):
+    tdoc = await document.get(domain_id, document.TYPE_CONTEST, tid)
+    await rating_model.add(domain_id, tid, tdoc['title'], tdoc['begin_at'])
+
+@argmethod.wrap
+async def delete_rating(domain_id: str, tid: objectid.ObjectId):
+    await rating_model.delete_rating(domain_id, tid)
+
+@argmethod.wrap
+async def process_all_contest_ratings(domain_id: str):
+    contests = await rating_model.list({'domain_id': domain_id})
+    for contest in contests:
+        await process_contest_rating(domain_id, contest['_id'])
+
 async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
     tdoc, rows, udict = await contest.get_scoreboard_details(domain_id, document.TYPE_CONTEST, tid, True, False)
     previous_rating = {}
@@ -140,7 +162,7 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
         print(uid, '->', rating_delta[uid])
         rating_changes.append({'uid': uid, 'new_rating': previous_rating[uid] + rating_delta[uid], 'delta': rating_delta[uid], 'previous_rating': previous_rating[uid]})
         
-    await rating_model.add(domain_id, tid, tdoc['title'], rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())
+    await rating_model.add_rating_changes(domain_id, tid, tdoc['title'], rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())
 
     return rating_changes
 

@@ -9,23 +9,23 @@ from vj4 import db
 from vj4 import error
 from vj4.util import argmethod
 
-async def add(domain_id: str, contest_id: str, contest_title: str, rating_changes, attend_at: datetime.datetime, calculated_at: datetime.datetime):
+async def add(domain_id: str, contest_id: str, contest_title: str, attend_at: datetime.datetime):
   coll = db.coll('rating')
-  obj_id = objectid.ObjectId()
-  rating_doc = { '_id': obj_id,
+  obj_id = contest_id
+  rating_doc = { '_id': contest_id,
                 'domain_id': domain_id,
-                'contest_id': contest_id,
                 'attend_at': attend_at,
-                'calculated_at': calculated_at,
                 'contest_title': contest_title}
-  inserted_doc = await coll.insert_one(rating_doc)
-  print(rating_doc)
+  inserted_doc = await coll.find_one_and_update(filter={'_id': obj_id}, update={'$set': rating_doc}, upsert=True, return_document=ReturnDocument.AFTER)
+  
+
+async def add_rating_changes(domain_id: str, contest_id: str, contest_title: str, rating_changes, attend_at: datetime.datetime, calculated_at: datetime.datetime):
   coll_rating_changes = db.coll('rating_changes')
   bulk_rating_changes = coll_rating_changes.initialize_unordered_bulk_op()
   for rating_change in rating_changes:
     bulk_rating_changes.insert({
       'domain_id': domain_id,
-      'rating_id': obj_id,
+      'rating_id': contest_id,
       'uid': rating_change['uid'],
       'new_rating': rating_change['new_rating'],
       'previous_rating': rating_change['previous_rating'],
@@ -44,8 +44,19 @@ async def get_latest_rating_changes(domain_id: str, uids: List[int]):
   coll = db.coll('domain.user')
   return await coll.find({'domain_id': domain_id, 'uid': {'$in': uids}}).to_list()
 
+async def delete_rating(domain_id: str, contest_id: str):
+  coll = db.coll('rating')
+  await coll.delete_one({'_id': contest_id, 'domain_id': domain_id})
+
 @argmethod.wrap
 async def clear_all_ratings(domain_id: str):
+  coll = db.coll('rating_changes')
+  await coll.delete_many({'domain_id': domain_id})
+  coll = db.coll('domain.user')
+  await coll.update_many({'domain_id': domain_id}, {'$unset': {'rating': ''}})
+
+@argmethod.wrap
+async def purge_all_ratings(domain_id: str):
   coll = db.coll('rating')
   await coll.delete_many({'domain_id': domain_id})
   coll = db.coll('rating_changes')
@@ -76,6 +87,7 @@ async def count(**kwargs):
 @argmethod.wrap
 async def ensure_indexes():
   coll = db.coll('rating')
+  await coll.create_index([('domain_id', 1)])
   await coll.create_index([('domain_id', 1), ('contest_id', 1)], unique=True)
   coll = db.coll('rating_changes')
   await coll.create_index([('rating_id', 1), ('uid', 1)], unique=True)

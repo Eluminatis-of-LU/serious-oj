@@ -85,8 +85,8 @@
         <li class="menu__item"><a class="menu__link" href="{{ reverse_url('rating_clear_all') }}">
           <span class="icon icon-close"></span> {{ _('Clear All Rating') }}
         </a></li>
-        <li class="menu__item"><a class="menu__link" href="{{ reverse_url('rating_calculate', tid=tdoc['doc_id']) }}">
-          <span class="icon icon-check"></span> {{ _('Calculate Rating') }}
+        <li class="menu__item"><a class="menu__link" href="{{ reverse_url('rating_add', tid=tdoc['doc_id']) }}">
+          <span class="icon icon-check"></span> {{ _('Add Contest to Rating') }}
         </a></li>
       {% endif %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('wiki_help') }}#contest">
