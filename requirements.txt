@@ -16,3 +16,4 @@ aiohttp-sentry
 aiosmtplib<3.0.0
 plotly
 kaleido
+seqlog

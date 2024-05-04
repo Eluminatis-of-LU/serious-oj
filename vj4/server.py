@@ -7,6 +7,7 @@ import signal
 import socket
 import sys
 import urllib.parse
+import seqlog
 
 from aiohttp import web
 from coloredlogs import syslog
@@ -19,6 +20,8 @@ options.define('syslog', default=False, help='Use syslog instead of stderr for l
 options.define('listen_owner', default='', help='Owner of the unix socket which is server listening to.')
 options.define('listen_group', default='', help='Group of the unix socket which is server listening to.')
 options.define('listen_mode', default='', help='File mode of the unix socket which is server listening to.')
+options.define('seq_server', default='', help='Server address for seq logging.')
+options.define('seq_api_key', default='', help='API key for seq logging.')
 
 _logger = logging.getLogger(__name__)
 
@@ -31,6 +34,15 @@ def main():
   else:
     syslog.enable_system_logging(level=logging.DEBUG if options.debug else logging.INFO,
                                  fmt='vj4[%(process)d] %(programname)s %(levelname).1s %(message)s')
+  if options.seq_server:
+    seqlog.log_to_seq(
+      server_url=options.seq_server,
+      api_key=options.seq_api_key,
+      level=logging.INFO,
+      batch_size=10,
+      auto_flush_timeout=10,  # seconds
+      override_root_logger=True
+    )
   logging.getLogger('aioamqp').setLevel(logging.WARNING)
   logging.getLogger('sockjs').setLevel(logging.WARNING)
   url = urllib.parse.urlparse(options.listen)
