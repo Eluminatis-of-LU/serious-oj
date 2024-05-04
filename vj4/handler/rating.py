@@ -18,7 +18,7 @@ class RatingPurgeHandler(base.Handler):
   async def get(self):
     await rating_model.purge_all_ratings(domain_id=self.domain_id)
     await rank_job.run(domain_id=self.domain_id)
-    self.redirect(self.reverse_url('domain_main'))
+    self.redirect(self.reverse_url('domain_manage_dashboard'))
 
 @app.route('/rating/clear', 'rating_clear_all')
 class RatingClearHandler(base.Handler):
@@ -29,7 +29,7 @@ class RatingClearHandler(base.Handler):
   async def get(self):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
     await rank_job.run(domain_id=self.domain_id)
-    self.redirect(self.reverse_url('domain_main'))
+    self.redirect(self.reverse_url('domain_manage_dashboard'))
 
 @app.route('/rating/{tid:\w{24}}/add', 'rating_add')
 class RatingAddHandler(base.Handler):
@@ -53,7 +53,7 @@ class RatingDeleteHandler(base.Handler):
     await rating_model.delete_rating(domain_id=self.domain_id, contest_id=tid)
     self.redirect(self.reverse_url('contest_detail', tid=tid))
 
-@app.route('/rating/process', 'rating_process')
+@app.route('/rating/process', 'rating_process_all')
 class RatingProcessHandler(base.Handler):
   
   @base.require_perm(builtin.PERM_PROCESS_RATING)
@@ -63,4 +63,4 @@ class RatingProcessHandler(base.Handler):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
     await rating_job.process_all_contest_ratings(domain_id=self.domain_id)
     await rank_job.run(domain_id=self.domain_id, keyword='rating')
-    self.redirect(self.reverse_url('domain_main'))
+    self.redirect(self.reverse_url('domain_manage_dashboard'))
