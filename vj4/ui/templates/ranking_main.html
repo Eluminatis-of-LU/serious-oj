@@ -22,6 +22,7 @@
                 <th class="col--user">{{ _('User') }}</th>
                 <th class="col--rp">{{ _('RP') }}</th>
                 <th class="col--accept">{{ _('Accepted') }}</th>
+                <th class="col--rating">{{ _('Rating') }}</th>
                 <th class="col--bio">{{ _('Bio') }}</th>
               </tr>
             </thead>
@@ -32,6 +33,7 @@
                 <td class="col--user">{{ user.render_inline(udict[dudoc['uid']], dudoc=dudoc) }}</td>
                 <td class="col--rp">{{ dudoc['rp']|default(0.0)|round(2) }}</td>
                 <td class="col--accept">{{ dudoc['num_accept']|default(0) }}</td>
+                <td class="col--rating">{{ dudoc['rating']|default('unrated') }}</td>
                 <td class="col--bio">{{ udict[dudoc['uid']]['bio']|default('')|markdown }}</td>
               </tr>
               {% endfor %}
