@@ -37,7 +37,7 @@ async def add_rating_changes(domain_id: str, contest_id: str, contest_title: str
   await bulk_rating_changes.execute()
   bulk_domain_users = db.coll('domain.user').initialize_unordered_bulk_op()
   for rating_change in rating_changes:
-    bulk_domain_users.find({'domain_id': domain_id, 'uid': rating_change['uid']}).update({'$inc': {'rating': rating_change['new_rating']}})
+    bulk_domain_users.find({'domain_id': domain_id, 'uid': rating_change['uid']}).update({'$set': {'rating': rating_change['new_rating']}})
   await bulk_domain_users.execute()
 
 async def get_latest_rating_changes(domain_id: str, uids: List[int]):
