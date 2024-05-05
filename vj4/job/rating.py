@@ -147,8 +147,6 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
         previous_rating[u['uid']] = u['rating'] if 'rating' in u else 400
     contestants: List[Contestant] = []
     
-    print('previous_rating:', previous_rating)
-    
     for row in rows[1:]:
         uid = row[1]['raw']['_id']
         rank = row[0]['value']
@@ -159,7 +157,6 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
     rating_delta = calculate_rating_changes(contestants)
     rating_changes = []
     for uid in rating_delta:
-        print(uid, '->', rating_delta[uid])
         rating_changes.append({'uid': uid, 'new_rating': previous_rating[uid] + rating_delta[uid], 'delta': rating_delta[uid], 'previous_rating': previous_rating[uid]})
         
     await rating_model.add_rating_changes(domain_id, tid, tdoc['title'], rating_changes, tdoc['begin_at'], datetime.datetime.utcnow())

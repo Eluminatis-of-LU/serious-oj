@@ -11,6 +11,7 @@ from vj4.model import builtin
 from vj4.model import document
 from vj4.model import domain
 from vj4.model import user
+from vj4.model import rating
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import training
@@ -106,7 +107,8 @@ class DomainDashboardHandler(base.Handler):
   async def get(self):
     if not self.has_perm(builtin.PERM_EDIT_PERM):
        self.check_perm(builtin.PERM_EDIT_DESCRIPTION)
-    self.render('domain_manage_dashboard.html')
+    rcdocs = await rating.get_sorted_by_attend_at(self.domain_id)
+    self.render('domain_manage_dashboard.html', rcdocs=rcdocs)
 
 
 @app.route('/domain/edit', 'domain_manage_edit')

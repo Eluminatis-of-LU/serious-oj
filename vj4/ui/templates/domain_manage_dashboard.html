@@ -17,13 +17,27 @@
     <dt>{{ _('Gravatar') }}</dt><dd><img src="{{ handler.domain['gravatar']|gravatar_url }}" width="32" height="32"></dd>
     <dt>{{ _('Name') }}</dt><dd>{{ handler.domain['name'] }}</dd>
     </dl>
-    {% if handler.has_perm(vj4.model.builtin.PERM_PROCESS_RATING) %}
-    <div class="large horizontal">
-      <a class="rounded primary button" href="{{ reverse_url('rating_process_all') }}">{{ _('Process All Rating') }}</a>
-      <a class="rounded primary button" href="{{ reverse_url('rating_clear_all') }}">{{ _('Clear All Rating') }}</a>
-      <a class="rounded button" href="{{ reverse_url('rating_purge_all') }}">{{ _('Purge All Rating') }}</a>
-    </div>
-    {% endif %}
   </div>
+  {% if handler.has_perm(vj4.model.builtin.PERM_PROCESS_RATING) %}
+  <div class="section">
+    <div class="section__header">
+      <h1 class="section__title" data-heading>{{ _('Contest Ratings') }}</h1>
+    </div>
+    <div class="section__body typo">
+      <div class="large horizontal">
+        <a class="rounded primary button" href="{{ reverse_url('rating_process_all') }}">{{ _('Process All Rating') }}</a>
+        <a class="rounded primary button" href="{{ reverse_url('rating_clear_all') }}">{{ _('Clear All Rating') }}</a>
+        <a class="rounded button" href="{{ reverse_url('rating_purge_all') }}">{{ _('Purge All Rating') }}</a>
+      </div>
+      <div class="large horizontal">
+        <ol>
+        {% for rcdoc in rcdocs %}
+          <li><a href="{{ reverse_url('contest_detail', tid=rcdoc['_id']) }}">{{ rcdoc['contest_title'] }}</a></li>
+        {% endfor %}
+        </ol>
+    </div>
+  </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
