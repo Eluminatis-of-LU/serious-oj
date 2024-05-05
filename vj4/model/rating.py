@@ -86,7 +86,7 @@ async def count(**kwargs):
 
 async def get_sorted_by_attend_at(domain_id: str):
   coll = db.coll('rating')
-  return await coll.find({'domain_id': domain_id}).sort('attend_at', -1).to_list()
+  return await coll.find({'domain_id': domain_id}).sort('attend_at', 1).to_list()
 
 @argmethod.wrap
 async def ensure_indexes():
