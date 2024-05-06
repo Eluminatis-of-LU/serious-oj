@@ -128,6 +128,7 @@ async def ensure_indexes():
     coll = db.coll("rating_changes")
     await coll.create_index([("rating_id", 1), ("uid", 1)], unique=True)
     await coll.create_index([("domain_id", 1), ("uid", 1)])
+    await coll.create_index([("rating_id", 1), ("rank", 1)])
     coll = db.coll("domain.user")
     await coll.create_index([("domain_id", 1), ("uid", 1), ("rating", 1)])
 
