@@ -29,37 +29,15 @@ async def add(
     )
 
 
-async def add_rating_changes(
-    domain_id: str,
-    contest_id: str,
-    contest_title: str,
-    rating_changes,
-    attend_at: datetime.datetime,
-    calculated_at: datetime.datetime,
-):
-    coll_rating_changes = db.coll("rating_changes")
-    bulk_rating_changes = coll_rating_changes.initialize_unordered_bulk_op()
-    for rating_change in rating_changes:
-        bulk_rating_changes.insert(
-            {
-                "domain_id": domain_id,
-                "rating_id": contest_id,
-                "uid": rating_change["uid"],
-                "new_rating": rating_change["new_rating"],
-                "previous_rating": rating_change["previous_rating"],
-                "delta": rating_change["delta"],
-                "attend_at": attend_at,
-                "calculated_at": calculated_at,
-                "contest_title": contest_title,
-                "rank": rating_change["rank"],
-            }
-        )
-    await bulk_rating_changes.execute()
+async def add_rating_changes(domain_id: str, rating_changes: List[Dict]):
+    bulk_rating_changes = db.coll("rating_changes").initialize_unordered_bulk_op()
     bulk_domain_users = db.coll("domain.user").initialize_unordered_bulk_op()
     for rating_change in rating_changes:
+        bulk_rating_changes.insert(rating_change)
         bulk_domain_users.find(
             {"domain_id": domain_id, "uid": rating_change["uid"]}
         ).update({"$set": {"rating": rating_change["new_rating"]}})
+    await bulk_rating_changes.execute()
     await bulk_domain_users.execute()
 
 

@@ -169,27 +169,26 @@ async def process_contest_rating(domain_id: str, tid: objectid.ObjectId):
 
     rating_delta = calculate_rating_changes(contestants)
     rating_changes = []
+    calculated_at = datetime.datetime.utcnow()
     for uid in rating_delta:
         rating_changes.append(
             {
+                "domain_id": domain_id,
+                "rating_id": tid,
                 "uid": uid,
                 "new_rating": previous_rating[uid] + rating_delta[uid],
-                "delta": rating_delta[uid],
                 "previous_rating": previous_rating[uid],
-                "contest_title": tdoc["title"],
+                "delta": rating_delta[uid],
                 "attend_at": tdoc["begin_at"],
-                "calculated_at": datetime.datetime.utcnow(),
+                "calculated_at": calculated_at,
+                "contest_title": tdoc["title"],
                 "rank": ranks[uid],
             }
         )
 
     await rating_model.add_rating_changes(
         domain_id,
-        tid,
-        tdoc["title"],
-        rating_changes,
-        tdoc["begin_at"],
-        datetime.datetime.utcnow(),
+        rating_changes
     )
 
     return rating_changes
