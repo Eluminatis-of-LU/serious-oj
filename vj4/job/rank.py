@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 @domainjob.wrap
-async def run(domain_id: str, keyword: str='rp', rank_field: str='rank', level_field: str='level'):
+async def run(domain_id: str, keyword: str='rating', rank_field: str='rank', level_field: str='level'):
   _logger.info('Ranking')
   dudocs = domain.get_multi_user(domain_id=domain_id, fields={'_id': 1, 'uid': 1, keyword: 1}) \
                  .sort(keyword, -1)
