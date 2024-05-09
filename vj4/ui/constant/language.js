@@ -9,7 +9,7 @@ export const LANG_TEXTS = {
   cs: "C# 7 (Mono 6.8)",
   java: "Java 8 (OpenJDK 1.8.0_392)",
   js: "JavaScript (Node.js v12.22.9)",
-  kt: "Kotlin 1.3",
+  kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.10.12)",
   ruby: "Ruby 3 (Ruby 3.0.2)",
 };
@@ -24,7 +24,7 @@ export const LANG_TEXTS_ALLTIME = {
   cs_bflat: "C# 11 (Bflat .NET 7.0.2)",
   java: "Java 8 (OpenJDK 1.8.0_392)",
   js: "JavaScript (Node.js v12.22.9)",
-  kt: "Kotlin 1.3",
+  kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.10.12)",
   ruby: "Ruby 3 (Ruby 3.0.2)",
 };
