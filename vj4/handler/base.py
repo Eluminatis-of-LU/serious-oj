@@ -115,6 +115,7 @@ class HandlerBase(setting.SettingMixin):
       return True
     if 'shared_uids' in pdoc and self.user['_id'] in pdoc['shared_uids']:
       return True
+    return False
 
   def can_see_pdoc(self, pdoc):
     if not pdoc:

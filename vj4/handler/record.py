@@ -156,7 +156,7 @@ class RecordDetailHandler(RecordMixin, base.Handler):
     except error.ProblemNotFoundError:
       pdoc = {}
     if (not self.own(rdoc, field='uid')
-        and not self.can_access_pdoc(pdoc)
+        and not self.can_see_pdoc(pdoc)
         and not self.has_perm(builtin.PERM_READ_RECORD_CODE)
         and not self.has_priv(builtin.PRIV_READ_RECORD_CODE)):
       del rdoc['code']
