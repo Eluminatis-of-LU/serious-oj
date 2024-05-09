@@ -181,7 +181,8 @@
             "javascript",
             "go",
             "ruby",
-            "csharp"
+            "csharp",
+            "kotlin"
           ],
           "plugins": [
             "toolbar",
