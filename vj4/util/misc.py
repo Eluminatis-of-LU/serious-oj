@@ -8,7 +8,7 @@ from urllib import parse
 
 from vj4.util import options
 
-markdown_parser = mistune.create_markdown(escape=True, hard_wrap=True, renderer='html', plugins=['table', 'url', 'math'])
+markdown_parser = mistune.create_markdown(escape=True, hard_wrap=True, renderer='html', plugins=['table', 'url', 'math', 'spoiler'])
 
 FS_RE = re.compile(r'\(vijos\:\/\/fs\/([0-9a-f]{40,})\)')
 
