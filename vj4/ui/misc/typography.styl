@@ -436,4 +436,14 @@ h1, h2, h3, h4, h5, h6
   &.darker
     color: darken(black, 40%)
 
+.spoiler
+  background: black;
+  color: transparent;
+  cursor: help;
+  user-select: none;
+  transition: background 0.3s ease 0.2s, color 0.2s ease 0.25s;
+  &:hover, &:focus
+    background: #e8e8e8;
+    color: inherit;
+   
 
