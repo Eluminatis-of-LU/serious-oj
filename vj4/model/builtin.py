@@ -492,5 +492,9 @@ DEFAULT_VNODES = collections.OrderedDict([
         {'pic': None, 'name': 'C#'},
         {'pic': None, 'name': 'Java'},
         {'pic': None, 'name': 'Python3'},
+    ]),
+    ('Notes', [
+        {'pic': None, 'name': 'Editorials'},
+        {'pic': None, 'name': 'Tutorials'},
     ])
 ])
