@@ -456,13 +456,14 @@ PROBLEM_CATEGORIES = collections.OrderedDict([
         'LCS',
         'LIS'
     ]),
-    ('Graph_Theory', ['DFS', 'BFS', 'Shortest_Path']),
-    ('Math', ['Number_Theory', 'Combinatorics', 'Geometry', 'Basic_Math']),
-    ('Implementation', ['Simulation', 'String_Processing',
-     'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
+    ('Graph_Theory', ['DFS', 'BFS', 'TREE', 'Shortest_Path']),
+    ('Math', ['Number_Theory', 'Probability', 'Combinatorics', 'Geometry', 'Basic_Math']),
+   ('Bit manipulation', ['BIT_MASKS']),
+    ('Implementation', ['Simulation', 'Games', 'String_Processing',
+     'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force', 'Two Pointer', 'Constructive algorithm']),
     ('Greedy', ['Greedy']),
-    ('Data_Structure', ['Segment_Tree', 'Binary_Indexed_Tree', 'Disjoint_Set',
-     'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table']),
+    ('Data_Structure', ['Segment_Tree','Divide and Conquer', 'Binary_Indexed_Tree', 'Disjoint_Set',
+     'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table', 'Binary_Search', 'Ternary_Search']),
 ])
 PROBLEM_SUB_CATEGORIES = {}
 for category, sub_categories in PROBLEM_CATEGORIES.items():
