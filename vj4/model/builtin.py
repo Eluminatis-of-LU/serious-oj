@@ -456,8 +456,8 @@ PROBLEM_CATEGORIES = collections.OrderedDict([
         'LCS',
         'LIS'
     ]),
-    ('Graph_Theory', ['DFS', 'BFS', 'Shortest_Path']),
-    ('Math', ['Number_Theory', 'Combinatorics', 'Geometry', 'Basic_Math']),
+    ('Graph_Theory', ['DFS', 'BFS', 'DSU' 'Shortest_Path']),
+    ('Math', ['Number_Theory', 'Probability', 'BIT_MASK' 'Combinatorics', 'Geometry', 'Basic_Math']),
     ('Implementation', ['Simulation', 'String_Processing',
      'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
     ('Greedy', ['Greedy']),
