@@ -456,13 +456,14 @@ PROBLEM_CATEGORIES = collections.OrderedDict([
         'LCS',
         'LIS'
     ]),
-    ('Graph_Theory', ['DFS', 'BFS', 'Shortest_Path']),
-    ('Math', ['Number_Theory', 'Combinatorics', 'Geometry', 'Basic_Math']),
-    ('Implementation', ['Simulation', 'String_Processing',
-     'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force']),
-    ('Greedy', ['Greedy']),
-    ('Data_Structure', ['Segment_Tree', 'Binary_Indexed_Tree', 'Disjoint_Set',
-     'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table']),
+    ('Graph_Theory', ['DFS', 'BFS', 'TREE', 'Shortest_Path']),
+     ('Math', ['Number_Theory', 'Probability', 'Combinatorics', 'Geometry', 'Basic_Math']),
+     ('Bit_Manipulation', ['BIT_MASKS']),
+     ('Implementation', ['Simulation', 'Games', 'String_Processing',
+     'Data_Structure', 'Ad_Hoc', 'Sorting', 'Brute_Force', 'Two_Pointer', 'Constructive_Algorithm']),
+     ('Greedy', ['Greedy']),
+     ('Data_Structure', ['Segment_Tree','Divide_and_Conquer', 'Binary_Indexed_Tree', 'Disjoint_Set',
+     'Sparse_Table', 'Trie', 'Heap', 'Stack', 'Queue', 'Hash_Table', 'Binary_Search', 'Ternary_Search']),
 ])
 PROBLEM_SUB_CATEGORIES = {}
 for category, sub_categories in PROBLEM_CATEGORIES.items():
