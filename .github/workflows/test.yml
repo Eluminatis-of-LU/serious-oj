@@ -37,7 +37,7 @@ jobs:
         run: yarn build --constant
 
       - name: Upload Python constant
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: vj4-constant
           path: vj4/constant/
@@ -62,7 +62,7 @@ jobs:
         run: yarn build:production
 
       - name: Upload uibuild
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: uibuild
           path: |
