@@ -165,14 +165,14 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         rdoc = tsddict[pid]['rid']
         col_accepted = '+'
         if tsddict[pid]['naccept'] > 0:
-          col_accepted += '(-{0})'.format(tsddict[pid]['naccept'])
+          col_accepted += '{0}'.format(tsddict[pid]['naccept'])
         col_time = tsddict[pid]['time']
         col_time_str = misc.format_seconds(col_time)
       else:
         rdoc = None
         col_accepted = '-' + str(tsddict[pid]['naccept']) if pid in tsddict else '-'
-        col_time = '-'
-        col_time_str = '-'
+        col_time = ''
+        col_time_str = ''
       if is_export:
         row.append({'type': 'string', 'value': col_accepted})
         row.append({'type': 'string', 'value': col_time})
