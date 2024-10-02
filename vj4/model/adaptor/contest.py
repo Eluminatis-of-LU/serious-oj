@@ -187,10 +187,12 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         row.append({'type': 'record',
                     'value': '{0}\n{1}'.format(col_accepted, col_time_str), 'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid})
     rows.append(row)
+  pidx = 0
   for column in rows[0]:
     if column['type'] == 'problem_detail':
       pid = column['raw']['doc_id']
-      column['value'] = '#{0}\n{1}\\{2}'.format(index + 1, pstats[pid]['accept'], pstats[pid]['attempt'])
+      pidx += 1
+      column['value'] = '#{0}\n{1}\\{2}'.format(pidx, pstats[pid]['accept'], pstats[pid]['attempt'])
       
   return rows
 
