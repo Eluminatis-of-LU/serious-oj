@@ -177,7 +177,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         row.append({'type': 'string', 'value': col_time_str})
       else:
         row.append({'type': 'record',
-                    'value': '{0}\n{1}'.format(col_accepted, col_time_str), 'raw': rdoc})
+                    'value': '{0}\n{1}'.format(col_accepted, col_time_str), 'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid})
     rows.append(row)
   return rows
 

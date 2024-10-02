@@ -58,7 +58,8 @@
               {% if column['raw'] %}
                 <a class="record-status--text {{record_color}}" href="{{ reverse_url('record_detail', rid=column['raw']) }}">{{ column['value']|nl2br }}</a>
               {% else %}
-                <a class="record-status--text {{record_color}}">{{ column['value']|nl2br }}</a>
+                <a class="record-status--text {{record_color}}"
+                href="{{ reverse_url('record_main') }}?uid_or_name={{ column['uid'] }}&pid={{ column['pid'] }}&tid={{ tdoc['doc_id'] }}">{{ column['value']|nl2br }}</a>
               {% endif %}
               {% else %}
                 {{ column['value']|nl2br }}
