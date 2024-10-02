@@ -131,7 +131,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns.append({'type': 'solved_problems', 'value': _('Solved Problems')})
   if is_export:
     columns.append({'type': 'total_time', 'value': _('Total Time (Seconds)')})
-    columns.append({'type': 'total_time_str', 'value': _('Total Time')})
+  columns.append({'type': 'total_time_str', 'value': _('Total Time')})
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_flag',
@@ -159,7 +159,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
                 'value': tsdoc.get('accept', 0)})
     if is_export:
       row.append({'type': 'string', 'value': tsdoc.get('time', 0.0)})
-      row.append({'type': 'string', 'value': misc.format_seconds(tsdoc.get('time', 0.0))})
+    row.append({'type': 'string', 'value': misc.format_seconds(tsdoc.get('time', 0.0))})
     for pid in tdoc['pids']:
       if tsddict.get(pid, {}).get('accept', False):
         rdoc = tsddict[pid]['rid']
