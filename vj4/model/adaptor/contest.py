@@ -163,7 +163,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     for pid in tdoc['pids']:
       if tsddict.get(pid, {}).get('accept', False):
         rdoc = tsddict[pid]['rid']
-        col_accepted = _('Accepted')
+        col_accepted = '+'
+        if tsddict[pid]['naccept'] > 0:
+          col_accepted += '(-{0})'.format(tsddict[pid]['naccept'])
         col_time = tsddict[pid]['time']
         col_time_str = misc.format_seconds(col_time)
       else:
