@@ -192,7 +192,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     if column['type'] == 'problem_detail':
       pid = column['raw']['doc_id']
       pidx += 1
-      column['value'] = '#{0}\n{1}\\{2}'.format(pidx, pstats[pid]['accept'], pstats[pid]['attempt'])
+      column['value'] = '#{0}\n{1}/{2}'.format(pidx, pstats[pid]['accept'], pstats[pid]['attempt'])
       
   return rows
 
