@@ -168,7 +168,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         col_time_str = misc.format_seconds(col_time)
       else:
         rdoc = None
-        col_accepted = '-'
+        col_accepted = '-' + str(tsddict[pid]['naccept']) if pid in tsddict else '-'
         col_time = '-'
         col_time_str = '-'
       if is_export:
