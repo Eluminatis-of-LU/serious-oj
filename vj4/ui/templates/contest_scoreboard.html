@@ -48,21 +48,17 @@
               {% if column['type'] == 'user' %}
                 {{ user.render_inline(column['raw'], badge=false) }}
               {% elif column['type'] == 'record' %}
-              {% if 'Accepted' in column['value']|string %}
-                 {% set record_color = 'pass' %}
-              {% elif column['value']|int > 0 %}
-                {% set record_color = 'pass' if column['value']|int == 100 else 'progress' %}
-              {% elif '-\n-' in column['value']|string %}
-                {% set record_color = '' %}
-              {% else %}
-                {% set record_color = 'fail' %}
-              {% endif %}
-              {% if column['raw'] %}
-                <a class="record-status--text {{record_color}}" href="{{ reverse_url('record_detail', rid=column['raw']) }}">{{ column['value']|nl2br }}</a>
-              {% else %}
+                {% if 'Accepted' in column['value']|string %}
+                  {% set record_color = 'pass' %}
+                {% elif column['value']|int > 0 %}
+                  {% set record_color = 'pass' if column['value']|int == 100 else 'progress' %}
+                {% elif '-\n-' in column['value']|string %}
+                  {% set record_color = '' %}
+                {% else %}
+                  {% set record_color = 'fail' %}
+                {% endif %}
                 <a class="record-status--text {{record_color}}"
                 href="{{ reverse_url('record_main') }}?uid_or_name={{ column['uid'] }}&pid={{ column['pid'] }}&tid={{ tdoc['doc_id'] }}">{{ column['value']|nl2br }}</a>
-              {% endif %}
               {% else %}
                 {{ column['value']|nl2br }}
               {% endif %}
