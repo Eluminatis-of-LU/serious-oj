@@ -189,7 +189,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':
-      pid = column['raw']
+      pid = column['raw']['doc_id']
       column['value'] = '#{0}\n{1}\\{2}'.format(index + 1, pstats[pid]['accept'], pstats[pid]['attempt'])
       
   return rows
