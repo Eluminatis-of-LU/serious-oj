@@ -93,7 +93,6 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
   columns.append({'type': 'user', 'value': _('User')})
-  columns.append({'type': 'display_name', 'value': _('Display Name')})
   columns.append({'type': 'total_score', 'value': _('Total Score')})
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
@@ -112,8 +111,6 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']]})
-    row.append({'type': 'display_name',
-                'value': dudict.get(tsdoc['uid'], {}).get('display_name', '')})
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
       row.append({'type': 'record',
@@ -127,7 +124,6 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
   columns.append({'type': 'user', 'value': _('User')})
-  columns.append({'type': 'display_name', 'value': _('Display Name')})
   columns.append({'type': 'solved_problems', 'value': _('Solved Problems')})
   if is_export:
     columns.append({'type': 'total_time', 'value': _('Total Time (Seconds)')})
@@ -154,8 +150,6 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']]})
-    row.append({'type': 'display_name',
-                'value': dudict.get(tsdoc['uid'], {}).get('display_name', '')})
     row.append({'type': 'string',
                 'value': tsdoc.get('accept', 0)})
     if is_export:
@@ -201,7 +195,6 @@ def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdi
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
   columns.append({'type': 'user', 'value': _('User')})
-  columns.append({'type': 'display_name', 'value': _('Display Name')})
   columns.append({'type': 'total_score', 'value': _('Score')})
   if is_export:
     columns.append({'type': 'total_original_score', 'value': _('Original Score')})
@@ -230,8 +223,6 @@ def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdi
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']]})
-    row.append({'type': 'display_name',
-                'value': dudict.get(tsdoc['uid'], {}).get('display_name', '')})
     row.append({'type': 'string',
                 'value': tsdoc.get('penalty_score', 0)})
     if is_export:
