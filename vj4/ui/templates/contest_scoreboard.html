@@ -58,7 +58,7 @@
                   {% set record_color = 'fail' %}
                 {% endif %}
                 <a class="record-status--text {{record_color}}"
-                href="{{ reverse_url('record_main') }}?uid_or_name={{ column['uid'] }}&pid={{ column['pid'] }}&tid={{ tdoc['doc_id'] }}">{{ column['value']|nl2br }}</a>
+                href="{{ reverse_url('record_main') }}?uid_or_name={{ column['uid'] }}&pid={{ column['pid'] }}">{{ column['value']|nl2br }}</a>
               {% else %}
                 {{ column['value']|nl2br }}
               {% endif %}
