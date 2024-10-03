@@ -33,8 +33,8 @@
               <p>
                 {% if 'country' in udoc and udoc['country'] %}
                 <img
-                  src="https://flagcdn.com/w20/{{ udoc['country'] }}.png"
-                  srcset="https://flagcdn.com/w40/{{ udoc['country'] }}.png 2x"
+                  src="https://flagcdn.com/w20/{{ udoc['country']|lower }}.png"
+                  srcset="https://flagcdn.com/w40/{{ udoc['country']|lower }}.png 2x"
                   width="20" alt="{{ vj4.constant.model.COUNTRY_NAMES[udoc['country']] }}">
                 &nbsp;{{ vj4.constant.model.COUNTRY_NAMES[udoc['country']] }}
                   {% if 'institute' in udoc and udoc['institute'] %}
