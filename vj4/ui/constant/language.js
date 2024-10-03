@@ -5,7 +5,6 @@ export const LANG_TEXTS = {
   c11: "C11 (GCC 13.2.0)",
   cc11: "C++11 (G++ 13.2.0)",
   cc: "C++17 (G++ 13.2.0)",
-  cc20: "C++20 (G++ 13.2.0)",
   cs: "C# 7 (Mono 6.8)",
   java: "Java 8 (OpenJDK 1.8.0_422)",
   js: "JavaScript (Node.js v18.19.1)",
