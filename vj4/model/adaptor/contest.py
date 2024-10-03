@@ -184,7 +184,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   for column in rows[0]:
     if column['type'] == 'problem_detail':
       pid = column['raw']['doc_id']
-      column['stats'] = '{1}/{2}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
+      column['stats'] = '{0}/{1}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
       
   return rows
 
