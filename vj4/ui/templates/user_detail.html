@@ -36,10 +36,9 @@
                   src="https://flagcdn.com/w20/{{ udoc['country']|lower }}.png"
                   srcset="https://flagcdn.com/w40/{{ udoc['country']|lower }}.png 2x"
                   width="20" alt="{{ vj4.constant.country.COUNTRIES[udoc['country']] }}">
-                &nbsp;{{ vj4.constant.country.COUNTRIES[udoc['country']] }}
-                  {% if 'institute' in udoc and udoc['institute'] %},&nbsp;@{{ udoc['institute'] }}
-                  {% endif %}
-                {% elif 'institute' in udoc and udoc['institute'] %}
+                &nbsp;{{ vj4.constant.country.COUNTRIES[udoc['country']] + ', ' if 'institute' in udoc and udoc['institute'] else '' }}
+                {% endif %}
+                {% if 'institute' in udoc and udoc['institute'] %}
                   @{{ udoc['institute'] }}
                 {% endif %}
               </p>
