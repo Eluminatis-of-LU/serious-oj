@@ -74,6 +74,22 @@ async def rejudge(record_id: objectid.ObjectId, enqueue: bool=True):
   if enqueue:
     await queue.publish('judge', rid=doc['_id'])
 
+@argmethod.wrap
+async def rejudge_all(domain_id: str, uid: str='', pid: str='', tid: str=''):
+  query = dict()
+  if uid:
+    query['uid'] = int(uid)
+  if pid or tid:
+    query['domain_id'] = domain_id
+    if pid:
+      query['pid'] = document.convert_doc_id(pid)
+    if tid:
+      query['tid'] = document.convert_doc_id(tid)
+  rdocs = get_all_multi(**query, get_hidden=True, fields={'_id': 1}).sort([('_id', -1)]).batch_size(100)
+  async for rdoc in rdocs:
+    await rejudge(rdoc['_id'])
+
+
 
 @argmethod.wrap
 def get_all_multi(end_id: objectid.ObjectId=None, get_hidden: bool=False, *, fields=None,
