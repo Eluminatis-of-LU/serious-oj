@@ -85,7 +85,7 @@ async def rejudge_all(domain_id: str, uid: str='', pid: str='', tid: str=''):
       query['pid'] = document.convert_doc_id(pid)
     if tid:
       query['tid'] = document.convert_doc_id(tid)
-  rdocs = get_all_multi(**query, get_hidden=True, fields={'_id'}).sort([('_id', -1)]).batch_size(100)
+  rdocs = get_all_multi(**query, get_hidden=True, fields={'_id': 1}).sort([('_id', -1)]).batch_size(100)
   async for rdoc in rdocs:
     await rejudge(rdoc['_id'])
 
