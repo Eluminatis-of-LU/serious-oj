@@ -11,6 +11,7 @@ export const LANG_TEXTS = {
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
+  rust2021: "Rust 2021 (Rust 1.81.0)",
 };
 
 export const LANG_TEXTS_ALLTIME = {
@@ -26,6 +27,7 @@ export const LANG_TEXTS_ALLTIME = {
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
+  rust2021: "Rust 2021 (Rust 1.81.0)",
 };
 
 export const LANG_HIGHLIGHT_ID = {
@@ -41,6 +43,7 @@ export const LANG_HIGHLIGHT_ID = {
   py3: "python",
   js: "javascript",
   kt: "kotlin",
+  rust2021: "rust",
 };
 
 export const LANG_CODEMIRROR_MODES = {
@@ -56,5 +59,6 @@ export const LANG_CODEMIRROR_MODES = {
   py3: "text/x-python",
   js: "text/javascript",
   kt: "text/x-kotlin",
+  rust2021: "text/rust",
 };
 attachObjectMeta(LANG_CODEMIRROR_MODES, "exportToPython", false);
