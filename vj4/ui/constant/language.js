@@ -11,7 +11,7 @@ export const LANG_TEXTS = {
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
-  rust2021: "Rust 2021 (Rust 1.81.0)",
+  rust2021: "Rust 2021 (Rust 1.75.0)",
 };
 
 export const LANG_TEXTS_ALLTIME = {
@@ -27,7 +27,7 @@ export const LANG_TEXTS_ALLTIME = {
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
-  rust2021: "Rust 2021 (Rust 1.81.0)",
+  rust2021: "Rust 2021 (Rust 1.75.0)",
 };
 
 export const LANG_HIGHLIGHT_ID = {
