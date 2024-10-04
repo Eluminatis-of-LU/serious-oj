@@ -38,7 +38,7 @@
                   src="https://flagcdn.com/w20/{{ udoc['country']|lower }}.png"
                   srcset="https://flagcdn.com/w40/{{ udoc['country']|lower }}.png 2x"
                   width="20" alt="{{ vj4.constant.country.COUNTRIES[udoc['country']] }}">
-                &nbsp;{{ vj4.constant.country.COUNTRIES[udoc['country']] + ', ' has_institute else '' }}
+                &nbsp;{{ vj4.constant.country.COUNTRIES[udoc['country']] + ', ' if has_institute else '' }}
                 {% endif %}
                 {% if has_institute %}
                   @{{ udoc['institute'] }}
