@@ -10,6 +10,7 @@ Usage example:
 import collections
 
 from vj4 import db
+from vj4 import mq
 from vj4.util import options
 
 options.define('pretty', default=False, help='Pretty print the result.')
