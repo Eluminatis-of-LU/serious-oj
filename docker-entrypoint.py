@@ -7,7 +7,8 @@ vj4_global_args = [
     'db-name',
     'db-username',
     'db-password',
-    'db-auth-source'
+    'db-auth-source',
+    'mq-host'
 ]
 args = sys.argv[1:]
 cmd = args[0] if len(args) > 0 else 'vj4.server'
