@@ -41,7 +41,7 @@
                 &nbsp;{{ vj4.constant.country.COUNTRIES[udoc['country']] + ', ' if has_institute else '' }}
                 {% endif %}
                 {% if has_institute %}
-                  @{{ udoc['institute'] }}
+                  @{{ 'Eluminatis of LU' if udoc['institute'] == 'ELU' else vj4.constant.institute.INSTITUTES[udoc['institute']] }}
                 {% endif %}
               </p>
               <div class="profile-header__contact-bar">
