@@ -1,5 +1,6 @@
 // ISO 3166-1 alpha-2 country code
 export const COUNTRIES = {
+    _: "",
     AF: "Afghanistan",
     AX: "Åland Islands",
     AL: "Albania",
