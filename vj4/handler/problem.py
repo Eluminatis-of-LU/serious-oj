@@ -305,7 +305,8 @@ class ProblemSubmitHandler(base.Handler):
       self.check_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN)
     rid = await record.add(self.domain_id, pdoc['doc_id'], constant.record.TYPE_SUBMISSION,
                            self.user['_id'], lang, code)
-    await self.set_settings(code_lang=lang)
+    if self.get_setting('code_lang') != lang:
+      await self.set_settings(code_lang=lang)
     self.json_or_redirect(self.reverse_url('record_detail', rid=rid))
 
 
