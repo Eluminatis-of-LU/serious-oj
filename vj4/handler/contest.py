@@ -222,6 +222,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     rid = await record.add(self.domain_id, pdoc['doc_id'], constant.record.TYPE_SUBMISSION,
                            self.user['_id'], lang, code,
                            ttype=document.TYPE_CONTEST, tid=tdoc['doc_id'], hidden=True)
+    if self.get_setting('code_lang') != lang:
+      await self.set_settings(code_lang=lang)
     await contest.update_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'],
                                 rid, pdoc['doc_id'], False, 0)
     if not self.can_show_record(tdoc):
