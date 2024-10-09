@@ -296,8 +296,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
     self.render('contest_edit.html', rules=rules,
                 date_text=dt.strftime('%Y-%m-%d'),
                 time_text=dt.strftime('%H:%M'),
-                pids=contest._format_pids([1000, 1001],
-                password=''))
+                pids=contest._format_pids([1000, 1001]),
+                password='')
 
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CONTEST)
