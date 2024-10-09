@@ -47,6 +47,8 @@
             <input type="password" name="password" placeholder="{{ _('Password') }}" 
               class="textbox" style="margin: auto;" required>
           </div>
+          {% elif %}
+          <input type="hidden" name="password" value="">
           {% endif %}
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
