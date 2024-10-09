@@ -94,7 +94,7 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
   @base.require_perm(builtin.PERM_ATTEND_CONTEST)
   @base.post_argument
   @base.require_csrf_token
-  @base.sanitizent
+  @base.sanitize
   async def post_attend(self, *, tid: objectid.ObjectId, password=''):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if self.is_done(tdoc):
