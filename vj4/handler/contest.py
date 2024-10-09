@@ -92,12 +92,15 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
   @base.route_argument
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_ATTEND_CONTEST)
+  @base.post_argument
   @base.require_csrf_token
-  @base.sanitize
-  async def post_attend(self, *, tid: objectid.ObjectId):
+  @base.sanitizent
+  async def post_attend(self, *, tid: objectid.ObjectId, password=''):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if self.is_done(tdoc):
       raise error.ContestNotLiveError(tdoc['doc_id'])
+    if password != tdoc.get('password', ''):
+      raise error.VerifyPasswordError('password')
     await contest.attend(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
     self.json_or_redirect(self.url)
 
@@ -293,7 +296,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
     self.render('contest_edit.html', rules=rules,
                 date_text=dt.strftime('%Y-%m-%d'),
                 time_text=dt.strftime('%H:%M'),
-                pids=contest._format_pids([1000, 1001]))
+                pids=contest._format_pids([1000, 1001],
+                password=''))
 
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CONTEST)
@@ -302,7 +306,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
   @base.sanitize
   async def post(self, *, title: str, content: str, rule: int,
                  begin_at_date: str, begin_at_time: str, duration: float,
-                 pids: str):
+                 pids: str, password: str):
     if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
     try:
@@ -316,7 +320,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
     pids = contest._parse_pids(pids)
     await self.verify_problems(pids)
     tid = await contest.add(self.domain_id, document.TYPE_CONTEST, title, content, self.user['_id'],
-                            rule, begin_at, end_at, pids)
+                            rule, begin_at, end_at, pids, password)
     await self.hide_problems(pids)
     self.json_or_redirect(self.reverse_url('contest_detail', tid=tid))
 
