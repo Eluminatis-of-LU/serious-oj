@@ -96,6 +96,7 @@ async def run(domain_id: str):
       _logger.info('Committing')
       await status_bulk.execute()
     _logger.info('Updating problem')
+    _logger.info(pdoc_update)
     await document.set(domain_id, document.TYPE_PROBLEM, pdoc['doc_id'], **pdoc_update)
   # users' num_submit, num_accept
   execute = False
