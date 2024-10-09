@@ -42,6 +42,14 @@
       <li class="menu__item">
     {% if handler.has_perm(vj4.model.builtin.PERM_ATTEND_CONTEST) and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
         <form action="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" method="POST">
+          {% if tdoc.get('password', '') != '' %}
+          <div style="padding: 12px 15px">
+            <input type="password" name="password" placeholder="{{ _('Password') }}" 
+              class="textbox" style="margin: auto;" required>
+          </div>
+          {% else %}
+          <input type="hidden" name="password" value="">
+          {% endif %}
           <input type="hidden" name="operation" value="attend">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
           <button class="menu__link" type="submit">
