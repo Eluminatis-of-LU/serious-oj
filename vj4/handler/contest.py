@@ -95,10 +95,11 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post_attend(self, *, tid: objectid.ObjectId, password=''):
+  async def post_attend(self, *, tid: objectid.ObjectId, password: str):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if self.is_done(tdoc):
       raise error.ContestNotLiveError(tdoc['doc_id'])
+    
     if password != tdoc.get('password', ''):
       raise error.VerifyPasswordError('password')
     await contest.attend(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
