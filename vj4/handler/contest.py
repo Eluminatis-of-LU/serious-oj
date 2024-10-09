@@ -319,7 +319,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
     pids = contest._parse_pids(pids)
     await self.verify_problems(pids)
     tid = await contest.add(self.domain_id, document.TYPE_CONTEST, title, content, self.user['_id'],
-                            rule, begin_at, end_at, pids, password)
+                            rule, begin_at, end_at, pids, password=password)
     await self.hide_problems(pids)
     self.json_or_redirect(self.reverse_url('contest_detail', tid=tid))
 
@@ -355,7 +355,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
   @base.sanitize
   async def post(self, *, tid: objectid.ObjectId, title: str, content: str, rule: int,
                  begin_at_date: str=None, begin_at_time: str=None, duration: float,
-                 pids: str):
+                 pids: str, password: str):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
       self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -372,7 +372,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
     pids = contest._parse_pids(pids)
     await self.verify_problems(pids)
     await contest.edit(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], title=title, content=content,
-                       rule=rule, begin_at=begin_at, end_at=end_at, pids=pids)
+                       rule=rule, begin_at=begin_at, end_at=end_at, pids=pids, password=password)
     await self.hide_problems(pids)
     if tdoc['begin_at'] != begin_at \
         or tdoc['end_at'] != end_at \
