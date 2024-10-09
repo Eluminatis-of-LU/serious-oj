@@ -14,7 +14,7 @@
             {{ form.form_text(columns=4, label='Duration (hours)', name='duration', value=duration|default('3'), row=False) }}
           </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
-          {{ form.form_text(columns=None, label='Password', name='password', value=password) }}
+          {{ form.form_text(columns=None, label='Password', name='password', value=tdoc['password']|default('')) }}
           {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
