@@ -66,7 +66,7 @@ async def run(domain_id: str):
   async for pdoc in pdocs:
     _logger.info('Problem {0}'.format(pdoc['doc_id']))
     # TODO(twd2): ignore no effect statuses like system error, ...
-    rdocs = record.get_multi(domain_id=domain_id, pid=pdoc['doc_id'],
+    rdocs = record.get_multi(domain_id=domain_id, pid=pdoc['doc_id'], get_hidden=True,
                              type=constant.record.TYPE_SUBMISSION,
                              fields={'_id': 1, 'uid': 1,
                                      'status': 1, 'score': 1}).sort('_id', 1)
