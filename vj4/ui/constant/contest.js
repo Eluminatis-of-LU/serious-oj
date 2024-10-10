@@ -5,6 +5,7 @@ export const CONTEST_TYPE_HOMEWORK = 2;
 
 export const RULE_OI = 2;
 export const RULE_ACM = 3;
+export const RULE_CF = 4;
 export const RULE_ASSIGNMENT = 11;
 
 export const DOCTYPE_TO_CTYPE = {
@@ -21,6 +22,7 @@ export const CTYPE_TO_DOCTYPE = {
 export const CONTEST_RULES = [
   RULE_OI,
   RULE_ACM,
+  RULE_CF,
 ];
 
 export const HOMEWORK_RULES = [
@@ -30,6 +32,7 @@ export const HOMEWORK_RULES = [
 export const RULE_ID = {
   [RULE_OI]: 'oi',
   [RULE_ACM]: 'acm',
+  [RULE_CF]: 'cf',
   [RULE_ASSIGNMENT]: 'assignment',
 };
 attachObjectMeta(RULE_ID, 'intKey', true);
@@ -37,6 +40,7 @@ attachObjectMeta(RULE_ID, 'intKey', true);
 export const RULE_TEXTS = {
   [RULE_OI]: 'OI',
   [RULE_ACM]: 'ACM/ICPC',
+  [RULE_CF]: 'Cf style',
   [RULE_ASSIGNMENT]: 'Assignment',
 };
 attachObjectMeta(RULE_TEXTS, 'intKey', true);
