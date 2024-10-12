@@ -36,6 +36,9 @@ async def user_in_problem(uid: int, domain_id: str, pid: document.convert_doc_id
   _logger.info(repr(new_psdoc))
   post_coros = []
   delta_num_ac_submission = num_ac_submission - pdoc.get('num_ac_submission', 0)
+  _logger.info('delta_num_ac_submission: {0}'.format(delta_num_ac_submission))
+  _logger.info('num_ac_submission: {0}'.format(num_ac_submission))
+  _logger.info('pdoc["num_ac_submission"]: {0}'.format(pdoc.get('num_ac_submission', 0)))
   if delta_num_ac_submission != 0:
     post_coros.append(problem.inc(domain_id, pid, 'num_ac_submission', delta_num_ac_submission))
   if await document.rev_set_status(domain_id, document.TYPE_PROBLEM, pid, uid,
