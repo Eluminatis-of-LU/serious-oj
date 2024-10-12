@@ -83,6 +83,9 @@ async def run(domain_id: str):
         psdocs[rdoc['uid']]['status'] = rdoc['status']
         psdocs[rdoc['uid']]['rid'] = rdoc['_id']
         if accept:
+          pdoc_update['num_problem_solved'] += 1
+          dudoc_updates[rdoc['uid']]['num_problem_solved'] += 1
+      if accept:
           pdoc_update['num_accept'] += 1
           dudoc_updates[rdoc['uid']]['num_accept'] += 1
     status_bulk = status_coll.initialize_unordered_bulk_op()

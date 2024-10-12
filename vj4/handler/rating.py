@@ -17,7 +17,7 @@ class RatingPurgeHandler(base.Handler):
   @base.sanitize
   async def get(self):
     await rating_model.purge_all_ratings(domain_id=self.domain_id)
-    await rank_job.run(domain_id=self.domain_id, keyword='num_accept')
+    await rank_job.run(domain_id=self.domain_id, keyword='num_problem_solved')
     self.redirect(self.reverse_url('domain_manage_dashboard'))
 
 @app.route('/rating/clear', 'rating_clear_all')
@@ -28,7 +28,7 @@ class RatingClearHandler(base.Handler):
   @base.sanitize
   async def get(self):
     await rating_model.clear_all_ratings(domain_id=self.domain_id)
-    await rank_job.run(domain_id=self.domain_id, keyword='num_accept')
+    await rank_job.run(domain_id=self.domain_id, keyword='num_problem_solved')
     self.redirect(self.reverse_url('domain_manage_dashboard'))
 
 @app.route('/rating/{tid:\w{24}}/add', 'rating_add')

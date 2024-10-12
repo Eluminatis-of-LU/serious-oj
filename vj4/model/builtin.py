@@ -423,7 +423,6 @@ USER_GUEST = {
 }
 DOMAIN_USER_GUEST = {
     # in every domain:
-    'rp': 0.0,
     'rank': 0,
     'role': ROLE_GUEST,
     'level': 0,

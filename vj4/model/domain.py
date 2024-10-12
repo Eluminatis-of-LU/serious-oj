@@ -352,8 +352,6 @@ async def ensure_indexes():
   await user_coll.create_index([('domain_id', 1),
                                 ('role', 1)], sparse=True)
   await user_coll.create_index([('domain_id', 1),
-                                ('rp', -1)])
-  await user_coll.create_index([('domain_id', 1),
                                 ('rank', 1)])
 
 
