@@ -60,7 +60,7 @@ async def _post_judge(handler, rdoc):
           await problem.inc(rdoc['domain_id'], rdoc['pid'], 'num_accept', 1)
           post_coros.append(domain.inc_user(rdoc['domain_id'], rdoc['uid'], num_accept=1))
       if accept:
-        await problem.inc(rdoc['domain_id'], rdoc['pid'], 'num_ac_submisison', 1)
+        await problem.inc(rdoc['domain_id'], rdoc['pid'], 'num_ac_submit', 1)
     else:
       await job.record.user_in_problem(rdoc['uid'], rdoc['domain_id'], rdoc['pid'])
     post_coros.append(job.difficulty.update_problem(rdoc['domain_id'], rdoc['pid']))

@@ -25,22 +25,22 @@ async def user_in_problem(uid: int, domain_id: str, pid: document.convert_doc_id
                            fields={'_id': 1, 'uid': 1,
                                    'status': 1, 'score': 1}).sort('_id', 1)
   new_psdoc = {'num_submit': 0, 'status': 0}
-  num_ac_submission = 0
+  num_ac_submit = 0
   async for rdoc in rdocs:
     new_psdoc['num_submit'] += 1
     if new_psdoc['status'] != constant.record.STATUS_ACCEPTED:
       new_psdoc['status'] = rdoc['status']
       new_psdoc['rid'] = rdoc['_id']
     if rdoc['status'] == constant.record.STATUS_ACCEPTED:
-      num_ac_submission += 1
+      num_ac_submit += 1
   _logger.info(repr(new_psdoc))
   post_coros = []
-  delta_num_ac_submission = num_ac_submission - pdoc.get('num_ac_submission', 0)
-  _logger.info('delta_num_ac_submission: {0}'.format(delta_num_ac_submission))
-  _logger.info('num_ac_submission: {0}'.format(num_ac_submission))
-  _logger.info('pdoc["num_ac_submission"]: {0}'.format(pdoc.get('num_ac_submission', 0)))
-  if delta_num_ac_submission != 0:
-    post_coros.append(problem.inc(domain_id, pid, 'num_ac_submission', delta_num_ac_submission))
+  delta_num_ac_submit = num_ac_submit - pdoc.get('num_ac_submit', 0)
+  _logger.info('delta_num_ac_submit: {0}'.format(delta_num_ac_submit))
+  _logger.info('num_ac_submit: {0}'.format(num_ac_submit))
+  _logger.info('pdoc["num_ac_submit"]: {0}'.format(pdoc.get('num_ac_submit', 0)))
+  if delta_num_ac_submit != 0:
+    post_coros.append(problem.inc(domain_id, pid, 'num_ac_submit', delta_num_ac_submit))
   if await document.rev_set_status(domain_id, document.TYPE_PROBLEM, pid, uid,
                                    psdoc['rev'], **new_psdoc):
     delta_submit = new_psdoc['num_submit'] - psdoc.get('num_submit', 0)
@@ -83,7 +83,7 @@ async def run(domain_id: str):
     _logger.info('Reading records, counting numbers, updating statuses')
     factory = functools.partial(dict, num_submit=0, num_accept=0, status=0, rid='')
     psdocs = collections.defaultdict(factory)
-    pdoc_update = {'num_submit': 0, 'num_accept': 0, 'num_ac_submisison': 0}
+    pdoc_update = {'num_submit': 0, 'num_accept': 0, 'num_ac_submit': 0}
     async for rdoc in rdocs:
       accept = True if rdoc['status'] == constant.record.STATUS_ACCEPTED else False
       pdoc_update['num_submit'] += 1
@@ -96,7 +96,7 @@ async def run(domain_id: str):
             pdoc_update['num_accept'] += 1
             dudoc_updates[rdoc['uid']]['num_accept'] += 1
       if accept:
-        pdoc_update['num_ac_submisison'] += 1
+        pdoc_update['num_ac_submit'] += 1
     status_bulk = status_coll.initialize_unordered_bulk_op()
     execute = False
     for uid, psdoc in psdocs.items():
