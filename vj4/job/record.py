@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 async def user_in_problem(uid: int, domain_id: str, pid: document.convert_doc_id):
   pdoc = await problem.get(domain_id, pid)
   psdoc = await document.rev_init_status(domain_id, document.TYPE_PROBLEM, pid, uid)
-  rdocs = record.get_multi(uid=uid, domain_id=domain_id, pid=pid, get_hidden=True,
+  rdocs = record.get_multi(uid=uid, domain_id=domain_id, pid=pid, 
                            type=constant.record.TYPE_SUBMISSION,
                            fields={'_id': 1, 'uid': 1,
                                    'status': 1, 'score': 1}).sort('_id', 1)
@@ -76,7 +76,7 @@ async def run(domain_id: str):
   async for pdoc in pdocs:
     _logger.info('Problem {0}'.format(pdoc['doc_id']))
     # TODO(twd2): ignore no effect statuses like system error, ...
-    rdocs = record.get_multi(domain_id=domain_id, pid=pdoc['doc_id'], get_hidden=True,
+    rdocs = record.get_multi(domain_id=domain_id, pid=pdoc['doc_id'],
                              type=constant.record.TYPE_SUBMISSION,
                              fields={'_id': 1, 'uid': 1,
                                      'status': 1, 'score': 1}).sort('_id', 1)
