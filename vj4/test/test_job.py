@@ -125,7 +125,7 @@ class RankTest(RecordTestCase):
   async def test_run(self):
     await self.init_record()
     await job.record.run(DOMAIN_ID)
-    await job.rank.run(DOMAIN_ID, 'rating')
+    await job.rank.run(DOMAIN_ID, 'num_accept')
     dudoc1 = await domain.get_user(DOMAIN_ID, UID)
     dudoc2 = await domain.get_user(DOMAIN_ID, UID2)
     self.assertEqual(dudoc1['rank'], 1)

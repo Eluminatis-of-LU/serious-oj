@@ -68,13 +68,13 @@ def _integrate(y: int):
 
 
 @argmethod.wrap
-def difficulty_algorithm(num_submit: int, num_accept: int):
+def difficulty_algorithm(num_submit: int, num_ac: int):
   """Algorithm is written by doc."""
   if not num_submit:
     return None
 
   s = _integrate(num_submit)
-  ac_rate = num_accept / num_submit
+  ac_rate = num_ac / num_submit
   ans = int(10.0 - 1.30 * s * 10.0 * ac_rate)
   if ans <= 0:
     ans = 1
