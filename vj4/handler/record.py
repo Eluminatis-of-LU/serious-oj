@@ -70,8 +70,7 @@ class RecordMainHandler(RecordMixin, base.Handler):
       start = None
     query = await self.get_filter_query(uid_or_name, pid, tid)
     # TODO(iceboy): projection, pagination.
-    rdocs = await record.get_all_multi(**query, end_id=start,
-      get_hidden=True).sort([('_id', -1)]).limit(50).to_list()
+    rdocs = await record.get_all_multi(**query, end_id=start).sort([('_id', -1)]).limit(50).to_list()
     # TODO(iceboy): projection.
     udict, dudict, pdict = await asyncio.gather(
         user.get_dict(rdoc['uid'] for rdoc in rdocs),

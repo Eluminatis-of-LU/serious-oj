@@ -68,13 +68,13 @@ def _integrate(y: int):
 
 
 @argmethod.wrap
-def difficulty_algorithm(num_submit: int, num_accept: int):
+def difficulty_algorithm(num_submit: int, num_ac: int):
   """Algorithm is written by doc."""
   if not num_submit:
     return None
 
   s = _integrate(num_submit)
-  ac_rate = num_accept / num_submit
+  ac_rate = num_ac / num_submit
   ans = int(10.0 - 1.30 * s * 10.0 * ac_rate)
   if ans <= 0:
     ans = 1
@@ -100,7 +100,7 @@ def _get_difficulty(pdoc, calculated_difficulty):
 @argmethod.wrap
 async def update_problem(domain_id: str, pid: document.convert_doc_id):
   pdoc = await problem.get(domain_id, pid)
-  difficulty_algo = difficulty_algorithm(pdoc['num_submit'], pdoc['num_accept'])
+  difficulty_algo = difficulty_algorithm(pdoc['num_submit'], pdoc['num_ac_submit'])
   difficulty = _get_difficulty(pdoc, difficulty_algo)
   return await problem.edit(domain_id, pdoc['doc_id'], difficulty=difficulty,
                             difficulty_algo=difficulty_algo)
@@ -114,7 +114,7 @@ async def recalc(domain_id: str):
   execute = False
   _logger.info('Calculating')
   async for pdoc in pdocs:
-    difficulty_algo = difficulty_algorithm(pdoc['num_submit'], pdoc['num_accept'])
+    difficulty_algo = difficulty_algorithm(pdoc['num_submit'], pdoc['num_ac_submit'])
     difficulty = _get_difficulty(pdoc, difficulty_algo)
     bulk.find({'_id': pdoc['_id']}) \
         .update_one({'$set': {'difficulty': difficulty,

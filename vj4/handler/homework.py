@@ -90,8 +90,7 @@ class HomeworkDetailHandler(contest.ContestMixin, base.OperationHandler):
       for pdetail in tsdoc.get('detail', []):
         psdict[pdetail['pid']] = pdetail
       if self.can_show_record(tdoc):
-        rdict = await record.get_dict((psdoc['rid'] for psdoc in psdict.values()),
-                                      get_hidden=True)
+        rdict = await record.get_dict((psdoc['rid'] for psdoc in psdict.values()))
       else:
         rdict = dict((psdoc['rid'], {'_id': psdoc['rid']}) for psdoc in psdict.values())
     else:
@@ -143,7 +142,7 @@ class HomeworkCodeHandler(base.OperationHandler):
         rnames[pdetail['rid']] = 'U{}_P{}_R{}'.format(tsdoc['uid'], pdetail['pid'], pdetail['rid'])
     output_buffer = io.BytesIO()
     zip_file = zipfile.ZipFile(output_buffer, 'a', zipfile.ZIP_DEFLATED)
-    rdocs = record.get_multi(get_hidden=True, _id={'$in': list(rnames.keys())})
+    rdocs = record.get_multi(_id={'$in': list(rnames.keys())})
     async for rdoc in rdocs:
       zip_file.writestr(rnames[rdoc['_id']] + '.' + rdoc['lang'], rdoc['code'])
     # mark all files as created in Windows :p
@@ -207,7 +206,7 @@ class HomeworkDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     if pid not in tdoc['pids']:
       raise error.ProblemNotFoundError(self.domain_id, pid, tdoc['doc_id'])
     if self.can_show_record(tdoc):
-      rdocs = await record.get_user_in_problem_multi(uid, self.domain_id, pdoc['doc_id'], get_hidden=True) \
+      rdocs = await record.get_user_in_problem_multi(uid, self.domain_id, pdoc['doc_id']) \
                           .sort([('_id', -1)]) \
                           .limit(10) \
                           .to_list()
