@@ -29,7 +29,7 @@
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, RP: {1} (No. {2}), Rating: {3}').format(dudoc['num_accept']|default(0), dudoc['rp']|default(0.0)|round(2), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+              <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
               <p>
                 {% set has_country = udoc.get('country', '_') != '_'  %}
                 {% set has_institute = udoc.get('institute', '_') != '_'  %}
