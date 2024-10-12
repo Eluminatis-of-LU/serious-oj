@@ -73,7 +73,7 @@ async def run(domain_id: str):
     _logger.info('Reading records, counting numbers, updating statuses')
     factory = functools.partial(dict, num_submit=0, num_accept=0, status=0, rid='')
     psdocs = collections.defaultdict(factory)
-    pdoc_update = {'num_submit': 0, 'num_accept': 0}
+    pdoc_update = {'num_submit': 0, 'num_accept': 0, 'num_ac_submisison': 0}
     async for rdoc in rdocs:
       accept = True if rdoc['status'] == constant.record.STATUS_ACCEPTED else False
       pdoc_update['num_submit'] += 1
