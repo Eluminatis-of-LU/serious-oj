@@ -149,9 +149,9 @@
       {% endif %}
       {% endif %}
       <dt>{{ _('Accepted') }}</dt>
-      <dd>{{ pdoc['num_accept'] }}</dd>
+      <dd>{{ pdoc['num_ac_submit'] }}</dd>
       <dt>{{ _('Accepted Ratio') }}</dt>
-      <dd>{% if pdoc['num_submit'] > 0 %}{{ (100 * pdoc['num_accept'] / pdoc['num_submit'])|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
+      <dd>{% if pdoc['num_submit'] > 0 %}{{ (100 * pdoc['num_ac_submit'] / pdoc['num_submit'])|round|int }}%{% else %}{{ _('?') }}{% endif %}</dd>
     {% if pdoc['num_be_copied'] %}
       <dt>{{ _('Be Copied') }}</dt>
       <dd>{{ pdoc['num_be_copied'] }}</dd>

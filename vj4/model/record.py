@@ -85,26 +85,25 @@ async def rejudge_all(domain_id: str, uid: str='', pid: str='', tid: str=''):
       query['pid'] = document.convert_doc_id(pid)
     if tid:
       query['tid'] = document.convert_doc_id(tid)
-  rdocs = get_all_multi(**query, get_hidden=True, fields={'_id': 1}).sort([('_id', -1)]).batch_size(100)
+  rdocs = get_all_multi(**query, fields={'_id': 1}).sort([('_id', -1)]).batch_size(100)
   async for rdoc in rdocs:
     await rejudge(rdoc['_id'])
 
 
 
 @argmethod.wrap
-def get_all_multi(end_id: objectid.ObjectId=None, get_hidden: bool=False, *, fields=None,
+def get_all_multi(end_id: objectid.ObjectId=None, *, fields=None,
                   **kwargs):
   coll = db.coll('record')
-  query = {**kwargs, 'hidden': False if not get_hidden else {'$gte': False}}
+  query = {**kwargs}
   if end_id:
     query['_id'] = {'$lt': end_id}
   return coll.find(query, projection=fields)
 
 
 @argmethod.wrap
-def get_multi(get_hidden: bool=False, fields=None, **kwargs):
+def get_multi(fields=None, **kwargs):
   coll = db.coll('record')
-  kwargs['hidden'] = False if not get_hidden else {'$gte': False}
   return coll.find(kwargs, projection=fields)
 
 
@@ -119,10 +118,9 @@ async def get_count(begin_id: objectid.ObjectId=None):
 
 @argmethod.wrap
 def get_problem_multi(domain_id: str, pid: document.convert_doc_id,
-                      get_hidden: bool=False, type: int=None, *, fields=None):
+                       type: int=None, *, fields=None):
   coll = db.coll('record')
-  query = {'hidden': False if not get_hidden else {'$gte': False},
-           'domain_id': domain_id, 'pid': pid}
+  query = {'domain_id': domain_id, 'pid': pid}
   if type != None:
     query['type'] = type
   return coll.find(query, projection=fields)
@@ -130,19 +128,18 @@ def get_problem_multi(domain_id: str, pid: document.convert_doc_id,
 
 @argmethod.wrap
 def get_user_in_problem_multi(uid: int, domain_id: str, pid: document.convert_doc_id,
-                              get_hidden: bool=False, type: int=None, *, fields=None):
+                              type: int=None, *, fields=None):
   coll = db.coll('record')
-  query = {'hidden': False if not get_hidden else {'$gte': False},
-           'domain_id': domain_id, 'pid': pid, 'uid': uid}
+  query = {'domain_id': domain_id, 'pid': pid, 'uid': uid}
   if type != None:
     query['type'] = type
   return coll.find(query, projection=fields)
 
 
-async def get_dict(rids, *, get_hidden=False, fields=None):
+async def get_dict(rids, *, fields=None):
   query = {'_id': {'$in': list(set(rids))}}
   result = dict()
-  async for rdoc in get_multi(**query, get_hidden=get_hidden, fields=fields):
+  async for rdoc in get_multi(**query, fields=fields):
     result[rdoc['_id']] = rdoc
   return result
 

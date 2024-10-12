@@ -120,123 +120,12 @@ class RecordTest(RecordTestCase):
     self.assertEqual(dudoc['num_submit'], 2)
     self.assertEqual(dudoc['num_accept'], 0)
 
-
-class RpTest(RecordTestCase):
-  @base.wrap_coro
-  async def test_recalc(self):
-    await self.init_record()
-    await job.record.run(DOMAIN_ID)
-    await job.rp.recalc(DOMAIN_ID)
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID)
-    psdoc = pdoc['psdoc']
-    rp_p1 = psdoc['rp']
-    self.assertGreater(rp_p1, 0)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID)
-    psdoc = pdoc['psdoc']
-    rp_p2 = psdoc['rp']
-    self.assertGreater(rp_p2, 0)
-    dudoc = await domain.get_user(DOMAIN_ID, UID)
-    self.assertEqual(dudoc['rp'], rp_p1 + rp_p2)
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID2)
-    psdoc = pdoc['psdoc']
-    self.assertTrue('rp' not in psdoc or psdoc['rp'] == 0)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID2)
-    psdoc = pdoc['psdoc']
-    self.assertTrue('rp' not in psdoc or psdoc['rp'] == 0)
-    dudoc = await domain.get_user(DOMAIN_ID, UID2)
-    self.assertTrue('rp' not in dudoc or dudoc['rp'] == 0)
-
-  @base.wrap_coro
-  async def test_update_problem(self):
-    await self.init_record()
-    await job.record.run(DOMAIN_ID)
-    await job.rp.recalc(DOMAIN_ID)
-    # user 1
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID)
-    psdoc = pdoc['psdoc']
-    rp_p1_before = psdoc['rp']
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID)
-    psdoc = pdoc['psdoc']
-    rp_p2_before = psdoc['rp']
-    dudoc = await domain.get_user(DOMAIN_ID, UID)
-    rp_u1_before = dudoc['rp']
-    # user 1 submitted a record, WA
-    rid_p1_wa2 = await record.add(DOMAIN_ID, self.pid1, constant.record.TYPE_SUBMISSION,
-                                  UID, 'cc', 'int main(){}')
-    await record.begin_judge(rid_p1_wa2, JUDGE_UID, JUDGE_TOKEN, constant.record.STATUS_JUDGING)
-    await record.end_judge(rid_p1_wa2, JUDGE_UID, JUDGE_TOKEN, constant.record.STATUS_WRONG_ANSWER,
-                           50, 1000, 1024)
-    # user 2 submitted a record, AC
-    rid_p1u2_ac = await record.add(DOMAIN_ID, self.pid1, constant.record.TYPE_SUBMISSION,
-                                   UID2, 'cc', 'int main(){}')
-    await record.begin_judge(rid_p1u2_ac, JUDGE_UID, JUDGE_TOKEN, constant.record.STATUS_JUDGING)
-    await record.end_judge(rid_p1u2_ac, JUDGE_UID, JUDGE_TOKEN, constant.record.STATUS_ACCEPTED,
-                           100, 1000, 1024)
-    await job.record.run(DOMAIN_ID)
-    await job.rp.update_problem(DOMAIN_ID, self.pid1)
-    await job.rp.update_problem(DOMAIN_ID, self.pid2)
-    # user 1
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID)
-    psdoc = pdoc['psdoc']
-    rp_p1 = psdoc['rp']
-    self.assertGreater(rp_p1, 0)
-    self.assertLess(rp_p1, rp_p1_before)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID)
-    psdoc = pdoc['psdoc']
-    rp_p2 = psdoc['rp']
-    self.assertGreater(rp_p2, 0)
-    self.assertEqual(rp_p2, rp_p2_before)
-    dudoc = await domain.get_user(DOMAIN_ID, UID)
-    self.assertEqual(dudoc['rp'], rp_p1 + rp_p2)
-    self.assertLess(dudoc['rp'], rp_u1_before)
-    # user 2
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID2)
-    psdoc = pdoc['psdoc']
-    rp_p1u2 = psdoc['rp']
-    self.assertGreater(rp_p1u2, 0)
-    self.assertLess(rp_p1u2, rp_p1)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID2)
-    psdoc = pdoc['psdoc']
-    self.assertTrue('rp' not in psdoc or psdoc['rp'] == 0)
-    dudoc = await domain.get_user(DOMAIN_ID, UID2)
-    self.assertEqual(dudoc['rp'], rp_p1u2)
-    # rejudge to WA
-    await record.begin_judge(self.rid_p2_ac, JUDGE_UID, JUDGE_TOKEN,
-                             constant.record.STATUS_JUDGING)
-    await record.end_judge(self.rid_p2_ac, JUDGE_UID, JUDGE_TOKEN,
-                           constant.record.STATUS_WRONG_ANSWER, 10, 1000, 1024)
-    await job.record.run(DOMAIN_ID)
-    await job.rp.update_problem(DOMAIN_ID, self.pid1)
-    await job.rp.update_problem(DOMAIN_ID, self.pid2)
-    # user 1
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID)
-    psdoc = pdoc['psdoc']
-    rp_p1_after = psdoc['rp']
-    self.assertEqual(rp_p1, rp_p1_after)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID)
-    psdoc = pdoc['psdoc']
-    self.assertTrue('rp' not in psdoc or psdoc['rp'] == 0)
-    dudoc = await domain.get_user(DOMAIN_ID, UID)
-    self.assertTrue(abs(dudoc['rp'] - rp_p1_after) < EPS)
-    # user 2
-    pdoc = await problem.get(DOMAIN_ID, self.pid1, UID2)
-    psdoc = pdoc['psdoc']
-    rp_p1u2_after = psdoc['rp']
-    self.assertEqual(rp_p1u2, rp_p1u2_after)
-    pdoc = await problem.get(DOMAIN_ID, self.pid2, UID2)
-    psdoc = pdoc['psdoc']
-    self.assertTrue('rp' not in psdoc or psdoc['rp'] == 0)
-    dudoc = await domain.get_user(DOMAIN_ID, UID2)
-    self.assertEqual(dudoc['rp'], rp_p1u2_after)
-
-
 class RankTest(RecordTestCase):
   @base.wrap_coro
   async def test_run(self):
     await self.init_record()
     await job.record.run(DOMAIN_ID)
-    await job.rp.recalc(DOMAIN_ID)
-    await job.rank.run(DOMAIN_ID, 'rp')
+    await job.rank.run(DOMAIN_ID, 'num_accept')
     dudoc1 = await domain.get_user(DOMAIN_ID, UID)
     dudoc2 = await domain.get_user(DOMAIN_ID, UID2)
     self.assertEqual(dudoc1['rank'], 1)
