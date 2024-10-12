@@ -427,7 +427,8 @@ DOMAIN_USER_GUEST = {
     'role': ROLE_GUEST,
     'level': 0,
     'num_submit': 0,
-    'num_accept': 0
+    'num_accept': 0,
+    'num_ac_submission': 0
 }
 USERS = [USER_SYSTEM, USER_GUEST]
 

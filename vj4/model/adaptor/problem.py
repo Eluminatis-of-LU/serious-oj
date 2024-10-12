@@ -42,7 +42,8 @@ async def add(domain_id: str, title: str, content: str, owner_uid: int,
   validator.check_dataset_hint(dataset_hint)
   pid = await document.add(domain_id, content, owner_uid, document.TYPE_PROBLEM,
                            pid, title=title, data=data, category=category, tag=tag,
-                           hidden=hidden, num_submit=0, num_accept=0, ac_msg=ac_msg, dataset_hint=dataset_hint)
+                           hidden=hidden, num_submit=0, num_accept=0, num_ac_submission=0, 
+                           ac_msg=ac_msg, dataset_hint=dataset_hint)
   await domain.inc_user(domain_id, owner_uid, num_problems=1)
   return pid
 
