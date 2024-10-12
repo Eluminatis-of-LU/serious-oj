@@ -125,8 +125,7 @@
                     {{ problem.render_problem_title(
                       pdoc,
                       invalid=not tsdoc['enroll'],
-                      show_tags=false,
-                      rp=vj4.job.rp.get_rp_expect(pdoc) if (not psdoc or psdoc['status'] != vj4.constant.record.STATUS_ACCEPTED) else none
+                      show_tags=false
                     ) }}
                   </td>
                   <td class="col--submit_n">{{ pdoc['num_submit'] }}</td>

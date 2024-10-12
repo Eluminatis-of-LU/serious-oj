@@ -17,7 +17,7 @@ class RankingMainHandler(base.Handler):
   @base.sanitize
   async def get(self, *, page: int=1):
     dudocs, dupcount, _ = await pagination.paginate(
-        domain.get_multi_user(domain_id=self.domain_id, rp={'$gt': 0.0}).sort([('rank', 1)]),
+        domain.get_multi_user(domain_id=self.domain_id).sort([('rank', 1)]),
         page, self.USERS_PER_PAGE)
     udict = await user.get_dict(dudoc['uid'] for dudoc in dudocs)
     self.render('ranking_main.html', page=page, dupcount=dupcount, dudocs=dudocs, udict=udict)
