@@ -10,7 +10,7 @@ export const LANG_TEXTS = {
   js: "JavaScript (Node.js v18.19.1)",
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
-  pypy3: "PyPy 3 (Python 3 3.9.18 PyPy 7.3.15)",
+  pypy3: "PyPy 3 (Python 3.9.18 PyPy 7.3.15)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
   rust2021: "Rust 2021 (Rust 1.75.0)",
 };
