@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/vijos/vj4">
-    <img src="https://raw.githubusercontent.com/Eluminatis-of-LU/serious-oj/refs/heads/master/.github_banner.jpg" alt="serious-oj" width="100%" align="middle" />
+  <a href="https://github.com/Eluminatis-of-LU/serious-oj">
+    <img src="https://raw.githubusercontent.com/Eluminatis-of-LU/serious-oj/refs/heads/master/.github_banner.png" alt="serious-oj" width=30%" align="middle" />
   </a>
 </p>
 
