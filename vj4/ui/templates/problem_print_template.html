@@ -19,10 +19,14 @@
             border-left: 5px solid #eeeded;
             text-align: center;
         }
+        .problem-limit {
+          font-size: 1.2em;
+          margin: 5px 0;
+          text-align: center;
+        }
         .problem h2 {
             font-size: 1.2em;
             margin: 5px 0;
-            text-align: center;
         }
         .problem p {
             margin: 10px 0;
@@ -66,10 +70,10 @@
     <div class="problem">
         <h1 class="problem-title">{{ pdoc['title'] }}</h1>
         {% if 'memory_limit_kb' in pdoc and pdoc['memory_limit_kb'] is not none %}
-        <h2>Memory Limit: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2> <!-- Adjust as needed -->
+        <h2 class="problem-limit">Memory Limit: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2> <!-- Adjust as needed -->
         {% endif %}
         {% if 'time_limit_ms' in pdoc and pdoc['time_limit_ms'] is not none %}
-        <h2>Time Limit: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2> <!-- Adjust as needed -->
+        <h2 class="problem-limit">Time Limit: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2> <!-- Adjust as needed -->
         {% endif %}
         {{ pdoc['content']|markdown }}
         {% if 'samples' in pdoc and pdoc['samples'] is not none %}
