@@ -597,7 +597,8 @@ class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
-        pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': tdoc["pids"]}).to_list()
+        pdict = await problem.get_dict(self.domain_id, tdoc["pids"])
+        pdocs = [pdict[pid] for pid in tdoc["pids"]]
         pdocs = map(lambda i, pdoc: dict(pdoc, title="{}. {}".format(
             chr(ord("A") + i), pdoc["title"])), range(len(pdocs)), pdocs)
         if ext == 'html':
@@ -617,7 +618,8 @@ class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
-        pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': tdoc["pids"]}).to_list()
+        pdict = await problem.get_dict(self.domain_id, tdoc["pids"])
+        pdocs = [pdict[pid] for pid in tdoc["pids"]]
         pdocs = map(lambda i, pdoc: dict(pdoc, title="{}. {}".format(
             chr(ord("A") + i), pdoc["title"])), range(len(pdocs)), pdocs)
         if ext == 'html':
