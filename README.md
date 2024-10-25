@@ -1,18 +1,16 @@
 <p align="center">
   <a href="https://github.com/vijos/vj4">
-    <img src="https://rawgit.com/vijos/vj4/master/.github_banner.png" alt="vj4" width="100%" align="middle" />
+    <img src="https://raw.githubusercontent.com/Eluminatis-of-LU/serious-oj/refs/heads/master/.github_banner.jpg" alt="serious-oj" width="100%" align="middle" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/vijos/vj4/actions" target="_blank"><img src="https://github.com/vijos/vj4/actions/workflows/test.yml/badge.svg?branch=master"></a>
-  <a href="https://codeclimate.com/github/vijos/vj4/maintainability" target="_blank"><img src="https://api.codeclimate.com/v1/badges/1e9710a66983c8124712/maintainability"></a>
-  <a href="https://www.versioneye.com/user/projects/598d6f846725bd005228a0e4" target="_blank"><img src="https://www.versioneye.com/user/projects/598d6f846725bd005228a0e4/badge.svg?style=flat-square"></a>
-  <a href="https://raw.githubusercontent.com/vijos/vj4/master/LICENSE" target="_blank"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg?style=flat-square"></a>
+  <a href="https://github.com/Eluminatis-of-LU/serious-oj/actions" target="_blank"><img src="https://github.com/Eluminatis-of-LU/serious-oj/actions/workflows/test.yml/badge.svg?branch=master"></a>
+  <a href="https://raw.githubusercontent.com/Eluminatis-of-LU/serious-oj/master/LICENSE" target="_blank"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg?style=flat-square"></a>
 </p>
 
 <p align="center">
-  Next generation of <a href="https://vijos.org" target="_blank">Vijos</a>, built with asyncio on Python 3.
+  Online judge <a href="https://judge.eluminatis-of-lu.com/" target="_blank">Serious-OJ</a>, built with asyncio on Python 3.
 </p>
 
 ***
@@ -26,18 +24,15 @@
 - Trainings
 - Contests (ACM & OI)
 - Dynamic Ranking System
+- Contest Rating System
 - Real-time Status Updates
 - Online Judge as a Service (a.k.a. Domain): create your own OJ website without dev-ops!
 - Management UI
-- Sandboxed & Distributed Judging: see [jd4](https://github.com/vijos/jd4), [winjudge](https://github.com/iceb0y/winjudge) and [windows-container](https://github.com/iceb0y/windows-container)
+- Sandboxed & Distributed Judging: see [sojj1](https://github.com/Eluminatis-of-LU/sojj1)
 - Secure (we are also CTF players)
 - Modern Architecture & User Interface
 
 ## Usage
-
-### Pre-built docker package
-
-There is pre-built docker package at `vijos/vj4`. This is maintained by [@moesoha](https://github.com/moesoha). Source code is available at https://github.com/vijos/vj4-docker.
 
 ### Manual build
 
@@ -142,13 +137,9 @@ pm vj4.model.user add -2 judge 123456 judge@example.org
 pm vj4.model.user set_judge -2
 ```
 
-### Use jd4
+### Use sojj1
 
-* See https://github.com/vijos/jd4 for more details about the judge daemon.
-
-### Use HydroJudge
-
-* You can also use [HydroJudge](https://hydro.js.org/plugins/hydrojudge/) from [Hydro](https://github.com/hydro-dev/Hydro).
+* See https://github.com/Eluminatis-of-LU/sojj1 for more details about the judge daemon.
 
 ## Notes
 
