@@ -35,7 +35,8 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
         else:
             if rule not in constant.contest.CONTEST_RULES:
                 raise error.ValidationError("rule")
-            tdocs = contest.get_multi(self.domain_id, document.TYPE_CONTEST, rule=rule)
+            tdocs = contest.get_multi(
+                self.domain_id, document.TYPE_CONTEST, rule=rule)
             qs = "rule={0}".format(rule)
         tdocs, tpcount, _ = await pagination.paginate(
             tdocs, page, self.CONTESTS_PER_PAGE
@@ -166,7 +167,8 @@ class ContestCodeHandler(base.OperationHandler):
         zip_file = zipfile.ZipFile(output_buffer, "a", zipfile.ZIP_DEFLATED)
         rdocs = record.get_multi(_id={"$in": list(rnames.keys())})
         async for rdoc in rdocs:
-            zip_file.writestr(rnames[rdoc["_id"]] + "." + rdoc["lang"], rdoc["code"])
+            zip_file.writestr(rnames[rdoc["_id"]] +
+                              "." + rdoc["lang"], rdoc["code"])
         # mark all files as created in Windows :p
         for zfile in zip_file.filelist:
             zfile.create_system = 0
@@ -186,7 +188,8 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
     @base.require_perm(builtin.PERM_VIEW_PROBLEM)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId, pid: document.convert_doc_id):
-        uid = self.user["_id"] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
+        uid = self.user["_id"] if self.has_priv(
+            builtin.PRIV_USER_PROFILE) else None
         tdoc, pdoc = await asyncio.gather(
             contest.get(self.domain_id, document.TYPE_CONTEST, tid),
             problem.get(self.domain_id, pid, uid),
@@ -205,7 +208,8 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
             if not self.is_ongoing(tdoc):
                 raise error.ContestNotLiveError(tdoc["doc_id"])
         if pid not in tdoc["pids"]:
-            raise error.ProblemNotFoundError(self.domain_id, pid, tdoc["doc_id"])
+            raise error.ProblemNotFoundError(
+                self.domain_id, pid, tdoc["doc_id"])
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
             (tdoc["title"], self.reverse_url("contest_detail", tid=tid)),
@@ -231,7 +235,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     @base.require_perm(builtin.PERM_SUBMIT_PROBLEM)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId, pid: document.convert_doc_id):
-        uid = self.user["_id"] if self.has_priv(builtin.PRIV_USER_PROFILE) else None
+        uid = self.user["_id"] if self.has_priv(
+            builtin.PRIV_USER_PROFILE) else None
         tdoc, pdoc = await asyncio.gather(
             contest.get(self.domain_id, document.TYPE_CONTEST, tid),
             problem.get(self.domain_id, pid, uid),
@@ -248,7 +253,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
         if not self.is_ongoing(tdoc):
             raise error.ContestNotLiveError(tdoc["doc_id"])
         if pid not in tdoc["pids"]:
-            raise error.ProblemNotFoundError(self.domain_id, pid, tdoc["doc_id"])
+            raise error.ProblemNotFoundError(
+                self.domain_id, pid, tdoc["doc_id"])
         if self.can_show_record(tdoc):
             rdocs = (
                 await record.get_user_in_problem_multi(
@@ -266,7 +272,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
                 (tdoc["title"], self.reverse_url("contest_detail", tid=tid)),
                 (
                     pdoc["title"],
-                    self.reverse_url("contest_detail_problem", tid=tid, pid=pid),
+                    self.reverse_url("contest_detail_problem",
+                                     tid=tid, pid=pid),
                 ),
                 (self.translate("contest_detail_problem_submit"), None),
             )
@@ -312,7 +319,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
         if not self.is_ongoing(tdoc):
             raise error.ContestNotLiveError(tdoc["doc_id"])
         if pid not in tdoc["pids"]:
-            raise error.ProblemNotFoundError(self.domain_id, pid, tdoc["doc_id"])
+            raise error.ProblemNotFoundError(
+                self.domain_id, pid, tdoc["doc_id"])
         rid = await record.add(
             self.domain_id,
             pdoc["doc_id"],
@@ -355,7 +363,8 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
         page_title = self.translate("contest_scoreboard")
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
-            (tdoc["title"], self.reverse_url("contest_detail", tid=tdoc["doc_id"])),
+            (tdoc["title"], self.reverse_url(
+                "contest_detail", tid=tdoc["doc_id"])),
             (page_title, None),
         )
         dudict = await domain.get_dict_user_by_uid(
@@ -497,7 +506,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         duration = (tdoc["end_at"] - tdoc["begin_at"]).total_seconds() / 3600
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
-            (tdoc["title"], self.reverse_url("contest_detail", tid=tdoc["doc_id"])),
+            (tdoc["title"], self.reverse_url(
+                "contest_detail", tid=tdoc["doc_id"])),
             (self.translate("contest_edit"), None),
         )
         self.render(
@@ -572,18 +582,61 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             await contest.recalc_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"]
             )
-        self.json_or_redirect(self.reverse_url("contest_detail", tid=tdoc["doc_id"]))
+        self.json_or_redirect(self.reverse_url(
+            "contest_detail", tid=tdoc["doc_id"]))
 
 
-@app.route("/contest/{tid}/html", "contest_problemset_html")
-class ContestProblemSetHtmlHandler(contest.ContestMixin, base.Handler):
+@app.route("/contest/{tid}/{ext}", "contest_problemset")
+class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     @base.route_argument
+    @base.get_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
     @base.sanitize
-    async def get(self, *, tid: objectid.ObjectId):
+    async def get(self, *, tid: objectid.ObjectId, ext: str):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
+        pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': tdoc["pids"]}).to_list()
+        pdocs = map(lambda i, pdoc: dict(pdoc, title="{}. {}".format(
+            chr(ord("A") + i), pdoc["title"])), range(len(pdocs)), pdocs)
+        if ext == 'html':
+            self.render("problem_print_template.html", tdoc=tdoc, pdocs=pdocs)
+        else:
+            raise error.ValidationError("ext")
+
+
+@app.route("/contest/{tid}/{ext}/zipped", "contest_problemset_zipped")
+class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
+    @base.sanitize
+    @base.route_argument
+    @base.get_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId, ext: str):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        pdocs = await problem.get_multi(self.domain_id, tdoc["pids"])
-        self.render_html("contest_problemset_pdf.html", tdoc=tdoc, pdocs=pdocs)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': tdoc["pids"]}).to_list()
+        pdocs = map(lambda i, pdoc: dict(pdoc, title="{}. {}".format(
+            chr(ord("A") + i), pdoc["title"])), range(len(pdocs)), pdocs)
+        if ext == 'html':
+
+            output_buffer = io.BytesIO()
+            zip_file = zipfile.ZipFile(
+                output_buffer, "a", zipfile.ZIP_DEFLATED)
+            for pdoc in pdocs:
+                html_str = self.render_html(
+                    "problem_print_template.html", tdoc=tdoc, pdocs=[pdoc])
+                zip_file.writestr(pdoc["title"] + ".html", html_str)
+            # mark all files as created in Windows
+            for zfile in zip_file.filelist:
+                zfile.create_system = 0
+            zip_file.close()
+            await self.binary(
+                output_buffer.getvalue(),
+                "application/zip",
+                file_name="{}-problemset.zip".format(tdoc["title"]),
+            )
+        else:
+            raise error.ValidationError("ext")
