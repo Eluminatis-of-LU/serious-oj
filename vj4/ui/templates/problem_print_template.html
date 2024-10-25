@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ tdoc['title'] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .problem {
+            margin-bottom: 40px;
+        }
+        .problem h1 {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-left: 5px solid #007BFF;
+            text-align: center;
+        }
+        .problem h2 {
+            font-size: 1.2em;
+            margin: 5px 0;
+            text-align: center;
+        }
+        .problem p {
+            margin: 10px 0;
+        }
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .example-table th, .example-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .example-table th {
+            background-color: #f8f8f8;
+        }
+        pre {
+            background-color: #eeeeee;
+            padding: 10px;
+            overflow-x: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    {% for pdoc in pdocs %}
+    <div class="problem">
+        <h1>{{ pdoc['title'] }}</h1>
+        <h2>Memory Limit: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2> <!-- Adjust as needed -->
+        <h2>Time Limit: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2> <!-- Adjust as needed -->
+        <p>
+            {{ pdoc['content']|markdown }}
+        </p>
+        {% if 'samples' in pdoc and pdoc['samples'] is not none %}
+          <h2>{{ _('Sample') }}</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ _('Input') }}</th>
+                <th>{{ _('Output') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in pdoc['samples'] %}
+              <tr>
+                <td>{{ sample['input']|markdown }}</td>
+                <td>{{ sample['output']|markdown }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+        {% if 'dataset_hint' in pdoc and pdoc['dataset_hint'] is not none %}
+          {{ pdoc['dataset_hint']|markdown }}
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>
