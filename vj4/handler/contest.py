@@ -582,7 +582,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             or tdoc["end_at"] != end_at
             or set(tdoc["pids"]) != set(pids)
             or tdoc["rule"] != rule
-            or tdoc['freeze_before'] != freeze_before
+            or tdoc.get('freeze_before', 0) != freeze_before
         ):
             await contest.recalc_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"]
