@@ -451,7 +451,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         begin_at_time: str,
         duration: float,
         pids: str,
-        password: str
+        password: str,
+        freeze_before: int
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -482,6 +483,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             end_at,
             pids,
             password=password,
+            freeze_before=freeze_before,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -537,7 +539,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         begin_at_time: str = None,
         duration: float,
         pids: str,
-        password: str
+        password: str,
+        freeze_before: int
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -571,6 +574,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             end_at=end_at,
             pids=pids,
             password=password,
+            freeze_before=freeze_before,
         )
         await self.hide_problems(pids)
         if (
@@ -578,6 +582,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             or tdoc["end_at"] != end_at
             or set(tdoc["pids"]) != set(pids)
             or tdoc["rule"] != rule
+            or tdoc['freeze_before'] != freeze_before
         ):
             await contest.recalc_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"]

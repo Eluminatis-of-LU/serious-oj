@@ -31,6 +31,9 @@ Rule = collections.namedtuple('Rule', ['show_record_func',
 
 
 def _oi_stat(tdoc, journal):
+  freeze_before = tdoc['freeze_before'] if 'freeze_before' in tdoc else 0
+  freeze_at = tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
+  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
   detail = list(dict((j['pid'], j) for j in journal if j['pid'] in tdoc['pids']).values())
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
@@ -38,6 +41,9 @@ def _oi_stat(tdoc, journal):
 def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
+  freeze_before = tdoc['freeze_before'] if 'freeze_before' in tdoc else 0
+  freeze_at = tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
+  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
   for j in journal:
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
       effective[j['pid']] = j
