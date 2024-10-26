@@ -29,8 +29,13 @@ Rule = collections.namedtuple('Rule', ['show_record_func',
                                        'rank_func',
                                        'scoreboard_func'])
 
+def _get_freeze_at(tdoc):
+  freeze_before = tdoc.get('freeze_before', 0)
+  return tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
 
 def _oi_stat(tdoc, journal):
+  freeze_at = _get_freeze_at(tdoc)
+  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
   detail = list(dict((j['pid'], j) for j in journal if j['pid'] in tdoc['pids']).values())
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
@@ -38,6 +43,8 @@ def _oi_stat(tdoc, journal):
 def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
+  freeze_at = _get_freeze_at(tdoc)
+  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
   for j in journal:
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
       effective[j['pid']] = j

@@ -23,7 +23,7 @@ def _rule_test_stat(tdoc, journal):
 
 
 NOW = datetime.datetime.utcnow().replace(microsecond=0)
-TDOC = {'pids': [777, 778, 779], 'begin_at': NOW}
+TDOC = {'pids': [777, 778, 779], 'begin_at': NOW, 'end_at': NOW + datetime.timedelta(hours=4)}
 ASSDOC = {'pids': [777, 778, 779], 'begin_at': NOW,
           'penalty_since': NOW + datetime.timedelta(seconds=5),
           'penalty_rules': {'1': 0.9, '2': 0.8, '3': 0.6, '4': 0.2}}
