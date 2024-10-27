@@ -15,6 +15,7 @@ from vj4.model import domain
 from vj4.model import fs
 from vj4.model import record
 from vj4.model import user
+from vj4.model import system
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
 from vj4.service import bus
@@ -47,12 +48,28 @@ class RecordCommonOperationMixin(object):
         query['pid'] = document.convert_doc_id(pid)
       if tid:
         query['tid'] = document.convert_doc_id(tid)
-    return query
+        if 'uid' in query and query['uid'] == self.user['_id']:
+          return query
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, query['tid'])
+        if not tdoc:
+          return query
+        if self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST):
+          return query
+        freeze_before = tdoc.get('freeze_before', 0)
+        freeze_at = tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
+        time_id = objectid.ObjectId.from_datetime(freeze_at)
+        query['_id'] = {'$lt': time_id}
+    if not tid:
+      if self.has_priv(builtin.PRIV_VIEW_HIDDEN_RECORD):
+        return query
+      if await system.get_should_fetch_contest_submission():
+        return query
+      query['tid'] = {'$exists': False}
+    return query    
 
 
 class RecordMixin(RecordVisibilityMixin, RecordCommonOperationMixin):
   pass
-
 
 @app.route('/records', 'record_main')
 class RecordMainHandler(RecordMixin, base.Handler):

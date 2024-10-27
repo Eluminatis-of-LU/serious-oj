@@ -591,7 +591,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             "contest_detail", tid=tdoc["doc_id"]))
 
 
-@app.route("/contest/{tid}/{ext}", "contest_problemset")
+@app.route("/contest/{tid}/problemset/{ext}", "contest_problemset")
 class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     @base.route_argument
@@ -612,7 +612,7 @@ class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("ext")
 
 
-@app.route("/contest/{tid}/{ext}/zipped", "contest_problemset_zipped")
+@app.route("/contest/{tid}/problemset/{ext}/zipped", "contest_problemset_zipped")
 class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     @base.route_argument
