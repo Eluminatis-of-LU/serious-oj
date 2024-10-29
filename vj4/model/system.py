@@ -10,6 +10,22 @@ from vj4.util import argmethod
 
 EXPECTED_DB_VERSION = 1
 
+@argmethod.wrap
+async def set_should_fetch_contest_submission(value: bool):
+  coll = db.coll('system')
+  await coll.update_one(filter={'_id': 'should_fetch_contest_submission'},
+                        update={'$set': {'value': value}},
+                        upsert=True)
+  return value
+
+@argmethod.wrap
+async def get_should_fetch_contest_submission():
+  coll = db.coll('system')
+  doc = await coll.find_one({'_id': 'should_fetch_contest_submission'})
+  if doc is None:
+    return True
+  else:
+    return doc['value']
 
 @argmethod.wrap
 async def inc_user_counter():
