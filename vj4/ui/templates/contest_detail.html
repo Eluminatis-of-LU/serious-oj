@@ -13,6 +13,11 @@
           <p>{{ _('We will check code similarity after this contest.') }}</p>
         </blockquote>
       {% endif %}
+      {% if handler.is_ranklist_frozen(tdoc) %}
+        <blockquote class="note">
+          <p>{{ _('Ranklist currently frozen') }}</p>
+        </blockquote>
+      {% endif %}
       </div>
     </div>
   {% if handler.is_ongoing(tdoc) or handler.is_done(tdoc) %}

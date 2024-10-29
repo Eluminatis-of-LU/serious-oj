@@ -511,6 +511,13 @@ class ContestStatusMixin(object):
 
   def is_ongoing(self, tdoc):
     return tdoc['begin_at'] <= self.now < tdoc['end_at']
+  
+  def is_ranklist_frozen(self, tdoc):
+    freeze_before = tdoc.get('freeze_before', 0)
+    if freeze_before <= 0:
+      return False
+    freeze_at = tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
+    return freeze_at <= self.now
 
   def is_done(self, tdoc):
     return tdoc['end_at'] <= self.now

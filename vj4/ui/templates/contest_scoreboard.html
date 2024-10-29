@@ -20,6 +20,11 @@
         {% endif %}
       </div>
     {% endif %}
+    {% if handler.is_ranklist_frozen(tdoc) %}
+      <blockquote class="note" style="text-align: center; font-size: large;">
+        <p>{{ _('Ranklist currently frozen') }}</p>
+      </blockquote>
+    {% endif %}
     <div class="section__body no-padding">
       <table class="data-table">
         <colgroup>
