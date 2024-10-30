@@ -64,7 +64,7 @@ class RecordCommonOperationMixin(object):
         return query
       if await system.get_should_fetch_contest_submission():
         return query
-      query['tid'] = {'$exists': False}
+      query['tid'] = None
     return query    
 
 
