@@ -379,6 +379,32 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
             path_components=path_components,
         )
 
+@app.route("/contest/{tid}/scoreboard/admin", "contest_scoreboard_admin")
+class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
+    @base.route_argument
+    @base.require_perm(builtin.PERM_VIEW_CONTEST)
+    @base.require_perm(builtin.PERM_VIEW_CONTEST_SCOREBOARD)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId):
+        tdoc, rows, udict = await self.get_unfrozen_scoreboard(document.TYPE_CONTEST, tid)
+        page_title = self.translate("contest_scoreboard")
+        path_components = self.build_path(
+            (self.translate("contest_main"), self.reverse_url("contest_main")),
+            (tdoc["title"], self.reverse_url(
+                "contest_detail", tid=tdoc["doc_id"])),
+            (page_title, None),
+        )
+        dudict = await domain.get_dict_user_by_uid(
+            domain_id=self.domain_id, uids=udict.keys()
+        )
+        self.render(
+            "contest_scoreboard.html",
+            tdoc=tdoc,
+            rows=rows,
+            dudict=dudict,
+            page_title=page_title,
+            path_components=path_components,
+        )
 
 @app.route("/contest/{tid}/scoreboard/download/{ext}", "contest_scoreboard_download")
 class ContestScoreboardDownloadHandler(contest.ContestMixin, base.Handler):

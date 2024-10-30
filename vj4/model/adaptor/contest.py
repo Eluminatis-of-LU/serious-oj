@@ -596,6 +596,34 @@ class ContestCommonOperationMixin(object):
     rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
                                                        ranked_tsdocs, udict, dudict, pdict)
     return tdoc, rows, udict
+  
+  async def get_unfrozen_scoreboard(self, doc_type: int, tid: objectid.ObjectId, is_export: bool=False):
+    if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
+      raise error.InvalidArgumentError('doc_type')
+    tdoc, tsdocs = await get_and_list_status(self.domain_id, doc_type, tid)
+    if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+      self.check_perm(builtin.PERM_EDIT_CONTEST)
+    if not self.can_show_scoreboard(tdoc):
+      if doc_type == document.TYPE_CONTEST:
+        raise error.ContestScoreboardHiddenError(self.domain_id, tid)
+      elif doc_type == document.TYPE_HOMEWORK:
+        raise error.HomeworkScoreboardHiddenError(self.domain_id, tid)
+    udict, dudict, pdict = await asyncio.gather(
+        user.get_dict([tsdoc['uid'] for tsdoc in tsdocs]),
+        domain.get_dict_user_by_uid(self.domain_id, [tsdoc['uid'] for tsdoc in tsdocs]),
+        problem.get_dict(self.domain_id, tdoc['pids']))
+    tdoc['freeze_before'] = 0
+    for tsdoc in tsdocs:
+      if 'journal' not in tsdoc or not tsdoc['journal']:
+        continue
+      journal = _get_status_journal(tsdoc)
+      stats = RULES[tdoc['rule']].stat_func(tdoc, journal)
+      tsdoc.update(stats)
+    ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
+    rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
+                                                       ranked_tsdocs, udict, dudict, pdict)
+    return tdoc, rows, udict
+
 
   async def verify_problems(self, pids):
     pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': pids},
