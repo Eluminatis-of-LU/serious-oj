@@ -59,6 +59,8 @@
               {% elif column['type'] == 'record' %}
                 {% if '+' in column['value']|string %}
                   {% set record_color = 'pass' %}
+                {% elif '?' in column['value']|string %}
+                  {% set record_color = 'progress' %}
                 {% elif column['value']|int > 0 %}
                   {% set record_color = 'pass' if column['value']|int == 100 else 'progress' %}
                 {% elif '-' in column['value']|string %}

@@ -40,6 +40,7 @@ def _oi_stat(tdoc, journal):
   for j in modified_journal:
     if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
       j['score'] = 0
+      j['status_unknown'] = True
   detail = list(dict((j['pid'], j) for j in modified_journal if j['pid'] in tdoc['pids']).values())
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
@@ -54,6 +55,7 @@ def _acm_stat(tdoc, journal):
       if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
         effective[j['pid']]['accept'] = False
         effective[j['pid']]['score'] = 0
+        effective[j['pid']]['status_unknown'] = True
       if not effective[j['pid']]['accept']:
         naccept[j['pid']] += 1
 
@@ -184,7 +186,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         rdoc = None
         col_accepted = ''
         if pid in tsddict:
-          col_accepted = '-' + str(tsddict[pid]['naccept'])
+          col_accepted = ('?' if tsddict[pid].get('status_unknown', False) else '-') + str(tsddict[pid]['naccept'])
           pstats[pid]['attempt'] += tsddict[pid]['naccept']
         col_time = ''
         col_time_str = ''
