@@ -135,7 +135,7 @@ async def set_role(domain_id: str, role: str, perm: int):
 
 
 @argmethod.wrap
-async def set_roles(domain_id: str, roles):
+async def set_roles(domain_id: str, roles: dict[str, int]):
   roles = {str(role): int(perm) for role, perm in roles.items()}
   update = {}
   for role in roles:
