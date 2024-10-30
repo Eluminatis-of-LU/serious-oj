@@ -125,11 +125,17 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row = []
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
-                'raw': udict[tsdoc['uid']]})
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')},
+              })
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
+      if tsddict.get(pid, {}).get('status_unknown', False):
+        col_score = '?'
+      else:
+        col_score = tsddict.get(pid, {}).get('score', '-')
       row.append({'type': 'record',
-                  'value': tsddict.get(pid, {}).get('score', '-'),
+                  'value': col_score,
                   'raw': tsddict.get(pid, {}).get('rid', None)})
     rows.append(row)
   return rows
