@@ -55,7 +55,7 @@
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}">
               {% if column['type'] == 'user' %}
-                {{ user.render_inline(column['raw'], badge=false, avatar=false, country=true) }}
+                {{ user.render_inline(column['raw'], column['dudoc'], badge=false, avatar=false, country=true) }}
               {% elif column['type'] == 'record' %}
                 {% if '+' in column['value']|string %}
                   {% set record_color = 'pass' %}

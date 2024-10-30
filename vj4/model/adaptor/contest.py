@@ -162,7 +162,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row = []
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
-                'raw': udict[tsdoc['uid']]})
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}, 
+                })
     row.append({'type': 'string',
                 'value': tsdoc.get('accept', 0)})
     if is_export:
