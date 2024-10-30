@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import collections
 import datetime
 import functools
@@ -35,8 +36,11 @@ def _get_freeze_at(tdoc):
 
 def _oi_stat(tdoc, journal):
   freeze_at = _get_freeze_at(tdoc)
-  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
-  detail = list(dict((j['pid'], j) for j in journal if j['pid'] in tdoc['pids']).values())
+  modified_journal = copy.deepcopy(journal)
+  for j in modified_journal:
+    if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
+      j['score'] = 0
+  detail = list(dict((j['pid'], j) for j in modified_journal if j['pid'] in tdoc['pids']).values())
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
 
@@ -44,11 +48,13 @@ def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
   freeze_at = _get_freeze_at(tdoc)
-  journal = [j for j in journal if j['rid'].generation_time.replace(tzinfo=None) < freeze_at]
   for j in journal:
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
-      effective[j['pid']] = j
-      if not j['accept']:
+      effective[j['pid']] = copy.deepcopy(j)
+      if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
+        effective[j['pid']]['accept'] = False
+        effective[j['pid']]['score'] = 0
+      if not effective[j['pid']]['accept']:
         naccept[j['pid']] += 1
 
   def time(jdoc):
