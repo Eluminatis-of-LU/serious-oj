@@ -619,6 +619,7 @@ class ContestCommonOperationMixin(object):
       journal = _get_status_journal(tsdoc)
       stats = RULES[tdoc['rule']].stat_func(tdoc, journal)
       tsdoc.update(stats)
+    tsdoc = tsdoc.sort(RULES[tdoc['rule']].status_sort)
     ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
     rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
                                                        ranked_tsdocs, udict, dudict, pdict)
