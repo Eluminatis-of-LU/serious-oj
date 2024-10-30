@@ -627,7 +627,9 @@ class ContestCommonOperationMixin(object):
       journal = _get_status_journal(tsdoc)
       stats = RULES[tdoc['rule']].stat_func(tdoc, journal)
       tsdoc.update(stats)
-    tsdocs = tsdocs.sort(RULES[tdoc['rule']].status_sort)
+    # convert mongodb sort to python sort
+    sort_func = lambda x: tuple((x.get(k, 0) * -1 if v == -1 else x.get(k, 0)) for k, v in RULES[tdoc['rule']].status_sort)
+    tsdocs = sorted(tsdocs, key=sort_func)
     ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
     rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
                                                        ranked_tsdocs, udict, dudict, pdict)
