@@ -377,6 +377,7 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
             dudict=dudict,
             page_title=page_title,
             path_components=path_components,
+            page_name="contest_scoreboard",
         )
 
 @app.route("/contest/{tid}/scoreboard/admin", "contest_scoreboard_admin")
@@ -404,6 +405,7 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
             dudict=dudict,
             page_title=page_title,
             path_components=path_components,
+            page_name="contest_scoreboard_admin",
         )
 
 @app.route("/contest/{tid}/scoreboard/download/{ext}", "contest_scoreboard_download")
@@ -437,6 +439,36 @@ class ContestScoreboardDownloadHandler(contest.ContestMixin, base.Handler):
         file_name = tdoc["title"]
         await self.binary(data, file_name="{}.{}".format(file_name, ext))
 
+@app.route("/contest/{tid}/scoreboard/admin/download/{ext}", "contest_scoreboard_admin_download")
+class ContestScoreboardDownloadHandler(contest.ContestMixin, base.Handler):
+    def _export_status_as_csv(self, rows):
+        # \r\n for notepad compatibility
+        csv_content = "\r\n".join(
+            [",".join([str(c["value"]) for c in row]) for row in rows]
+        )
+        data = "\uFEFF" + csv_content
+        return data.encode()
+
+    def _export_status_as_html(self, rows):
+        return self.render_html(
+            "contest_scoreboard_download_html.html", rows=rows
+        ).encode()
+
+    @base.route_argument
+    @base.require_perm(builtin.PERM_VIEW_CONTEST)
+    @base.require_perm(builtin.PERM_VIEW_CONTEST_SCOREBOARD)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId, ext: str):
+        get_status_content = {
+            "csv": self._export_status_as_csv,
+            "html": self._export_status_as_html,
+        }
+        if ext not in get_status_content:
+            raise error.ValidationError("ext")
+        tdoc, rows, udict = await self.get_unfrozen_scoreboard(document.TYPE_CONTEST, tid, True)
+        data = get_status_content[ext](rows)
+        file_name = tdoc["title"]
+        await self.binary(data, file_name="{}.{}".format(file_name, ext))
 
 @app.route("/contest/create", "contest_create")
 class ContestCreateHandler(contest.ContestMixin, base.Handler):
