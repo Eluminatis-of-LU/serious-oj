@@ -546,6 +546,16 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
 
+@app.route("/contest/{tid}/publish", "contest_publish_problemset")
+class ContestEditHandler(contest.ContestMixin, base.Handler):
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        await self.publish_problems(tdoc["pids"])
 
 @app.route("/contest/{tid}/edit", "contest_edit")
 class ContestEditHandler(contest.ContestMixin, base.Handler):
