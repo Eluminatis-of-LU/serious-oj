@@ -546,7 +546,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
 
-@app.route("/contest/{tid}/publish", "contest_publish_problemset")
+@app.route("/contest/{tid}/problemset/publish", "contest_publish_problemset")
 class ContestEditHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
@@ -659,7 +659,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             "contest_detail", tid=tdoc["doc_id"]))
 
 
-@app.route("/contest/{tid}/problemset/{ext}", "contest_problemset")
+@app.route("/contest/{tid}/problemset/download/{ext}", "contest_problemset")
 class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     @base.route_argument
@@ -680,7 +680,7 @@ class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("ext")
 
 
-@app.route("/contest/{tid}/problemset/{ext}/zipped", "contest_problemset_zipped")
+@app.route("/contest/{tid}/problemset/download/{ext}/zipped", "contest_problemset_zipped")
 class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     @base.route_argument
