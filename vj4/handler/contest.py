@@ -556,6 +556,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         await self.publish_problems(tdoc["pids"])
+        self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
 
 @app.route("/contest/{tid}/edit", "contest_edit")
 class ContestEditHandler(contest.ContestMixin, base.Handler):
