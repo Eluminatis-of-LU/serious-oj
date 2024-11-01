@@ -135,7 +135,7 @@ async def set_role(domain_id: str, role: str, perm: int):
 
 
 @argmethod.wrap
-async def set_roles(domain_id: str, roles):
+async def set_roles(domain_id: str, roles: dict[str, int]):
   roles = {str(role): int(perm) for role, perm in roles.items()}
   update = {}
   for role in roles:
@@ -339,6 +339,9 @@ async def get_prefix_search(prefix: str, fields={}, limit: int=50):
                     .to_list()
   return builtin_ddocs + ddocs
 
+@argmethod.wrap
+async def set_display_name(domain_id: str, uid: int, display_name: str):
+  return await set_user(domain_id, uid, display_name=display_name)
 
 @argmethod.wrap
 async def ensure_indexes():

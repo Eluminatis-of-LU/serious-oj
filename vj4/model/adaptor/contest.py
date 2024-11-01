@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import collections
 import datetime
 import functools
@@ -29,19 +30,33 @@ Rule = collections.namedtuple('Rule', ['show_record_func',
                                        'rank_func',
                                        'scoreboard_func'])
 
+def _get_freeze_at(tdoc):
+  freeze_before = tdoc.get('freeze_before', 0)
+  return tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
 
 def _oi_stat(tdoc, journal):
-  detail = list(dict((j['pid'], j) for j in journal if j['pid'] in tdoc['pids']).values())
+  freeze_at = _get_freeze_at(tdoc)
+  modified_journal = copy.deepcopy(journal)
+  for j in modified_journal:
+    if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
+      j['score'] = 0
+      j['status_unknown'] = True
+  detail = list(dict((j['pid'], j) for j in modified_journal if j['pid'] in tdoc['pids']).values())
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
 
 def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
+  freeze_at = _get_freeze_at(tdoc)
   for j in journal:
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
-      effective[j['pid']] = j
-      if not j['accept']:
+      effective[j['pid']] = copy.deepcopy(j)
+      if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
+        effective[j['pid']]['accept'] = False
+        effective[j['pid']]['score'] = 0
+        effective[j['pid']]['status_unknown'] = True
+      if not effective[j['pid']]['accept']:
         naccept[j['pid']] += 1
 
   def time(jdoc):
@@ -113,11 +128,17 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row = []
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
-                'raw': udict[tsdoc['uid']]})
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')},
+              })
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
+      if tsddict.get(pid, {}).get('status_unknown', False):
+        col_score = '?'
+      else:
+        col_score = tsddict.get(pid, {}).get('score', '-')
       row.append({'type': 'record',
-                  'value': tsddict.get(pid, {}).get('score', '-'),
+                  'value': col_score,
                   'raw': tsddict.get(pid, {}).get('rid', None)})
     rows.append(row)
   return rows
@@ -152,7 +173,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row = []
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
-                'raw': udict[tsdoc['uid']]})
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}, 
+                })
     row.append({'type': 'string',
                 'value': tsdoc.get('accept', 0)})
     if is_export:
@@ -172,7 +195,7 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         rdoc = None
         col_accepted = ''
         if pid in tsddict:
-          col_accepted = '-' + str(tsddict[pid]['naccept'])
+          col_accepted = ('?' if tsddict[pid].get('status_unknown', False) else '-') + str(tsddict[pid]['naccept'])
           pstats[pid]['attempt'] += tsddict[pid]['naccept']
         col_time = ''
         col_time_str = ''
@@ -516,6 +539,13 @@ class ContestStatusMixin(object):
 
   def is_ongoing(self, tdoc):
     return tdoc['begin_at'] <= self.now < tdoc['end_at']
+  
+  def is_ranklist_frozen(self, tdoc):
+    freeze_before = tdoc.get('freeze_before', 0)
+    if freeze_before <= 0:
+      return False
+    freeze_at = tdoc['end_at'] - datetime.timedelta(minutes=freeze_before)
+    return freeze_at <= self.now
 
   def is_done(self, tdoc):
     return tdoc['end_at'] <= self.now
@@ -586,6 +616,37 @@ class ContestCommonOperationMixin(object):
     rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
                                                        ranked_tsdocs, udict, dudict, pdict)
     return tdoc, rows, udict
+  
+  async def get_unfrozen_scoreboard(self, doc_type: int, tid: objectid.ObjectId, is_export: bool=False):
+    if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
+      raise error.InvalidArgumentError('doc_type')
+    tdoc, tsdocs = await get_and_list_status(self.domain_id, doc_type, tid)
+    if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+      self.check_perm(builtin.PERM_EDIT_CONTEST)
+    if not self.can_show_scoreboard(tdoc):
+      if doc_type == document.TYPE_CONTEST:
+        raise error.ContestScoreboardHiddenError(self.domain_id, tid)
+      elif doc_type == document.TYPE_HOMEWORK:
+        raise error.HomeworkScoreboardHiddenError(self.domain_id, tid)
+    udict, dudict, pdict = await asyncio.gather(
+        user.get_dict([tsdoc['uid'] for tsdoc in tsdocs]),
+        domain.get_dict_user_by_uid(self.domain_id, [tsdoc['uid'] for tsdoc in tsdocs]),
+        problem.get_dict(self.domain_id, tdoc['pids']))
+    tdoc['freeze_before'] = 0
+    for tsdoc in tsdocs:
+      if 'journal' not in tsdoc or not tsdoc['journal']:
+        continue
+      journal = _get_status_journal(tsdoc)
+      stats = RULES[tdoc['rule']].stat_func(tdoc, journal)
+      tsdoc.update(stats)
+    # convert mongodb sort to python sort
+    sort_func = lambda x: tuple((x.get(k, 0) * -1 if v == -1 else x.get(k, 0)) for k, v in RULES[tdoc['rule']].status_sort)
+    tsdocs = sorted(tsdocs, key=sort_func)
+    ranked_tsdocs = RULES[tdoc['rule']].rank_func(tsdocs)
+    rows = RULES[tdoc['rule']].scoreboard_func(is_export, self.translate, tdoc,
+                                                       ranked_tsdocs, udict, dudict, pdict)
+    return tdoc, rows, udict
+
 
   async def verify_problems(self, pids):
     pdocs = await problem.get_multi(domain_id=self.domain_id, doc_id={'$in': pids},
@@ -612,6 +673,9 @@ class ContestCommonOperationMixin(object):
 
   async def hide_problems(self, pids):
     await asyncio.gather(*[problem.set_hidden(self.domain_id, pid, True) for pid in pids])
+  
+  async def publish_problems(self, pids):
+    await asyncio.gather(*[problem.set_hidden(self.domain_id, pid, False) for pid in pids])
 
 
 class ContestMixin(ContestStatusMixin, ContestVisibilityMixin, ContestCommonOperationMixin):

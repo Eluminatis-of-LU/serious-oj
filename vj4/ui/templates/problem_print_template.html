@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ tdoc['title'] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 1200px;
+            min-width: 920px
+        }
+        .problem {
+            margin-bottom: 40px;
+        }
+        .problem-title {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-left: 5px solid #eeeded;
+            text-align: center;
+        }
+        .problem-limit {
+          font-size: 1.2em;
+          margin: 5px 0;
+          text-align: center;
+        }
+        .problem h2 {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+        .problem p {
+            margin: 10px 0;
+        }
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .example-table th, .example-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .example-table th {
+            background-color: #f8f8f8;
+        }
+        pre {
+            background-color: #eeeeee;
+            padding: 10px;
+            overflow-x: auto;
+            margin: 0;
+        }
+        @page {  
+          margin-top: 0.75in;
+          margin-bottom: 0.75in;
+          margin-left: 0.5in;
+          margin-right: 0.5in;
+          size: A4;
+        }
+        @media print {
+          .problem {
+            page-break-after: always;
+            break-after: page;
+          }
+        }
+    </style>
+<script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>    
+</head>
+<body onload="window.print()">
+    {% for pdoc in pdocs %}
+    <div class="problem">
+        <h1 class="problem-title">{{ pdoc['title'] }}</h1>
+        {% if 'memory_limit_kb' in pdoc and pdoc['memory_limit_kb'] is not none %}
+        <h2 class="problem-limit">Memory Limit: {{ pdoc['memory_limit_kb'] | format_memory_limit }}</h2> <!-- Adjust as needed -->
+        {% endif %}
+        {% if 'time_limit_ms' in pdoc and pdoc['time_limit_ms'] is not none %}
+        <h2 class="problem-limit">Time Limit: {{ pdoc['time_limit_ms'] | format_time_limit }}</h2> <!-- Adjust as needed -->
+        {% endif %}
+        {{ pdoc['content']|markdown }}
+        {% if 'samples' in pdoc and pdoc['samples'] is not none %}
+          <h2>{{ _('Sample') }}</h2>
+          <table class="example-table">
+            <thead>
+              <tr>
+                <th style="max-width: 50%; width: 50%">{{ _('Input') }}</th>
+                <th style="max-width: 50%; width: 50%;">{{ _('Output') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in pdoc['samples'] %}
+              <tr>
+                <td style="max-width: 50%; width: 50%"><pre>{{ sample['input']|markdown }}</pre></td>
+                <td style="max-width: 50%; width: 50%"><pre>{{ sample['output']|markdown }}</pre></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+        {% if 'dataset_hint' in pdoc and pdoc['dataset_hint'] is not none %}
+          {{ pdoc['dataset_hint']|markdown }}
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>

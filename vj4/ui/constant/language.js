@@ -10,6 +10,7 @@ export const LANG_TEXTS = {
   js: "JavaScript (Node.js v18.19.1)",
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
+  pypy3: "PyPy 3 (Python 3.9.18 PyPy 7.3.15)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
   rust2021: "Rust 2021 (Rust 1.75.0)",
 };
@@ -26,6 +27,7 @@ export const LANG_TEXTS_ALLTIME = {
   js: "JavaScript (Node.js v18.19.1)",
   kt: "Kotlin 1.9 (kotlinc-jvm 1.9.24)",
   py3: "Python 3 (Python 3.12.3)",
+  pypy3: "PyPy 3 (Python 3.9.18 PyPy 7.3.15)",
   ruby: "Ruby 3 (Ruby 3.2.3)",
   rust2021: "Rust 2021 (Rust 1.75.0)",
 };
@@ -41,6 +43,7 @@ export const LANG_HIGHLIGHT_ID = {
   cs_bflat: "csharp",
   java: "java",
   py3: "python",
+  pypy3: "python",
   js: "javascript",
   kt: "kotlin",
   rust2021: "rust",
@@ -57,6 +60,7 @@ export const LANG_CODEMIRROR_MODES = {
   cs_bflat: "text/x-csharp",
   java: "text/x-java",
   py3: "text/x-python",
+  pypy3: "text/x-python",
   js: "text/javascript",
   kt: "text/x-kotlin",
   rust2021: "text/rust",
