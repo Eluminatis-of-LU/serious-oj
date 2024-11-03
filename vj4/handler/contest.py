@@ -203,10 +203,13 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
         )
         attended = tsdoc and tsdoc.get("attend") == 1
         if not self.is_done(tdoc):
-            if not attended:
+            if not (attended or self.can_edit_contest(tdoc)):
                 raise error.ContestNotAttendedError(tdoc["doc_id"])
             if not self.is_ongoing(tdoc):
                 raise error.ContestNotLiveError(tdoc["doc_id"])
+        elif pdoc['hidden'] and not (attended or self.can_edit_contest(tdoc)):
+            raise error.ProblemNotFoundError(
+                self.domain_id, pid, tdoc["doc_id"])
         if pid not in tdoc["pids"]:
             raise error.ProblemNotFoundError(
                 self.domain_id, pid, tdoc["doc_id"])

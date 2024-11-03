@@ -277,7 +277,6 @@ class ContestNotLiveError(ForbiddenError):
   def message(self):
     return 'This contest is not live.'
 
-
 class HomeworkScoreboardHiddenError(ForbiddenError):
   @property
   def message(self):

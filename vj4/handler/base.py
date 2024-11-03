@@ -106,6 +106,15 @@ class HandlerBase(setting.SettingMixin):
   def own(self, doc, perm=builtin.PERM_NONE, field='owner_uid', priv=builtin.PRIV_NONE):
     return (doc[field] == self.user['_id']) and self.has_perm(perm) and self.has_priv(priv)
   
+  def can_edit_contest(self, tdoc):
+    if not tdoc:
+      return False
+    if self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+      return True
+    if self.has_perm(builtin.PERM_EDIT_CONTEST):
+      return True
+    return False
+
   def can_access_pdoc(self, pdoc):
     if not pdoc:
       return False
