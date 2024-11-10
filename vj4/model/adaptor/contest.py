@@ -369,7 +369,7 @@ def get_multi(domain_id: str, doc_type: int, fields=None, **kwargs):
                             doc_type=doc_type,
                             fields=fields,
                             **kwargs) \
-                 .sort([('doc_id', -1)])
+                 .sort([('begin_at', -1)])
 
 
 @argmethod.wrap
