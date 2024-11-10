@@ -9,16 +9,16 @@ RUN yarn \
 FROM ghcr.io/astral-sh/uv:python3.9-bookworm-slim
 COPY --from=stage-node /app/src/vj4 /app/vj4
 COPY --from=stage-node /app/src/LICENSE /app/src/README.md /app/src/requirements.txt /app/src/setup.py /app/
-COPY ./scripts/install_uv_and_restore.sh /install_uv_and_restore.sh
+COPY ./scripts/restore.sh /restore.sh
 WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y \
         git
 
-RUN /install_uv_and_restore.sh
+RUN /restore.sh
 
-RUN rm /install_uv_and_restore.sh
+RUN rm /restore.sh
 
 RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
