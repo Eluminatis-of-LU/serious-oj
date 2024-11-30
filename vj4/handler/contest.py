@@ -29,14 +29,18 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
     @base.get_argument
     @base.sanitize
     async def get(self, *, rule: int = 0, page: int = 1):
+        query = {}
+        query['hidden'] = {"$ne": True}
+        if self.has_perm(builtin.PERM_EDIT_CONTEST):
+            del query['hidden']
         if not rule:
-            tdocs = contest.get_multi(self.domain_id, document.TYPE_CONTEST)
+            tdocs = contest.get_multi(self.domain_id, document.TYPE_CONTEST, **query)
             qs = ""
         else:
             if rule not in constant.contest.CONTEST_RULES:
                 raise error.ValidationError("rule")
             tdocs = contest.get_multi(
-                self.domain_id, document.TYPE_CONTEST, rule=rule)
+                self.domain_id, document.TYPE_CONTEST, rule=rule, **query)
             qs = "rule={0}".format(rule)
         tdocs, tpcount, _ = await pagination.paginate(
             tdocs, page, self.CONTESTS_PER_PAGE
@@ -513,7 +517,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         duration: float,
         pids: str,
         password: str,
-        freeze_before: int
+        freeze_before: int,
+        hidden: bool = False
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -545,6 +550,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             pids,
             password=password,
             freeze_before=freeze_before,
+            hidden=hidden,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -612,7 +618,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         duration: float,
         pids: str,
         password: str,
-        freeze_before: int
+        freeze_before: int,
+        hidden: bool = False
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -647,6 +654,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             pids=pids,
             password=password,
             freeze_before=freeze_before,
+            hidden=hidden,
         )
         await self.hide_problems(pids)
         if (

@@ -201,7 +201,12 @@ class ProblemDetailHandler(base.OperationHandler):
 
   async def _get_related_contests(self, pid):
     if self.has_perm(builtin.PERM_VIEW_CONTEST):
-      return await contest.get_multi(self.domain_id, document.TYPE_CONTEST, pids=pid).to_list()
+      query = {}
+      query['hidden'] = {"$ne": True}
+      query['pids'] = pid
+      if self.has_perm(builtin.PERM_EDIT_CONTEST):
+          del query['hidden']
+      return await contest.get_multi(self.domain_id, document.TYPE_CONTEST, **query).to_list()
     return None
 
   async def _get_related_homework(self, pid):

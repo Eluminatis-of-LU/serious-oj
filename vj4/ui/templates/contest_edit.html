@@ -18,6 +18,9 @@
             {{ form.form_text(columns=6, label='Password', name='password', value=tdoc['password']|default(''), row=False) }}
             {{ form.form_text(columns=6, label='Freeze ranklist before (minutes)', name='freeze_before', value=tdoc['freeze_before']|default('0'), row=False) }}
           </div>
+          <div class="row">
+            {{ form.form_checkbox(label='Hidden', name='hidden', value=tdoc['hidden']|default(False), row=False) }}
+          </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
           {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}
           <div class="row"><div class="columns">

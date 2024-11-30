@@ -31,7 +31,11 @@ class DomainMainHandler(contest.ContestStatusMixin, base.Handler):
 
   async def prepare_contest(self):
     if self.has_perm(builtin.PERM_VIEW_CONTEST):
-      tdocs = await contest.get_multi(self.domain_id, document.TYPE_CONTEST) \
+      query = {}
+      query['hidden'] = {"$ne": True}
+      if self.has_perm(builtin.PERM_EDIT_CONTEST):
+          del query['hidden']
+      tdocs = await contest.get_multi(self.domain_id, document.TYPE_CONTEST, **query) \
                            .limit(self.CONTESTS_ON_MAIN) \
                            .to_list()
       tsdict = await contest.get_dict_status(self.domain_id, self.user['_id'],
