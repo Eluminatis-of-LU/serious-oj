@@ -193,16 +193,22 @@ async def _validate_dataset(domain_id, pid, zip):
     for sample in config["Samples"]:
         input_file = f"{input_path_prefix}{config['TestCases'][sample]['Input']}"
         output_file = f"{output_path_prefix}{config['TestCases'][sample]['Output']}"
-        input_data = zip.read(input_file)
-        output_data = zip.read(output_file)
+        input_data = _process_sample(zip.read(input_file))
+        output_data = _process_sample(zip.read(output_file))
         samples.append(
             {
-                "input": input_data.decode(),
-                "output": output_data.decode(),
+                "input": input_data,
+                "output": output_data,
             }
         )
     await problem.edit(domain_id, pid, samples=samples)
 
+def _process_sample(bytes):
+    str = "```\n" + bytes.decode()
+    if str[-1] != "\n":
+        str += "\n"
+    str += "```"
+    return str
 
 async def _on_problem_data_change(e):
     value = e["value"]
