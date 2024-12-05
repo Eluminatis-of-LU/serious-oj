@@ -187,10 +187,8 @@ async def _validate_dataset(domain_id, pid, zip):
         time_limit_ms=time_limit,
         dataset_status=None,
     )
-    if "Samples" not in config:
-        return
     samples = []
-    for sample in config["Samples"]:
+    for sample in config.get("Samples", []):
         input_file = f"{input_path_prefix}{config['TestCases'][sample]['Input']}"
         output_file = f"{output_path_prefix}{config['TestCases'][sample]['Output']}"
         input_data = _process_sample(zip.read(input_file))
@@ -201,6 +199,8 @@ async def _validate_dataset(domain_id, pid, zip):
                 "output": output_data,
             }
         )
+    if len(samples) == 0:
+        samples = None
     await problem.edit(domain_id, pid, samples=samples)
 
 def _process_sample(bytes):
