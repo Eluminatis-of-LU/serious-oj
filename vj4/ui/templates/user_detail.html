@@ -29,7 +29,9 @@
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+              {% if not dudoc.get('temp_user', false) %}
+                <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+              {% endif %}
               <p>
                 {% set has_country = udoc.get('country', '_') != '_'  %}
                 {% set has_institute = udoc.get('institute', '_') != '_'  %}
@@ -83,6 +85,7 @@
           </div>
         </div>
       </div>
+      {% if not dudoc.get('temp_user', false) %}
       <div class="profile-content">
         <div class="section__tab-container immersive">
           <ul class="section__tabs">
@@ -192,12 +195,14 @@
           </ul>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
   <div class="medium-3 columns">
   {% if is_self_profile %}
     {{ home.render_sidebar() }}
   {% endif %}
+  {% if not dudoc.get('temp_user', false) %}
     <div class="section side">
       <div class="section__body">
         <div class="balancer sidebar-user-stat">
@@ -222,6 +227,7 @@
         </div>
       </div>
     </div>
+  {% endif %}
   {% if handler.can_view(udoc, 'bio') %}
     <div class="section side">
       <div class="section__header">

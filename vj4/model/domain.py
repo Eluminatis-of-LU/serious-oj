@@ -344,6 +344,10 @@ async def set_display_name(domain_id: str, uid: int, display_name: str):
   return await set_user(domain_id, uid, display_name=display_name)
 
 @argmethod.wrap
+async def set_tempuser_status(domain_id: str, uid: int, status: bool):
+  return await set_user(domain_id, uid, temp_user=status)
+
+@argmethod.wrap
 async def ensure_indexes():
   coll = db.coll('domain')
   await coll.create_index('owner_uid')
