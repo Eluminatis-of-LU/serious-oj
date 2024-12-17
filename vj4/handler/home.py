@@ -232,6 +232,18 @@ class HomeMessagesHandler(base.OperationHandler):
     await message.delete(message_id, self.user['_id'])
     self.json_or_redirect(self.url)
 
+@app.connection_route('/home/notification-conn', 'home_notification-conn', global_route=True)
+class HomePushNoitificationConnection(base.Connection):
+  @base.require_priv(builtin.PRIV_USER_PROFILE)
+  async def on_open(self):
+    await super(HomePushNoitificationConnection, self).on_open()
+    bus.subscribe(self.on_push_received, ['push_received-' + str(self.user['_id'])])
+
+  async def on_push_received(self, e):
+    self.send(**e['value'])
+
+  async def on_close(self):
+    bus.unsubscribe(self.on_push_received)
 
 @app.connection_route('/home/messages-conn', 'home_messages-conn', global_route=True)
 class HomeMessagesConnection(base.Connection):

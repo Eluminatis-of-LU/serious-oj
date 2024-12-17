@@ -39,10 +39,12 @@ async def _send_ac_mail(handler, rdoc):
                           translate('P{0} - {1} Accepted!').format(pdoc['doc_id'], pdoc['title']),
                           'ac_mail.html', rdoc=rdoc, pdoc=pdoc, _=translate)
 
-
 async def _post_judge(handler, rdoc):
   accept = rdoc['status'] == constant.record.STATUS_ACCEPTED
   bus.publish_throttle('record_change', rdoc, rdoc['_id'])
+  bus.publish_throttle('push_received-' + str(rdoc['uid']), 
+                        {'type': 'success' if accept else 'error', 'message': constant.record.STATUS_TEXTS[rdoc['status']]},
+                        rdoc['uid'])
   post_coros = list()
   # TODO(twd2): ignore no effect statuses like system error, ...
   if rdoc['type'] == constant.record.TYPE_SUBMISSION:

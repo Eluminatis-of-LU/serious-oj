@@ -6,6 +6,7 @@ import request from 'vj/utils/request';
 import responsiveCutoff from 'vj/breakpoints.json';
 import { isAbove } from 'vj/utils/mediaQuery';
 import Navigation from '.';
+import Notification from 'vj/components/notification';
 
 const nav = Navigation.instance;
 const { $nav } = nav;
@@ -26,7 +27,39 @@ function handleNavLogoutClick(ev) {
   ev.preventDefault();
 }
 
-const navigationPage = new AutoloadPage('navigationPage', () => {
+const navigationPage = new AutoloadPage('navigationPage', async () => {
+  const { default: SockJs } = await import('sockjs-client');
+  const sock = new SockJs('/home/notification-conn');
+
+  let heartbeatClock;
+  sock.onopen = () => {
+    heartbeatClock = setInterval(() => {
+      sock.send(JSON.stringify({}));
+    }, 25000);
+  };
+  sock.onclose = () => clearInterval(heartbeatClock);
+
+  sock.onmessage = message => {
+    const msg = JSON.parse(message.data);
+    console.log(msg);
+    switch (msg.type) {
+      case 'success':
+        Notification.success(msg.message);
+        break;
+      case 'info':
+        Notification.info(msg.message);
+        break;
+      case 'warn':
+        Notification.warn(msg.message);
+        break;
+      case 'error':
+        Notification.error(msg.message);
+        break;
+      default:
+        break;
+    }
+  };
+
   if (!document.getElementById('panel') || !document.getElementById('menu')) {
     return;
   }
