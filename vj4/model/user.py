@@ -136,6 +136,14 @@ async def set_password(uid: int, password: str):
                                        return_document=ReturnDocument.AFTER)
   return doc
 
+@argmethod.wrap
+async def set_user_temp_status(uid: int, status: bool):
+  """Set password. Returns doc or None."""
+  coll = db.coll('user')
+  doc = await coll.find_one_and_update(filter={'_id': uid},
+                                       update={'$set': {'temp_user': status}},
+                                       return_document=ReturnDocument.AFTER)
+  return doc
 
 @argmethod.wrap
 async def set_mail(uid: int, mail: str):
