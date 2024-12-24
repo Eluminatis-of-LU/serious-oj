@@ -395,3 +395,8 @@ class SendMailError(UserFacingError):
   @property
   def message(self):
     return 'Failed to send mail to {0}.'
+
+class TempUserError(UserFacingError):
+  @property
+  def message(self):
+    return 'Not allowed for temp user.'

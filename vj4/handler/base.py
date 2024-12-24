@@ -73,7 +73,7 @@ class HandlerBase(setting.SettingMixin):
 
   def has_perm(self, perm):
     role = self.domain_user.get('role', builtin.ROLE_DEFAULT)
-    mask = domain.get_all_roles(self.domain).get(role, builtin.PERM_NONE)
+    mask = domain.get_all_roles(self.domain).get(role, builtin.PERM_NONE) if not self.is_temp_user() else builtin.TEMP_USER_PERMISSIONS
     return ((perm & mask) == perm
             or self.has_priv(builtin.PRIV_MANAGE_ALL_DOMAIN))
 
@@ -84,9 +84,16 @@ class HandlerBase(setting.SettingMixin):
   def has_priv(self, priv):
     return (priv & self.user['priv']) == priv
 
+  def is_temp_user(self):
+    return self.user.get('temp_user', False)
+
   def check_priv(self, priv):
     if not self.has_priv(priv):
       raise error.PrivilegeError(priv)
+    
+  def check_not_temp_user(self):
+    if self.user.get('temp_user', False):
+      raise error.TempUserError()
 
   def dudoc_has_perm(self, udoc, dudoc, perm, ddoc=None):
     if not udoc or not dudoc:
@@ -436,6 +443,13 @@ def require_perm(perm):
 
   return decorate
 
+def require_not_temp_user(func):
+  @functools.wraps(func)
+  def wrapper(self, *args, **kwargs):
+    self.check_not_temp_user()
+    return func(self, *args, **kwargs)
+
+  return wrapper
 
 def require_priv(priv):
   def decorate(func):
