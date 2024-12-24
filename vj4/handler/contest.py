@@ -239,7 +239,7 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
 class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
-    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM)
+    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM_CONTEST)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId, pid: document.convert_doc_id):
         uid = self.user["_id"] if self.has_priv(
@@ -302,7 +302,7 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
-    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM)
+    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM_CONTEST)
     @base.post_argument
     @base.require_csrf_token
     @base.sanitize
