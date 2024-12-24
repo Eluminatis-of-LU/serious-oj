@@ -3,6 +3,7 @@
 <div class="section side">
   <ol class="menu">
     {{ sidemenu.render_item('account--circle', 'user_detail', label='My Profile', uid=handler.user['_id']) }}
+    {% if not handler.is_temp_user() %}
     {{ sidemenu.render_item('comment--multiple', 'home_messages') }}
     <li class="menu__seperator"></li>
     {{ sidemenu.render_item('wrench', 'home_account') }}
@@ -12,6 +13,7 @@
     <li class="menu__seperator"></li>
     {{ sidemenu.render_item('file', 'home_file') }}
     {{ sidemenu.render_item('web', 'home_domain') }}
+    {% endif %}
   </ol>
 </div>
 {% endmacro %}
