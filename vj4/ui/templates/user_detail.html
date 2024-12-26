@@ -29,7 +29,9 @@
                 {{ _('currently offline') }}.
               {% endif %}
               </p>
-              <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+              {% if not udoc.get('temp_user', false) %}
+                <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+              {% endif %}
               <p>
                 {% set has_country = udoc.get('country', '_') != '_'  %}
                 {% set has_institute = udoc.get('institute', '_') != '_'  %}
@@ -45,14 +47,16 @@
                 {% endif %}
               </p>
               <div class="profile-header__contact-bar">
-              {% if is_self_profile %}
+              {% if is_self_profile and not handler.is_temp_user() %}
                 <a class="profile-header__contact-item" href="{{ reverse_url('home_account') }}#setting_info" data-tooltip="{{ _('Edit Profile') }}">
                   <span class="icon icon-edit"></span>
                 </a>
               {% endif %}
+              {% if not handler.is_temp_user() %}
                 <a class="profile-header__contact-item" href="{{ reverse_url('home_messages') }}?target_uid={{ udoc['_id'] }}" target="_blank" rel="noopener noreferrer" data-tooltip="{{ _('Send Message') }}">
                   <span class="icon icon-comment--multiple"></span>
                 </a>
+              {% endif %}
               {% if handler.can_view(udoc, 'mail') and udoc['mail'] %}
                 <a class="profile-header__contact-item" href="javascript:;" name="profile_contact_copy" data-content="{{ udoc['mail'] | base64_encode }}" data-tooltip="{{ _('Copy Email') }}">
                   <span class="icon icon-mail"></span>
@@ -83,6 +87,7 @@
           </div>
         </div>
       </div>
+      {% if not udoc.get('temp_user', false) %}
       <div class="profile-content">
         <div class="section__tab-container immersive">
           <ul class="section__tabs">
@@ -192,12 +197,14 @@
           </ul>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
   <div class="medium-3 columns">
   {% if is_self_profile %}
     {{ home.render_sidebar() }}
   {% endif %}
+  {% if not udoc.get('temp_user', false) %}
     <div class="section side">
       <div class="section__body">
         <div class="balancer sidebar-user-stat">
@@ -222,10 +229,11 @@
         </div>
       </div>
     </div>
+  {% endif %}
   {% if handler.can_view(udoc, 'bio') %}
     <div class="section side">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Bio') }}{% if is_self_profile %} <small><a href="{{ reverse_url('home_account') }}#setting_info">[{{ _('Edit') }}]</a></small>{% endif %}</h1>
+        <h1 class="section__title">{{ _('Bio') }}{% if is_self_profile and not handler.is_temp_user() %} <small><a href="{{ reverse_url('home_account') }}#setting_info">[{{ _('Edit') }}]</a></small>{% endif %}</h1>
       </div>
       <div class="section__body typo">
       {% if udoc['bio'] and udoc['bio']|length > 0 %}

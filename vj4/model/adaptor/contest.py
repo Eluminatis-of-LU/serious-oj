@@ -276,8 +276,8 @@ def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdi
 
 
 RULES = {
-  constant.contest.RULE_OI: Rule(lambda tdoc, now: now > tdoc['end_at'],
-                                 lambda tdoc, now: now > tdoc['end_at'],
+  constant.contest.RULE_OI: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
+                                 lambda tdoc, now: now >= tdoc['begin_at'],
                                  _oi_stat,
                                  [('score', -1)],
                                  functools.partial(rank.ranked, equ_func=_oi_equ_func),
@@ -381,7 +381,7 @@ def get_multi(domain_id: str, doc_type: int, fields=None, **kwargs):
                             doc_type=doc_type,
                             fields=fields,
                             **kwargs) \
-                 .sort([('doc_id', -1)])
+                 .sort([('begin_at', -1)])
 
 
 @argmethod.wrap

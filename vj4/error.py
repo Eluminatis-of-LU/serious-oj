@@ -277,7 +277,6 @@ class ContestNotLiveError(ForbiddenError):
   def message(self):
     return 'This contest is not live.'
 
-
 class HomeworkScoreboardHiddenError(ForbiddenError):
   @property
   def message(self):
@@ -396,3 +395,8 @@ class SendMailError(UserFacingError):
   @property
   def message(self):
     return 'Failed to send mail to {0}.'
+
+class TempUserError(UserFacingError):
+  @property
+  def message(self):
+    return 'Not allowed for temp user.'

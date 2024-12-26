@@ -458,6 +458,13 @@ async def ensure_indexes():
                            ('doc_type', 1),
                            ('rule', 1),
                            ('doc_id', -1)], sparse=True)
+  await coll.create_index([('domain_id', 1),
+                          ('doc_type', 1),
+                          ('rule', 1),
+                          ('begin_at', -1)], sparse=True)
+  await coll.create_index([('domain_id', 1),
+                          ('doc_type', 1),
+                          ('begin_at', -1)], sparse=True)
   # for training
   await coll.create_index([('domain_id', 1),
                            ('doc_type', 1),

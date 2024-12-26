@@ -11,6 +11,7 @@ from vj4 import db
 from vj4 import error
 from vj4.model import system
 from vj4.service import bus
+from vj4.service import dataset
 from vj4.service import smallcache
 from vj4.service import staticmanifest
 from vj4.util import json
@@ -83,6 +84,7 @@ class Application(web.Application):
     loop.run_until_complete(system.ensure_db_version())
     loop.run_until_complete(asyncio.gather(tools.ensure_all_indexes(), bus.init()))
     smallcache.init()
+    dataset.init()
 
     # Load views.
     from vj4.handler import contest

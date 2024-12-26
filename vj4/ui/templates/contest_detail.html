@@ -20,12 +20,12 @@
       {% endif %}
       </div>
     </div>
-  {% if handler.is_ongoing(tdoc) or handler.is_done(tdoc) %}
+  {% if handler.is_ongoing(tdoc) or handler.is_done(tdoc) or handler.can_edit_contest(tdoc) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Problem') }}</h1>
       </div>
-    {% if attended or handler.is_done(tdoc) %}
+    {% if attended or handler.is_done(tdoc) or handler.can_edit_contest(tdoc) %}
       <div class="section__body no-padding">
         <table class="data-table">
           <colgroup>
@@ -64,7 +64,11 @@
             {% endif %}
               <td class="col--problem col--problem-name">
                 #{{ loop.index }}:
+                {% if pdict[pid]['hidden'] and not (attended or handler.can_edit_contest(tdoc)) %}
+                  <span class="text-orange">{{ _('Problem not published') }}</span>
+                {% else %}
                 {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                {% endif %}
               </td>
             </tr>
           {% endfor %}

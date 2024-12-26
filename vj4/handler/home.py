@@ -32,6 +32,7 @@ TOKEN_TYPE_TEXTS = {
 
 @app.route('/home/security', 'home_security', global_route=True)
 class HomeSecurityHandler(base.OperationHandler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     # TODO(iceboy): pagination? or limit session count for uid?
@@ -48,6 +49,7 @@ class HomeSecurityHandler(base.OperationHandler):
     } for session in sessions)
     self.render('home_security.html', sessions=annotated_sessions)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -62,6 +64,7 @@ class HomeSecurityHandler(base.OperationHandler):
       raise error.CurrentPasswordError(self.user['_id'])
     self.json_or_redirect(self.url)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -84,6 +87,7 @@ class HomeSecurityHandler(base.OperationHandler):
                          uname=udoc['uname'])
     self.render('user_changemail_mail_sent.html')
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -98,6 +102,7 @@ class HomeSecurityHandler(base.OperationHandler):
       raise error.InvalidTokenDigestError(token_type, token_digest)
     self.json_or_redirect(self.url)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   async def post_delete_all_tokens(self):
@@ -107,6 +112,7 @@ class HomeSecurityHandler(base.OperationHandler):
 
 @app.route('/home/security/changemail/{code}', 'user_changemail_with_code', global_route=True)
 class UserChangemailWithCodeHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.sanitize
@@ -125,6 +131,7 @@ class UserChangemailWithCodeHandler(base.Handler):
 
 @app.route('/home/account', 'home_account', global_route=True)
 class HomeAccountHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     self.render('home_settings.html', category='account', settings=setting.ACCOUNT_SETTINGS)
@@ -139,10 +146,12 @@ class HomeAccountHandler(base.Handler):
 
 @app.route('/home/domain/account', 'home_domain_account', global_route=False)
 class HomeDomainAccountHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     self.render('home_settings.html', category='domain_account', settings=setting.DOMAIN_ACCOUNT_SETTINGS)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.post_argument
   @base.require_csrf_token
@@ -153,6 +162,7 @@ class HomeDomainAccountHandler(base.Handler):
 
 @app.route('/home/preference', 'home_preference', global_route=True)
 class HomeAccountHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     self.render('home_settings.html', category='preference', settings=setting.PREFERENCE_SETTINGS)
@@ -177,6 +187,7 @@ class HomeMessagesHandler(base.OperationHandler):
                     'gravatar_url': gravatar_url,
                     'gravatar': ''}
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     # TODO(iceboy): projection, pagination.
@@ -190,6 +201,7 @@ class HomeMessagesHandler(base.OperationHandler):
       self.modify_udoc(udict, mdoc['sendee_uid'])
     self.json_or_render('home_messages.html', messages=mdocs, udict=udict)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -209,6 +221,7 @@ class HomeMessagesHandler(base.OperationHandler):
       await bus.publish('message_received-' + str(uid), {'type': 'new', 'data': mdoc})
     self.json_or_redirect(self.url, mdoc=mdoc)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -225,6 +238,7 @@ class HomeMessagesHandler(base.OperationHandler):
       await bus.publish('message_received-' + str(other_uid), {'type': 'reply', 'data': mdoc})
     self.json_or_redirect(self.url, reply=reply)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
   @base.sanitize
@@ -232,9 +246,22 @@ class HomeMessagesHandler(base.OperationHandler):
     await message.delete(message_id, self.user['_id'])
     self.json_or_redirect(self.url)
 
+@app.connection_route('/home/notification-conn', 'home_notification-conn', global_route=True)
+class HomePushNoitificationConnection(base.Connection):
+  @base.require_priv(builtin.PRIV_USER_PROFILE)
+  async def on_open(self):
+    await super(HomePushNoitificationConnection, self).on_open()
+    bus.subscribe(self.on_push_received, ['push_received-' + str(self.user['_id'])])
+
+  async def on_push_received(self, e):
+    self.send(**e['value'])
+
+  async def on_close(self):
+    bus.unsubscribe(self.on_push_received)
 
 @app.connection_route('/home/messages-conn', 'home_messages-conn', global_route=True)
 class HomeMessagesConnection(base.Connection):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def on_open(self):
     await super(HomeMessagesConnection, self).on_open()
@@ -249,6 +276,7 @@ class HomeMessagesConnection(base.Connection):
 
 @app.route('/home/domain', 'home_domain', global_route=True)
 class HomeDomainHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     pending_ddocs = await domain.get_pending(owner_uid=self.user['_id']) \
@@ -266,6 +294,7 @@ class HomeDomainHandler(base.Handler):
           or self.has_priv(builtin.PRIV_MANAGE_ALL_DOMAIN))
     self.render('home_domain.html', pending_ddocs=pending_ddocs, ddocs=ddocs, dudict=dudict, can_manage=can_manage)
 
+  @base.require_not_temp_user
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
@@ -276,10 +305,12 @@ class HomeDomainHandler(base.Handler):
 
 @app.route('/home/domain/create', 'home_domain_create', global_route=True)
 class HomeDomainCreateHandler(base.Handler):
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_CREATE_DOMAIN)
   async def get(self):
     self.render('home_domain_create.html')
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_CREATE_DOMAIN)
   @base.post_argument
   @base.require_csrf_token
@@ -296,13 +327,15 @@ class HomeFileHandler(base.OperationHandler):
     return options.cdn_prefix.rstrip('/') + \
       self.reverse_url('fs_get', domain_id=builtin.DOMAIN_ID_SYSTEM,
                        secret=fdoc['metadata']['secret'])
-
+  
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   async def get(self):
     ufdocs = await userfile.get_multi(owner_uid=self.user['_id']).to_list()
     fdict = await fs.get_meta_dict(ufdoc.get('file_id') for ufdoc in ufdocs)
     self.render('home_file.html', ufdocs=ufdocs, fdict=fdict)
 
+  @base.require_not_temp_user
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.post_argument
   @base.require_csrf_token

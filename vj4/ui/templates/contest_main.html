@@ -8,7 +8,12 @@
         <div>
           <h2 class="status_title">{{ _(title) }}</h2>
         </div>
-        <h1>{{ tdoc['title'] }}</h1>
+        <h1>
+          {{ tdoc['title'] }}
+          {%- if tdoc['hidden'] %}
+            <span class="text-blue">({{ _('hidden') }})</span>
+          {%- endif %}
+        </h1>
         <ul class="info">
           <li>
             <span class="icon icon-award"></span>
@@ -87,7 +92,14 @@
                 </div>
               </div>
               <div class="media__body medium">
-                <h1 class="contest__title"><a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>{{ tdoc['title'] }}</a></h1>
+                <h1 class="contest__title">
+                  <a href="{{ reverse_url('contest_detail', tid=tdoc['doc_id']) }}" data-emoji-enabled>
+                    {{ tdoc['title'] }}
+                    {%- if tdoc['hidden'] %}
+                      <span class="text-orange">({{ _('hidden') }})</span>
+                    {%- endif %}
+                  </a>
+                </h1>
                 <ul class="supplementary list">
                   <li>
                     <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ vj4.constant.contest.RULE_TEXTS[tdoc['rule']] }}</a>

@@ -48,6 +48,7 @@
               <span class="icon icon-account--circle"></span> {{ _('my_profile') }}
             </a>
           </li>
+          {% if not handler.is_temp_user() %}
           <li class="menu__item">
             <a href="{{ reverse_url('home_messages') }}" class="menu__link">
               <span class="icon icon-comment--multiple"></span> {{ _('home_messages') }}
@@ -85,6 +86,7 @@
               <span class="icon icon-web"></span> {{ _('my_domains') }}
             </a>
           </li>
+          {% endif %}
           <li class="menu__seperator"></li>
           <li class="menu__item">
             <a href="{{ reverse_url('user_logout') }}" class="menu__link" name="nav_logout">

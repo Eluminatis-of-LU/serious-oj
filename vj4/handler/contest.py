@@ -29,14 +29,18 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
     @base.get_argument
     @base.sanitize
     async def get(self, *, rule: int = 0, page: int = 1):
+        query = {}
+        query['hidden'] = {"$ne": True}
+        if self.has_perm(builtin.PERM_EDIT_CONTEST):
+            del query['hidden']
         if not rule:
-            tdocs = contest.get_multi(self.domain_id, document.TYPE_CONTEST)
+            tdocs = contest.get_multi(self.domain_id, document.TYPE_CONTEST, **query)
             qs = ""
         else:
             if rule not in constant.contest.CONTEST_RULES:
                 raise error.ValidationError("rule")
             tdocs = contest.get_multi(
-                self.domain_id, document.TYPE_CONTEST, rule=rule)
+                self.domain_id, document.TYPE_CONTEST, rule=rule, **query)
             qs = "rule={0}".format(rule)
         tdocs, tpcount, _ = await pagination.paginate(
             tdocs, page, self.CONTESTS_PER_PAGE
@@ -203,10 +207,13 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
         )
         attended = tsdoc and tsdoc.get("attend") == 1
         if not self.is_done(tdoc):
-            if not attended:
+            if not (attended or self.can_edit_contest(tdoc)):
                 raise error.ContestNotAttendedError(tdoc["doc_id"])
             if not self.is_ongoing(tdoc):
                 raise error.ContestNotLiveError(tdoc["doc_id"])
+        elif pdoc['hidden'] and not (attended or self.can_edit_contest(tdoc)):
+            raise error.ProblemNotFoundError(
+                self.domain_id, pid, tdoc["doc_id"])
         if pid not in tdoc["pids"]:
             raise error.ProblemNotFoundError(
                 self.domain_id, pid, tdoc["doc_id"])
@@ -232,7 +239,7 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
 class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
-    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM)
+    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM_CONTEST)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId, pid: document.convert_doc_id):
         uid = self.user["_id"] if self.has_priv(
@@ -295,7 +302,7 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
-    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM)
+    @base.require_perm(builtin.PERM_SUBMIT_PROBLEM_CONTEST)
     @base.post_argument
     @base.require_csrf_token
     @base.sanitize
@@ -510,7 +517,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         duration: float,
         pids: str,
         password: str,
-        freeze_before: int
+        freeze_before: int,
+        hidden: bool = False
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -542,6 +550,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             pids,
             password=password,
             freeze_before=freeze_before,
+            hidden=hidden,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -609,7 +618,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         duration: float,
         pids: str,
         password: str,
-        freeze_before: int
+        freeze_before: int,
+        hidden: bool = False
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -644,6 +654,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             pids=pids,
             password=password,
             freeze_before=freeze_before,
+            hidden=hidden,
         )
         await self.hide_problems(pids)
         if (
