@@ -22,6 +22,7 @@
             {{ form.form_checkbox(label='Hidden', name='hidden', value=tdoc['hidden']|default(False), row=False) }}
           </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
+          {{ form.form_text(columns=None, label='Moderators', name='moderators', value=tdoc['moderators']|default([])) }}
           {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
