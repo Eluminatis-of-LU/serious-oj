@@ -555,6 +555,10 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
 
+@app.route("/contest/{tid}/clarification", "contest_clarification_main")
+class ContestClarificationMainHandler(contest.ContestMixin, base.Handler):
+    pass
+
 @app.route("/contest/{tid}/problemset/publish", "contest_publish_problemset")
 class ContestEditHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
