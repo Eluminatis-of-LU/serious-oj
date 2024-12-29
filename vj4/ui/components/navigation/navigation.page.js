@@ -55,6 +55,8 @@ const navigationPage = new AutoloadPage('navigationPage', async () => {
       case 'error':
         Notification.error(msg.message);
         break;
+      case 'window-alert':
+        window.alert(msg.message);
       default:
         break;
     }
