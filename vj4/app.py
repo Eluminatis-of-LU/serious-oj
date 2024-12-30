@@ -12,6 +12,7 @@ from vj4 import error
 from vj4.model import system
 from vj4.service import bus
 from vj4.service import dataset
+from vj4.service import worker
 from vj4.service import smallcache
 from vj4.service import staticmanifest
 from vj4.util import json
@@ -85,6 +86,7 @@ class Application(web.Application):
     loop.run_until_complete(asyncio.gather(tools.ensure_all_indexes(), bus.init()))
     smallcache.init()
     dataset.init()
+    worker.init()
 
     # Load views.
     from vj4.handler import contest
@@ -102,9 +104,22 @@ class Application(web.Application):
     from vj4.handler import rating
     from vj4.handler import user
     from vj4.handler import i18n
+    from vj4.handler.api import announcement
     if options.static:
       self.router.add_static('/', static_path, name='static')
 
+def api_route(url, name, version=1, global_route=False):
+  """Decorator for API route. Appends /api/v{version} to the URL."""
+  def decorate(handler):
+    handler.NAME = handler.NAME or name
+    handler.TITLE = handler.TITLE or name
+    handler.GLOBAL = global_route
+    Application().router.add_route('*', '/api/v{version}' + url, handler, name=name + '_api_v' + str(version))
+    Application().router.add_route('*', '/api/v{version}/d/{domain_id}' + url, handler,
+                                   name=name + '_with_domain_id_api_v' + str(version))
+    return handler
+
+  return decorate
 
 def route(url, name, global_route=False):
   def decorate(handler):
