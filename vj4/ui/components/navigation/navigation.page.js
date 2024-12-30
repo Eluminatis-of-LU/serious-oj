@@ -41,7 +41,6 @@ const navigationPage = new AutoloadPage('navigationPage', async () => {
 
   sock.onmessage = message => {
     const msg = JSON.parse(message.data);
-    console.log(msg);
     switch (msg.type) {
       case 'success':
         Notification.success(msg.message);
@@ -56,6 +55,7 @@ const navigationPage = new AutoloadPage('navigationPage', async () => {
         Notification.error(msg.message);
         break;
       case 'window-alert':
+        window.alert(msg.message);
         break;
       default:
         break;
