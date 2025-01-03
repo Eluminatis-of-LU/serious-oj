@@ -247,7 +247,7 @@ class HomeworkDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
                            self.user['_id'], lang, code,
                            ttype=document.TYPE_HOMEWORK, tid=tdoc['doc_id'], hidden=True)
     await contest.update_status(self.domain_id, document.TYPE_HOMEWORK, tdoc['doc_id'], self.user['_id'],
-                                rid, pdoc['doc_id'], False, 0, constant.record.STATUS_WAITING,)
+                                rid, pdoc['doc_id'], False, 0, constant.record.STATUS_WAITING)
     if not self.can_show_record(tdoc):
       self.json_or_redirect(self.reverse_url('homework_detail', tid=tdoc['doc_id']))
     else:
