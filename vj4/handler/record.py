@@ -189,11 +189,25 @@ class RecordDetailHandler(RecordMixin, base.Handler):
     else:
       judge_udoc = None
     # check permission for visibility: hidden problem
+    path_components = None
+    if tdoc:
+      path_components = self.build_path(
+            (self.translate("contest_main"), self.reverse_url("contest_main")),
+            (tdoc["title"], self.reverse_url("contest_detail", tid=tdoc["_id"])),
+            (pdoc["title"], self.reverse_url("contest_detail_problem", tid=tdoc["_id"], pid=pdoc["doc_id"])),
+            (self.translate("record_detail"), None),
+      )
+    else:
+      path_components = self.build_path(
+            (self.translate("record_main"), self.reverse_url("record_main")),
+            (pdoc["title"], self.reverse_url("problem_detail", pid=pdoc["doc_id"])),
+            (self.translate("record_detail"), None),
+      )
     if pdoc.get('hidden', False) and not self.can_see_pdoc(pdoc):
       pdoc = None
     url_prefix = '/d/{}'.format(urllib.parse.quote(self.domain_id))
     self.render('record_detail.html', rdoc=rdoc, udoc=udoc, dudoc=dudoc, pdoc=pdoc, tdoc=tdoc,
-                judge_udoc=judge_udoc, show_status=show_status,
+                judge_udoc=judge_udoc, show_status=show_status, path_components=path_components,
                 socket_url=url_prefix + '/records/{}/conn'.format(rid)) # FIXME(twd2): magic
 
 
