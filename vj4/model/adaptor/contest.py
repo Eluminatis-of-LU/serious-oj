@@ -50,7 +50,7 @@ def _acm_stat(tdoc, journal):
   effective = {}
   freeze_at = _get_freeze_at(tdoc)
   for j in journal:
-    if j['status'] >= constant.record.STATUS_COMPILE_ERROR:
+    if j.get('status', constant.record.STATUS_WAITING) >= constant.record.STATUS_COMPILE_ERROR:
       continue
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
       effective[j['pid']] = copy.deepcopy(j)
@@ -442,7 +442,7 @@ def _get_status_journal(tsdoc):
 @argmethod.wrap
 async def update_status(domain_id: str, doc_type: int, tid: objectid.ObjectId, uid: int,
                         rid: objectid.ObjectId, pid: document.convert_doc_id,
-                        accept: bool, score: int, status=constant.record.STATUS_WAITING):
+                        accept: bool, score: int, status: int):
   """This method returns None when the modification has been superseded by a parallel operation."""
   if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
     raise error.InvalidArgumentError('doc_type')
