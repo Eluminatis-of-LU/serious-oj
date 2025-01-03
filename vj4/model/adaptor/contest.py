@@ -50,6 +50,8 @@ def _acm_stat(tdoc, journal):
   effective = {}
   freeze_at = _get_freeze_at(tdoc)
   for j in journal:
+    if j.get('status', constant.record.STATUS_WAITING) >= constant.record.STATUS_COMPILE_ERROR:
+      continue
     if j['pid'] in tdoc['pids'] and not (j['pid'] in effective and effective[j['pid']]['accept']):
       effective[j['pid']] = copy.deepcopy(j)
       if j['rid'].generation_time.replace(tzinfo=None) >= freeze_at:
@@ -440,14 +442,14 @@ def _get_status_journal(tsdoc):
 @argmethod.wrap
 async def update_status(domain_id: str, doc_type: int, tid: objectid.ObjectId, uid: int,
                         rid: objectid.ObjectId, pid: document.convert_doc_id,
-                        accept: bool, score: int):
+                        accept: bool, score: int, status: int):
   """This method returns None when the modification has been superseded by a parallel operation."""
   if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
     raise error.InvalidArgumentError('doc_type')
   tdoc = await document.get(domain_id, doc_type, tid)
   tsdoc = await document.rev_push_status(
     domain_id, tdoc['doc_type'], tdoc['doc_id'], uid,
-    'journal', {'rid': rid, 'pid': pid, 'accept': accept, 'score': score})
+    'journal', {'rid': rid, 'pid': pid, 'accept': accept, 'score': score, 'status': status})
   if 'attend' not in tsdoc or not tsdoc['attend']:
     if tdoc['doc_type'] == document.TYPE_CONTEST:
       raise error.ContestNotAttendedError(domain_id, tid, uid)

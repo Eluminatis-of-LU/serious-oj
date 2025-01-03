@@ -350,6 +350,7 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
             pdoc["doc_id"],
             False,
             0,
+            constant.record.STATUS_WAITING,
         )
         if not self.can_show_record(tdoc):
             self.json_or_redirect(

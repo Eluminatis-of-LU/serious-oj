@@ -28,19 +28,19 @@ ASSDOC = {'pids': [777, 778, 779], 'begin_at': NOW,
           'penalty_since': NOW + datetime.timedelta(seconds=5),
           'penalty_rules': {'1': 0.9, '2': 0.8, '3': 0.6, '4': 0.2}}
 SUBMIT_777_AC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=2)),
-                 'pid': 777, 'accept': True, 'score': 22}
+                 'pid': 777, 'accept': True, 'score': 22, 'status': constant.record.STATUS_ACCEPTED}
 SUBMIT_777_AC_LATE = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=7)),
-                      'pid': 777, 'accept': True, 'score': 17}
+                      'pid': 777, 'accept': True, 'score': 17, 'status': constant.record.STATUS_ACCEPTED}
 SUBMIT_777_NAC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=3)),
-                  'pid': 777, 'accept': False, 'score': 44}
+                  'pid': 777, 'accept': False, 'score': 44, 'status': constant.record.STATUS_WRONG_ANSWER}
 SUBMIT_777_NAC_LATE = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=12)),
-                       'pid': 777, 'accept': False, 'score': 23}
+                       'pid': 777, 'accept': False, 'score': 23, 'status': constant.record.STATUS_WRONG_ANSWER}
 SUBMIT_778_AC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=4)),
-                 'pid': 778, 'accept': True, 'score': 33}
+                 'pid': 778, 'accept': True, 'score': 33, 'status': constant.record.STATUS_ACCEPTED}
 SUBMIT_778_AC_LATE = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=8)),
-                      'pid': 778, 'accept': True, 'score': 37}
+                      'pid': 778, 'accept': True, 'score': 37, 'status': constant.record.STATUS_ACCEPTED}
 SUBMIT_780_AC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=5)),
-                 'pid': 780, 'accept': True, 'score': 1000}
+                 'pid': 780, 'accept': True, 'score': 1000, 'status': constant.record.STATUS_ACCEPTED}
 
 DOMAIN_ID_DUMMY = 'dummy'
 OWNER_UID = 22
