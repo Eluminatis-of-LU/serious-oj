@@ -54,7 +54,7 @@ async def _post_judge(handler, rdoc):
       post_coros.append(contest.update_status(rdoc['domain_id'],
                                               rdoc.get('ttype', document.TYPE_CONTEST), rdoc['tid'],
                                               rdoc['uid'], rdoc['_id'], rdoc['pid'],
-                                              accept, rdoc['score']))
+                                              accept, rdoc['score'], rdoc['status']))
     if not rdoc.get('rejudged'):
       if await problem.update_status(rdoc['domain_id'], rdoc['pid'], rdoc['uid'],
                                      rdoc['_id'], rdoc['status']):
