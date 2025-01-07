@@ -58,12 +58,14 @@ class ProblemMainHandler(base.OperationHandler):
   @base.require_perm(builtin.PERM_VIEW_PROBLEM)
   @base.get_argument
   @base.sanitize
-  async def get(self, *, page: int=1):
+  async def get(self, *, page: int=1, show_only_hidden: bool=False):
     # TODO(iceboy): projection.
     if not self.has_perm(builtin.PERM_VIEW_PROBLEM_HIDDEN):
       f = {'$or': [{'hidden': False}, {'owner_uid': self.user['_id']}, {'shared_uids': self.user['_id']}]}
     else:
       f = {}
+    if show_only_hidden:
+      f['hidden'] = True
     pdocs, ppcount, pcount = await pagination.paginate(problem.get_multi(domain_id=self.domain_id,
                                                                          **f) \
                                                               .sort([('doc_id', 1)]),
