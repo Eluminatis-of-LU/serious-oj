@@ -11,6 +11,7 @@ from vj4.handler import base
 from vj4.model import builtin
 from vj4.model import document
 from vj4.model import domain
+from vj4.model import judge
 from vj4.model import record
 from vj4.model import user
 from vj4.model.adaptor import contest
@@ -76,6 +77,12 @@ class JudgePlaygroundHandler(base.Handler):
   async def get(self):
     self.render('judge_playground.html')
 
+@app.route('/judge/checkin', 'judge_checkin')
+class JudgeNoopHandler(base.Handler):
+  @base.require_priv(builtin.JUDGE_PRIV)
+  async def post(self, name: str, version: str, concurrency: int):
+    await judge.checkin(name, version, concurrency)
+    self.json({})
 
 @app.route('/judge/noop', 'judge_noop')
 class JudgeNoopHandler(base.Handler):
