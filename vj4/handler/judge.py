@@ -82,7 +82,7 @@ class JudgeNoopHandler(base.Handler):
   @base.require_priv(builtin.JUDGE_PRIV)
   @base.post_argument
   @base.sanitize
-  async def post(self, name: str, version: str, concurrency: int):
+  async def post(self, *, name: str, version: str, concurrency: int):
     await judge.checkin(name, version, concurrency)
     self.json({})
 
