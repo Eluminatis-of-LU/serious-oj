@@ -19,9 +19,9 @@ async def checkin(name: str, version: str, concurrency: int):
         upsert=True,
     )
 
-async def get_all():
+def get_all():
     coll = db.coll("judge")
-    return await coll.find().to_list(None)
+    return coll.find()
 
 
 @argmethod.wrap

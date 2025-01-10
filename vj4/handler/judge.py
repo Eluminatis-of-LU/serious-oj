@@ -73,7 +73,7 @@ async def _post_judge(handler, rdoc):
 class JudgeMainHandler(base.Handler):
   @base.require_priv(builtin.JUDGE_PRIV)
   async def get(self):
-    self.json({'judges': await judge.get_all()})
+    self.json({'judges': await judge.get_all().to_list()})
 
 @app.route('/judge/playground', 'judge_playground')
 class JudgePlaygroundHandler(base.Handler):
