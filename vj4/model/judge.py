@@ -4,12 +4,19 @@ from vj4.util import argmethod
 import datetime
 
 
-async def checkin(doc):
+async def checkin(name: str, version: str, concurrency: int):
     coll = db.coll("judge")
     expire_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
-    doc["expire_at"] = expire_at
     await coll.find_one_and_update(
-        {"_id": doc['name']}, {"$set": {"expire_at": expire_at}}, upsert=True
+        {"_id": name},
+        {
+            "$set": {
+                "expire_at": expire_at,
+                "version": version,
+                "concurrency": concurrency,
+            }
+        },
+        upsert=True,
     )
 
 
