@@ -11,6 +11,7 @@ from vj4.handler import base
 from vj4.model import builtin
 from vj4.model import document
 from vj4.model import domain
+from vj4.model import judge
 from vj4.model import record
 from vj4.model import user
 from vj4.model.adaptor import contest
@@ -68,6 +69,11 @@ async def _post_judge(handler, rdoc):
     post_coros.append(job.difficulty.update_problem(rdoc['domain_id'], rdoc['pid']))
   await asyncio.gather(*post_coros)
 
+@app.route('/judge', 'judge_main')
+class JudgeMainHandler(base.Handler):
+  @base.require_priv(builtin.JUDGE_PRIV)
+  async def get(self):
+    self.json({'judges': await judge.get_all().to_list()})
 
 @app.route('/judge/playground', 'judge_playground')
 class JudgePlaygroundHandler(base.Handler):
@@ -76,6 +82,14 @@ class JudgePlaygroundHandler(base.Handler):
   async def get(self):
     self.render('judge_playground.html')
 
+@app.route('/judge/checkin', 'judge_checkin')
+class JudgeNoopHandler(base.Handler):
+  @base.require_priv(builtin.JUDGE_PRIV)
+  @base.post_argument
+  @base.sanitize
+  async def post(self, *, name: str, version: str, concurrency: int):
+    await judge.checkin(name, version, concurrency)
+    self.json({})
 
 @app.route('/judge/noop', 'judge_noop')
 class JudgeNoopHandler(base.Handler):
