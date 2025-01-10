@@ -8,7 +8,9 @@ async def checkin(doc):
     coll = db.coll("judge")
     expire_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
     doc["expire_at"] = expire_at
-    await coll.insert_one(doc)
+    await coll.find_one_and_update(
+        {"_id": doc['name']}, {"$set": {"expire_at": expire_at}}, upsert=True
+    )
 
 
 @argmethod.wrap
