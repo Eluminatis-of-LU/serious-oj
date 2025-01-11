@@ -6,7 +6,7 @@ import datetime
 
 async def checkin(name: str, version: str, concurrency: int):
     coll = db.coll("judge")
-    expire_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+    expire_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=8)
     await coll.find_one_and_update(
         {"_id": name},
         {
