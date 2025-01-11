@@ -19,7 +19,12 @@ async def checkin(name: str, version: str, concurrency: int):
         upsert=True,
     )
 
-def get_all():
+async def clear_all_checkin():
+    coll = db.coll("judge")
+    await coll.delete_many({})
+    return True
+
+def get_all_checkin():
     coll = db.coll("judge")
     return coll.find()
 

@@ -69,11 +69,17 @@ async def _post_judge(handler, rdoc):
     post_coros.append(job.difficulty.update_problem(rdoc['domain_id'], rdoc['pid']))
   await asyncio.gather(*post_coros)
 
+@app.route('/judge/clear', 'judge_clear')
+class JudgeMainHandler(base.Handler):
+  @base.require_priv(builtin.JUDGE_PRIV)
+  async def get(self):
+    self.json({'success': await judge.clear_all_checkin()})
+
 @app.route('/judge', 'judge_main')
 class JudgeMainHandler(base.Handler):
   @base.require_priv(builtin.JUDGE_PRIV)
   async def get(self):
-    self.json({'judges': await judge.get_all().to_list()})
+    self.json({'judges': await judge.get_all_checkin().to_list()})
 
 @app.route('/judge/playground', 'judge_playground')
 class JudgePlaygroundHandler(base.Handler):
