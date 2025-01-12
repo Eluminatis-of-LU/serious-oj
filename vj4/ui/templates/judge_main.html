@@ -9,12 +9,14 @@
                         <col class="col--name">
                         <col class="col--concurrency">
                         <col class="col--version">
+                        <col class="col--checkin_at">
                     </colgroup>
                     <thead>
                         <tr>
                             <th class="col--name">{{ _('Name') }}</th>
                             <th class="col--concurrency">{{ _('Concurrency') }}</th>
                             <th class="col--version">{{ _('Version') }}</th>
+                            <th class="col--checkin_at">{{ _('Checkin time') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,6 +30,7 @@
                                     {{ judge.version }}
                                 </a>
                             </td>
+                            <td class="col--checkin_at">{{ judge.checkin_at }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
