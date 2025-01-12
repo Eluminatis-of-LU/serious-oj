@@ -1,0 +1,39 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+    <div class="medium-12 columns">
+        <div class="section">
+            <div class="section__body no-padding">
+                <table class="data-table judge_main__table">
+                    <colgroup>
+                        <col class="col--name">
+                        <col class="col--concurrency">
+                        <col class="col--version">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="col--name">{{ _('Name') }}</th>
+                            <th class="col--concurrency">{{ _('Concurrency') }}</th>
+                            <th class="col--version">{{ _('Version') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for judge in judges %}
+                        <tr>
+                            <td class="col--name">{{ judge._id }}</td>
+                            <td class="col--concurrency">{{ judge.concurrency }}</td>
+                            <td class="col--version">
+                                <a href="https://github.com/Eluminatis-of-LU/sojj1/commit/{{ judge.version }}"
+                                    target="_blank">
+                                    {{ judge.version }}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

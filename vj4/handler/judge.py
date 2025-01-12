@@ -79,7 +79,7 @@ class JudgeMainHandler(base.Handler):
 class JudgeMainHandler(base.Handler):
   @base.require_priv(builtin.JUDGE_PRIV)
   async def get(self):
-    self.json({'judges': await judge.get_all_checkin().to_list()})
+    self.json_or_render('judge_main.html', judges=await judge.get_all_checkin().to_list())
 
 @app.route('/judge/playground', 'judge_playground')
 class JudgePlaygroundHandler(base.Handler):

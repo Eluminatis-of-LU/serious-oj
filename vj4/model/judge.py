@@ -6,11 +6,13 @@ import datetime
 
 async def checkin(name: str, version: str, concurrency: int):
     coll = db.coll("judge")
-    expire_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=8)
+    checkin_at = datetime.datetime.utcnow()
+    expire_at = checkin_at + datetime.timedelta(minutes=8)
     await coll.find_one_and_update(
         {"_id": name},
         {
             "$set": {
+                "checkin_at": checkin_at,
                 "expire_at": expire_at,
                 "version": version,
                 "concurrency": concurrency,
