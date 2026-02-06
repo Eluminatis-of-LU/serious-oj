@@ -38,7 +38,7 @@ const page = new NamedPage('user_detail', async () => {
           data: {
             labels: data.map(d => new Date(d.date).toLocaleDateString()),
             datasets: [{
-              label: 'Rating',
+              label: i18n('Rating'),
               data: data.map(d => d.rating),
               borderColor: 'rgb(75, 192, 192)',
               backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -52,7 +52,7 @@ const page = new NamedPage('user_detail', async () => {
             plugins: {
               title: {
                 display: true,
-                text: 'Rating Chart',
+                text: i18n('Rating Chart'),
               },
               tooltip: {
                 callbacks: {
@@ -67,7 +67,10 @@ const page = new NamedPage('user_detail', async () => {
             },
           },
         });
-        console.log('Rating chart rendered successfully', chart);
+        // Chart instance stored for potential future use
+        if (chart) {
+          // Successfully rendered
+        }
       }
     } catch (error) {
       console.error('Error loading rating chart:', error);

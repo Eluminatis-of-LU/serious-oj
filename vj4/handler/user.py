@@ -185,6 +185,7 @@ class UserRatingChartHandler(base.Handler):
     rating_changes = sorted(rating_changes, key=lambda x: x['attend_at'])
     
     # Return JSON data for frontend rendering
+    # Using ISO 8601 format for reliable cross-platform date parsing
     chart_data = [{
       'date': r['attend_at'].isoformat(),
       'rating': r['new_rating'],
