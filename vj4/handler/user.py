@@ -1,7 +1,5 @@
 import asyncio
 import datetime
-import plotly
-import plotly.graph_objs as G
 
 from vj4 import app
 from vj4 import constant
@@ -186,23 +184,14 @@ class UserRatingChartHandler(base.Handler):
     rating_changes = await rating.get_user_rating_changes(self.domain_id, uid)
     rating_changes = sorted(rating_changes, key=lambda x: x['attend_at'])
     
-    x = [r['attend_at'] for r in rating_changes]
-    y = [r['new_rating'] for r in rating_changes]
-    text_label = [r['contest_title'] for r in rating_changes]
+    # Return JSON data for frontend rendering
+    chart_data = [{
+      'date': r['attend_at'].isoformat(),
+      'rating': r['new_rating'],
+      'contest': r['contest_title']
+    } for r in rating_changes]
     
-    # create a line chart
-    chart = G.Scatter(x=x, y=y, text=text_label, textposition="top center", mode='lines+markers+text')
-    
-    # create a layout, and add a title
-    layout = G.Layout(title='Rating Chart')
-    
-    # create a figure, and plot the chart
-    
-    fig = G.Figure(data=[chart], layout=layout)
-    
-    # convert the figure to png
-    img = plotly.io.to_image(fig, format='jpg')
-    await self.binary(img, 'image/jpg', 'rating_chart.jpg')
+    self.json(chart_data)
 
 @app.route('/user/{uid:-?\d+}', 'user_detail')
 class UserDetailHandler(base.Handler, UserSettingsMixin):

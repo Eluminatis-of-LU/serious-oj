@@ -16,6 +16,7 @@ node_modules/
 npm-debug.log
 .uibuild/
 .cache/
+package-lock.json
 
 # Vagrant dirts.
 Vagrantfile

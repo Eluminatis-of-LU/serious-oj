@@ -5,8 +5,8 @@ import { AutoloadPage } from 'vj/misc/PageLoader';
 import request from 'vj/utils/request';
 import responsiveCutoff from 'vj/breakpoints.json';
 import { isAbove } from 'vj/utils/mediaQuery';
-import Navigation from '.';
 import Notification from 'vj/components/notification';
+import Navigation from '.';
 
 const nav = Navigation.instance;
 const { $nav } = nav;
@@ -42,23 +42,23 @@ const navigationPage = new AutoloadPage('navigationPage', async () => {
   sock.onmessage = message => {
     const msg = JSON.parse(message.data);
     switch (msg.type) {
-      case 'success':
-        Notification.success(msg.message);
-        break;
-      case 'info':
-        Notification.info(msg.message);
-        break;
-      case 'warn':
-        Notification.warn(msg.message);
-        break;
-      case 'error':
-        Notification.error(msg.message);
-        break;
-      case 'window-alert':
-        window.alert(msg.message);
-        break;
-      default:
-        break;
+    case 'success':
+      Notification.success(msg.message);
+      break;
+    case 'info':
+      Notification.info(msg.message);
+      break;
+    case 'warn':
+      Notification.warn(msg.message);
+      break;
+    case 'error':
+      Notification.error(msg.message);
+      break;
+    case 'window-alert':
+      window.alert(msg.message);
+      break;
+    default:
+      break;
     }
   };
 

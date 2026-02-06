@@ -191,7 +191,7 @@
             <li class="section__tab-item">
               <h1 class="section__tab-title">{{ _('Ratings') }}</h1>
               <div class="section__tab-main">
-                <img src="{{ reverse_url('user_rating_chart', uid=udoc['_id']) }}" alt="{{ _('Rating Chart') }}" class="user-profile-rating-chart" style="width: 100%;">
+                <canvas id="rating-chart" data-uid="{{ udoc['_id'] }}" style="width: 100%; height: 400px;"></canvas>
               </div>
             </li>
           </ul>
