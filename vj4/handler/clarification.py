@@ -43,7 +43,7 @@ class ClarificationCreateHandler(base.Handler):
     self.json_or_redirect(self.reverse_url('contest_detail', tid=tdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid}/answer', 'clarification_answer')
+@app.route('/clarify/{cqid:\w{24}}/answer', 'clarification_answer')
 class ClarificationAnswerHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
@@ -87,7 +87,7 @@ class ClarificationAnswerHandler(base.Handler):
       self.json_or_redirect(self.url)
 
 
-@app.route('/clarify/{cqid}/toggle-visibility', 'clarification_toggle_visibility')
+@app.route('/clarify/{cqid:\w{24}}/toggle-visibility', 'clarification_toggle_visibility')
 class ClarificationToggleVisibilityHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
@@ -124,7 +124,7 @@ class ClarificationToggleVisibilityHandler(base.Handler):
       self.json_or_redirect(self.url)
 
 
-@app.route('/clarify/{cqid}/toggle-announcement', 'clarification_toggle_announcement')
+@app.route('/clarify/{cqid:\w{24}}/toggle-announcement', 'clarification_toggle_announcement')
 class ClarificationToggleAnnouncementHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
@@ -181,7 +181,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
       self.json_or_redirect(self.url)
 
 
-@app.route('/clarify/{cqid}/edit', 'clarification_edit')
+@app.route('/clarify/{cqid:\w{24}}/edit', 'clarification_edit')
 class ClarificationEditHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
@@ -205,7 +205,7 @@ class ClarificationEditHandler(base.Handler):
       self.json_or_redirect(self.url)
 
 
-@app.route('/clarify/{cqid}/delete', 'clarification_delete')
+@app.route('/clarify/{cqid:\w{24}}/delete', 'clarification_delete')
 class ClarificationDeleteHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_csrf_token
