@@ -108,7 +108,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo python -m pip install --upgrade setuptools pip
+          sudo python -m pip install --upgrade --ignore-installed pip setuptools
           python -c "import sys; print(sys.version)"
           python -m pip install -r requirements.txt
 
