@@ -20,7 +20,7 @@ def is_moderator_or_admin(handler, tdoc):
 
 
 @app.route('/contest/{tid:\w{24}}/clarifications', 'contest_clarifications')
-class ContestClarificationListHandler(base.Handler):
+class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
   @base.require_perm(builtin.PERM_VIEW_CONTEST)
   @base.require_perm(builtin.PERM_VIEW_CLARIFICATION)
   @base.route_argument
@@ -29,6 +29,10 @@ class ContestClarificationListHandler(base.Handler):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
+    
+    # Get contest status to check if user has attended
+    tsdoc = await contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
+    attended = tsdoc and tsdoc.get('attend') == 1
     
     # Get clarification questions for this contest
     query = {'parent_doc_type': document.TYPE_CONTEST, 'parent_doc_id': tdoc['doc_id']}
@@ -46,12 +50,12 @@ class ContestClarificationListHandler(base.Handler):
         (self.translate('Clarifications'), None))
     
     self.render('contest_clarifications.html', tdoc=tdoc, cqdocs=cqdocs,
-                is_moderator=is_moderator, page_title=tdoc['title'],
+                attended=attended, is_moderator=is_moderator, page_title=tdoc['title'],
                 path_components=path_components)
 
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}', 'contest_clarification_detail')
-class ContestClarificationDetailHandler(base.Handler):
+class ContestClarificationDetailHandler(contest.ContestMixin, base.Handler):
   @base.require_perm(builtin.PERM_VIEW_CONTEST)
   @base.require_perm(builtin.PERM_VIEW_CLARIFICATION)
   @base.route_argument
@@ -60,6 +64,10 @@ class ContestClarificationDetailHandler(base.Handler):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
+    
+    # Get contest status to check if user has attended
+    tsdoc = await contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
+    attended = tsdoc and tsdoc.get('attend') == 1
     
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
@@ -88,7 +96,7 @@ class ContestClarificationDetailHandler(base.Handler):
         (cqdoc['title'], None))
     
     self.render('contest_clarification_detail.html', tdoc=tdoc, cqdoc=cqdoc,
-                owner=owner, is_moderator=is_moderator, page_title=cqdoc['title'],
+                owner=owner, attended=attended, is_moderator=is_moderator, page_title=cqdoc['title'],
                 path_components=path_components)
 
 
