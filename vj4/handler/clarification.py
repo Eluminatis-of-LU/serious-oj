@@ -19,7 +19,7 @@ def is_moderator_or_admin(handler, tdoc):
           handler.has_perm(builtin.PERM_EDIT_CONTEST))
 
 
-@app.route('/contest/{tid}/clarify', 'clarification_create')
+@app.route('/contest/{tid:\w{24}}/clarify', 'clarification_create')
 class ClarificationCreateHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CLARIFICATION)
