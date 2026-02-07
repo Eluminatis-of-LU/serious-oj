@@ -202,7 +202,7 @@ class ClarificationTest(base.DatabaseTestCase):
         DOMAIN_ID_DUMMY,
         parent_doc_type=document.TYPE_CONTEST,
         parent_doc_id=contest_id_1
-    ).to_list(None)
+    ).to_list()
     
     self.assertEqual(len(cqdocs), 2)
     
@@ -212,7 +212,7 @@ class ClarificationTest(base.DatabaseTestCase):
         parent_doc_type=document.TYPE_CONTEST,
         parent_doc_id=contest_id_1,
         is_public=True
-    ).to_list(None)
+    ).to_list()
     
     self.assertEqual(len(cqdocs_public), 1)
     self.assertEqual(cqdocs_public[0]['title'], 'Question 1')
@@ -269,7 +269,7 @@ class ClarificationTest(base.DatabaseTestCase):
         DOMAIN_ID_DUMMY,
         parent_doc_type=document.TYPE_CONTEST,
         parent_doc_id=contest_id
-    ).to_list(None)
+    ).to_list()
     
     self.assertEqual(len(cqdocs), 2)
     self.assertTrue(cqdocs[0]['is_announcement'])

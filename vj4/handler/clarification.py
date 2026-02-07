@@ -152,7 +152,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
               domain_id=self.domain_id,
               doc_id=tdoc['doc_id'],
               fields={'uid': 1}
-          ).to_list(None)
+          ).to_list()
           
           # Send push notification to each attendee (except the sender)
           notification_data = {

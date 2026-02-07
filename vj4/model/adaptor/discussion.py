@@ -232,7 +232,7 @@ async def get_list_reply(domain_id: str, did: document.convert_doc_id, *, fields
                                   parent_doc_id=did,
                                   fields=fields) \
                        .sort([('doc_id', -1)]) \
-                       .to_list(None)
+                       .to_list()
 
 
 def get_multi_reply(domain_id: str, did: document.convert_doc_id, *, fields=None):

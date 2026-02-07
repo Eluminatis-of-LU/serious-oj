@@ -120,7 +120,7 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             # If not owner, not moderator, and not admin, only show public questions
             if tdoc['owner_uid'] != self.user['_id'] and not is_moderator:
                 query['is_public'] = True
-            cqdocs = await clarification.get_multi(self.domain_id, **query).to_list(None)
+            cqdocs = await clarification.get_multi(self.domain_id, **query).to_list()
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
             (tdoc["title"], None),
