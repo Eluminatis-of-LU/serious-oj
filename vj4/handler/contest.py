@@ -560,7 +560,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         mod_uids = []
         if moderator_uids:
             try:
-                mod_uids = [int(uid.strip()) for uid in moderator_uids.split(',') if uid.strip()]
+                mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
             except ValueError:
                 raise error.ValidationError("moderator_uids")
         
@@ -675,7 +675,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         mod_uids = []
         if moderator_uids:
             try:
-                mod_uids = [int(uid.strip()) for uid in moderator_uids.split(',') if uid.strip()]
+                mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
             except ValueError:
                 raise error.ValidationError("moderator_uids")
         

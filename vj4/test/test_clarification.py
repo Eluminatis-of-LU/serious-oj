@@ -276,5 +276,30 @@ class ClarificationTest(base.DatabaseTestCase):
     self.assertEqual(cqdocs[0]['title'], 'Important Announcement')
 
 
+class ContestModeratorTest(base.DatabaseTestCase):
+  @base.wrap_coro
+  async def test_is_contest_moderator(self):
+    from vj4.model.adaptor import contest
+    
+    # Create a mock contest document with moderators
+    tdoc = {
+      'moderator_uids': [100, 200, 300]
+    }
+    
+    # Check moderator status
+    self.assertTrue(contest.is_contest_moderator(tdoc, 100))
+    self.assertTrue(contest.is_contest_moderator(tdoc, 200))
+    self.assertTrue(contest.is_contest_moderator(tdoc, 300))
+    self.assertFalse(contest.is_contest_moderator(tdoc, 400))
+    
+    # Empty moderator list
+    tdoc_empty = {'moderator_uids': []}
+    self.assertFalse(contest.is_contest_moderator(tdoc_empty, 100))
+    
+    # No moderator field
+    tdoc_no_field = {}
+    self.assertFalse(contest.is_contest_moderator(tdoc_no_field, 100))
+
+
 if __name__ == '__main__':
   unittest.main()

@@ -72,7 +72,7 @@ class ClarificationAnswerHandler(base.Handler):
       notification_content = f"Your clarification question '{cqdoc['title']}' has been answered."
       try:
         await message.add(self.user['_id'], cqdoc['owner_uid'], notification_content)
-      except:
+      except Exception:
         pass  # Don't fail if notification fails
     
     # Redirect back to the parent contest
@@ -155,9 +155,9 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
             if tsdoc['uid'] != self.user['_id']:
               try:
                 await message.add(self.user['_id'], tsdoc['uid'], notification_content)
-              except:
+              except Exception:
                 pass  # Don't fail if individual notification fails
-        except:
+        except Exception:
           pass  # Don't fail if notification system fails
     else:
       # Fallback to permission check for non-contest clarifications
