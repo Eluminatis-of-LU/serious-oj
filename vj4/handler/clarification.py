@@ -76,7 +76,7 @@ class ClarificationAnswerHandler(base.Handler):
         'url': self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']) if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST else None
       }
       try:
-        await bus.publish('push_received-' + str(cqdoc['owner_uid']), notification_data)
+        await bus.publish(f'push_received-{cqdoc["owner_uid"]}', notification_data)
       except Exception:
         pass  # Don't fail if notification fails
     
@@ -164,7 +164,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
           for tsdoc in tsdocs:
             if tsdoc['uid'] != self.user['_id']:
               try:
-                await bus.publish('push_received-' + str(tsdoc['uid']), notification_data)
+                await bus.publish(f'push_received-{tsdoc["uid"]}', notification_data)
               except Exception:
                 pass  # Don't fail if individual notification fails
         except Exception:
