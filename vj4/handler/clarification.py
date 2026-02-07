@@ -154,14 +154,9 @@ class ClarificationAnswerHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
-    # Get contest document to check moderator status
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      # Only contest moderators or admins can answer
-      if not is_moderator_or_admin(self, tdoc):
-        raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
-    else:
-      # Fallback to permission check for non-contest clarifications
-      self.check_perm(builtin.PERM_ANSWER_CLARIFICATION)
+    # Only contest moderators or admins can answer
+    if not is_moderator_or_admin(self, tdoc):
+      raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
     
     await clarification.answer(self.domain_id, cqid, self.user['_id'], answer_content)
     
@@ -204,21 +199,13 @@ class ClarificationToggleVisibilityHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
-    # Get contest document to check moderator status
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      # Only contest moderators or admins can mark as private
-      if not is_public:  # Making it private
-        if not is_moderator_or_admin(self, tdoc):
-          raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
-      # Anyone can make their own question public, moderators can change any
-      elif cqdoc['owner_uid'] != self.user['_id'] and not is_moderator_or_admin(self, tdoc):
+    # Only contest moderators or admins can mark as private
+    if not is_public:  # Making it private
+      if not is_moderator_or_admin(self, tdoc):
         raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
-    else:
-      # Check permissions for non-contest clarifications
-      if cqdoc['owner_uid'] != self.user['_id']:
-        self.check_perm(builtin.PERM_EDIT_CLARIFICATION)
-      else:
-        self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
+    # Anyone can make their own question public, moderators can change any
+    elif cqdoc['owner_uid'] != self.user['_id'] and not is_moderator_or_admin(self, tdoc):
+      raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
     
     await clarification.set_visibility(self.domain_id, cqid, is_public)
     # Redirect back to the clarification detail page
@@ -247,41 +234,36 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
-    # Get contest document to check moderator status
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      # Only contest moderators or admins can mark as announcement
-      if not is_moderator_or_admin(self, tdoc):
-        raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
-      
-      # If marking as announcement, send notifications to all contest attendees
-      if is_announcement:
-        # Get all contest attendees
-        try:
-          tsdocs = await contest.get_multi_status(
-              document.TYPE_CONTEST,
-              domain_id=self.domain_id,
-              doc_id=tdoc['doc_id'],
-              fields={'uid': 1}
-          ).to_list()
-          
-          # Send push notification to each attendee (except the sender)
-          notification_data = {
-            'type': 'clarification_announcement',
-            'title': 'Contest Announcement',
-            'message': f"Announcement: {cqdoc['title']}",
-            'url': self.reverse_url('contest_detail', tid=tdoc['doc_id'])
-          }
-          for tsdoc in tsdocs:
-            if tsdoc['uid'] != self.user['_id']:
-              try:
-                await bus.publish(f'push_received-{tsdoc["uid"]}', notification_data)
-              except Exception:
-                pass  # Don't fail if individual notification fails
-        except Exception:
-          pass  # Don't fail if notification system fails
-    else:
-      # Fallback to permission check for non-contest clarifications
-      self.check_perm(builtin.PERM_ANSWER_CLARIFICATION)
+    # Only contest moderators or admins can mark as announcement
+    if not is_moderator_or_admin(self, tdoc):
+      raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
+    
+    # If marking as announcement, send notifications to all contest attendees
+    if is_announcement:
+      # Get all contest attendees
+      try:
+        tsdocs = await contest.get_multi_status(
+            document.TYPE_CONTEST,
+            domain_id=self.domain_id,
+            doc_id=tdoc['doc_id'],
+            fields={'uid': 1}
+        ).to_list()
+        
+        # Send push notification to each attendee (except the sender)
+        notification_data = {
+          'type': 'clarification_announcement',
+          'title': 'Contest Announcement',
+          'message': f"Announcement: {cqdoc['title']}",
+          'url': self.reverse_url('contest_detail', tid=tdoc['doc_id'])
+        }
+        for tsdoc in tsdocs:
+          if tsdoc['uid'] != self.user['_id']:
+            try:
+              await bus.publish(f'push_received-{tsdoc["uid"]}', notification_data)
+            except Exception:
+              pass  # Don't fail if individual notification fails
+      except Exception:
+        pass  # Don't fail if notification system fails
     
     await clarification.set_announcement(self.domain_id, cqid, is_announcement)
     # Redirect back to the clarification detail page
@@ -342,17 +324,9 @@ class ClarificationDeleteHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
-    # Get contest document to check moderator status
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      # Only contest moderators or admins can delete
-      if not is_moderator_or_admin(self, tdoc):
-        raise error.PermissionError(builtin.PERM_DELETE_CLARIFICATION)
-    else:
-      # Check permissions for non-contest clarifications
-      if cqdoc['owner_uid'] != self.user['_id']:
-        self.check_perm(builtin.PERM_DELETE_CLARIFICATION)
-      else:
-        self.check_perm(builtin.PERM_DELETE_CLARIFICATION_SELF)
+    # Only contest moderators or admins can delete
+    if not is_moderator_or_admin(self, tdoc):
+      raise error.PermissionError(builtin.PERM_DELETE_CLARIFICATION)
     
     await clarification.delete(self.domain_id, cqid)
     # Redirect back to the clarifications list page
