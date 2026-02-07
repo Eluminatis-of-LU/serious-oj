@@ -30,8 +30,12 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
     
-    # Get contest status to check if user has attended
-    tsdoc = await contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
+    # Get contest status, owner info in parallel
+    tsdoc, owner_udoc, owner_dudoc = await asyncio.gather(
+        contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id']),
+        user.get_by_uid(tdoc['owner_uid']),
+        domain.get_user(domain_id=self.domain_id, uid=tdoc['owner_uid'])
+    )
     attended = tsdoc and tsdoc.get('attend') == 1
     
     # Get clarification questions for this contest
@@ -50,7 +54,8 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
         (self.translate('Clarifications'), None))
     
     self.render('contest_clarifications.html', tdoc=tdoc, cqdocs=cqdocs,
-                attended=attended, is_moderator=is_moderator, page_title=tdoc['title'],
+                attended=attended, owner_udoc=owner_udoc, owner_dudoc=owner_dudoc,
+                is_moderator=is_moderator, page_title=tdoc['title'],
                 path_components=path_components)
 
 
@@ -65,8 +70,12 @@ class ContestClarificationDetailHandler(contest.ContestMixin, base.Handler):
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
     
-    # Get contest status to check if user has attended
-    tsdoc = await contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
+    # Get contest status, owner info in parallel
+    tsdoc, owner_udoc, owner_dudoc = await asyncio.gather(
+        contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id']),
+        user.get_by_uid(tdoc['owner_uid']),
+        domain.get_user(domain_id=self.domain_id, uid=tdoc['owner_uid'])
+    )
     attended = tsdoc and tsdoc.get('attend') == 1
     
     cqdoc = await clarification.get(self.domain_id, cqid)
@@ -96,7 +105,8 @@ class ContestClarificationDetailHandler(contest.ContestMixin, base.Handler):
         (cqdoc['title'], None))
     
     self.render('contest_clarification_detail.html', tdoc=tdoc, cqdoc=cqdoc,
-                owner=owner, attended=attended, is_moderator=is_moderator, page_title=cqdoc['title'],
+                owner=owner, attended=attended, owner_udoc=owner_udoc, owner_dudoc=owner_dudoc,
+                is_moderator=is_moderator, page_title=cqdoc['title'],
                 path_components=path_components)
 
 
