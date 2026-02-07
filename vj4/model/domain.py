@@ -17,9 +17,9 @@ PROJECTION_PUBLIC = {
   'gravatar': 1
 }
 
-# MongoDB can only handle 64-bit integers natively.
+# MongoDB can only handle 64-bit signed integers natively.
 # For permission values that exceed this, we store them as strings.
-MAX_MONGODB_INT = 2**63 - 1  # Maximum signed 64-bit integer
+MONGODB_INT64_MAX = 2**63 - 1  # Maximum signed 64-bit integer
 
 def _serialize_roles(roles):
   """Convert role permissions to MongoDB-compatible format.
@@ -28,7 +28,7 @@ def _serialize_roles(roles):
   """
   result = {}
   for role, perm in roles.items():
-    if isinstance(perm, int) and abs(perm) > MAX_MONGODB_INT:
+    if isinstance(perm, int) and perm > MONGODB_INT64_MAX:
       # Store as string for values that exceed 64-bit limit
       result[role] = f"__bigint__{perm}"
     else:
@@ -192,7 +192,7 @@ async def set_roles(domain_id: str, roles: dict[str, int]):
         raise error.ModifyBuiltinRoleError(domain_id, role)
     # Serialize large integers
     perm_value = roles[role]
-    if abs(perm_value) > MAX_MONGODB_INT:
+    if perm_value > MONGODB_INT64_MAX:
       perm_value = f"__bigint__{perm_value}"
     update['roles.{0}'.format(role)] = perm_value
   for domain in builtin.DOMAINS:
