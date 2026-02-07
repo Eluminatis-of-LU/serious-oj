@@ -7,10 +7,10 @@ from vj4.model import builtin
 from vj4.model import document
 from vj4.model import user
 from vj4.model import domain
-from vj4.model import message
 from vj4.model.adaptor import clarification
 from vj4.model.adaptor import contest
 from vj4.handler import base
+from vj4.service import bus
 
 
 def is_moderator_or_admin(handler, tdoc):
@@ -67,11 +67,16 @@ class ClarificationAnswerHandler(base.Handler):
     
     await clarification.answer(self.domain_id, cqid, self.user['_id'], answer_content)
     
-    # Send notification to the question asker
+    # Send push notification to the question asker
     if cqdoc['owner_uid'] != self.user['_id']:
-      notification_content = f"Your clarification question '{cqdoc['title']}' has been answered."
+      notification_data = {
+        'type': 'clarification_answered',
+        'title': 'Clarification Answered',
+        'message': f"Your clarification question '{cqdoc['title']}' has been answered.",
+        'url': self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']) if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST else None
+      }
       try:
-        await message.add(self.user['_id'], cqdoc['owner_uid'], notification_content)
+        await bus.publish('push_received-' + str(cqdoc['owner_uid']), notification_data)
       except Exception:
         pass  # Don't fail if notification fails
     
@@ -140,7 +145,6 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
       
       # If marking as announcement, send notifications to all contest attendees
       if is_announcement:
-        notification_content = f"Announcement: {cqdoc['title']}"
         # Get all contest attendees
         try:
           tsdocs = await contest.get_multi_status(
@@ -150,11 +154,17 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
               fields={'uid': 1}
           ).to_list(None)
           
-          # Send notification to each attendee (except the sender)
+          # Send push notification to each attendee (except the sender)
+          notification_data = {
+            'type': 'clarification_announcement',
+            'title': 'Contest Announcement',
+            'message': f"Announcement: {cqdoc['title']}",
+            'url': self.reverse_url('contest_detail', tid=tdoc['doc_id'])
+          }
           for tsdoc in tsdocs:
             if tsdoc['uid'] != self.user['_id']:
               try:
-                await message.add(self.user['_id'], tsdoc['uid'], notification_content)
+                await bus.publish('push_received-' + str(tsdoc['uid']), notification_data)
               except Exception:
                 pass  # Don't fail if individual notification fails
         except Exception:
