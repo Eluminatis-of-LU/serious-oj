@@ -145,7 +145,7 @@
                   </div>
                   {% endif %}
                   <div class="supplementary__meta">
-                    <span class="time">{{ cqdoc['update_at']|datetime }}</span>
+                    <span class="time">{{ datetime_span(cqdoc['update_at']) }}</span>
                     {% if is_moderator and not cqdoc['answered'] %}
                     <form method="post" action="{{ reverse_url('clarification_answer', cqid=cqdoc['doc_id']) }}" style="display: inline;">
                       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
