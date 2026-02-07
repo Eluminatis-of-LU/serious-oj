@@ -17,6 +17,35 @@ PROJECTION_PUBLIC = {
   'gravatar': 1
 }
 
+# MongoDB can only handle 64-bit integers natively.
+# For permission values that exceed this, we store them as strings.
+MAX_MONGODB_INT = 2**63 - 1  # Maximum signed 64-bit integer
+
+def _serialize_roles(roles):
+  """Convert role permissions to MongoDB-compatible format.
+  
+  Large integers (>64 bits) are stored as strings with '__bigint__' prefix.
+  """
+  result = {}
+  for role, perm in roles.items():
+    if isinstance(perm, int) and abs(perm) > MAX_MONGODB_INT:
+      # Store as string for values that exceed 64-bit limit
+      result[role] = f"__bigint__{perm}"
+    else:
+      result[role] = perm
+  return result
+
+def _deserialize_roles(roles):
+  """Convert role permissions from MongoDB format back to Python integers."""
+  result = {}
+  for role, perm in roles.items():
+    if isinstance(perm, str) and perm.startswith('__bigint__'):
+      # Convert string back to integer
+      result[role] = int(perm[len('__bigint__'):])
+    else:
+      result[role] = perm
+  return result
+
 
 @argmethod.wrap
 async def add(domain_id: str, owner_uid: int,
@@ -30,9 +59,11 @@ async def add(domain_id: str, owner_uid: int,
       raise error.DomainAlreadyExistError(domain_id)
   coll = db.coll('domain')
   try:
+    # Serialize roles to handle large permission integers
+    serialized_roles = _serialize_roles(roles)
     result = await coll.insert_one({'_id': domain_id,
                                     'pending': True, 'owner_uid': owner_uid,
-                                    'roles': roles, 'name': name,
+                                    'roles': serialized_roles, 'name': name,
                                     'gravatar': gravatar, 'bulletin': bulletin})
     domain_id = result.inserted_id
   except errors.DuplicateKeyError:
@@ -69,6 +100,9 @@ async def get(domain_id: str, fields=None):
   ddoc = await coll.find_one(domain_id, fields)
   if not ddoc:
     raise error.DomainNotFoundError(domain_id)
+  # Deserialize roles if present
+  if 'roles' in ddoc:
+    ddoc['roles'] = _deserialize_roles(ddoc['roles'])
   return ddoc
 
 
@@ -80,7 +114,12 @@ def get_multi(*, fields=None, **kwargs):
 @argmethod.wrap
 async def get_list(*, fields=None, limit: int=None, **kwargs):
   coll = db.coll('domain')
-  return await coll.find(kwargs, fields).limit(limit).to_list()
+  ddocs = await coll.find(kwargs, fields).limit(limit).to_list()
+  # Deserialize roles for each domain
+  for ddoc in ddocs:
+    if 'roles' in ddoc:
+      ddoc['roles'] = _deserialize_roles(ddoc['roles'])
+  return ddocs
 
 
 def get_pending(**kwargs):
@@ -98,17 +137,25 @@ async def edit(domain_id: str, **kwargs):
   if 'name' in kwargs:
     validator.check_name(kwargs['name'])
   # TODO(twd2): check kwargs
-  return await coll.find_one_and_update(filter={'_id': domain_id},
+  ddoc = await coll.find_one_and_update(filter={'_id': domain_id},
                                         update={'$set': {**kwargs}},
                                         return_document=ReturnDocument.AFTER)
+  # Deserialize roles if present
+  if ddoc and 'roles' in ddoc:
+    ddoc['roles'] = _deserialize_roles(ddoc['roles'])
+  return ddoc
 
 
 async def unset(domain_id, fields):
   # TODO(twd2): check fields
   coll = db.coll('domain')
-  return await coll.find_one_and_update(filter={'_id': domain_id},
+  ddoc = await coll.find_one_and_update(filter={'_id': domain_id},
                                         update={'$unset': dict((f, '') for f in set(fields))},
                                         return_document=ReturnDocument.AFTER)
+  # Deserialize roles if present
+  if ddoc and 'roles' in ddoc:
+    ddoc['roles'] = _deserialize_roles(ddoc['roles'])
+  return ddoc
 
 
 @argmethod.wrap
@@ -143,14 +190,22 @@ async def set_roles(domain_id: str, roles: dict[str, int]):
     if role in builtin.BUILTIN_ROLE_DESCRIPTORS:
       if not builtin.BUILTIN_ROLE_DESCRIPTORS[role].modifiable:
         raise error.ModifyBuiltinRoleError(domain_id, role)
-    update['roles.{0}'.format(role)] = roles[role]
+    # Serialize large integers
+    perm_value = roles[role]
+    if abs(perm_value) > MAX_MONGODB_INT:
+      perm_value = f"__bigint__{perm_value}"
+    update['roles.{0}'.format(role)] = perm_value
   for domain in builtin.DOMAINS:
     if domain['_id'] == domain_id:
       raise error.BuiltinDomainError(domain_id)
   coll = db.coll('domain')
-  return await coll.find_one_and_update(filter={'_id': domain_id},
+  ddoc = await coll.find_one_and_update(filter={'_id': domain_id},
                                         update={'$set': update},
                                         return_document=ReturnDocument.AFTER)
+  # Deserialize roles before returning
+  if ddoc and 'roles' in ddoc:
+    ddoc['roles'] = _deserialize_roles(ddoc['roles'])
+  return ddoc
 
 
 @argmethod.wrap
