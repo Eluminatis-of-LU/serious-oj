@@ -1,0 +1,97 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Clarification Questions') }}</h1>
+      </div>
+      <div class="section__body">
+        {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_CLARIFICATION) %}
+        <div class="section__body">
+          <h2>{{ _('Ask a Question') }}</h2>
+          <form method="post" action="{{ reverse_url('clarification_create', tid=tdoc['doc_id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <div class="row">
+              <div class="medium-12 columns">
+                <label>
+                  {{ _('Title') }}
+                  <input name="title" type="text" class="textbox" required>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <label>
+                  {{ _('Question') }}
+                  <textarea name="content" class="textbox" rows="3" required></textarea>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <label class="checkbox">
+                  <input type="checkbox" name="is_public" value="on" checked> {{ _('Public (visible to all users)') }}
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <button type="submit" class="button rounded primary">{{ _('Ask Question') }}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+        
+        <div class="section__body">
+          <h2>{{ _('All Questions') }}</h2>
+          {% if cqdocs %}
+          <ul class="supplementary list">
+          {% for cqdoc in cqdocs %}
+            <li class="supplementary__item">
+              <div class="media">
+                <div class="media__body medium-12 columns">
+                  <div class="clearfix">
+                    <div style="float: left;">
+                      {% if cqdoc['is_announcement'] %}
+                      <span class="icon icon-megaphone" style="color: #f39c12;"></span>
+                      <strong>{{ _('Announcement') }}</strong>
+                      {% endif %}
+                      {% if not cqdoc['is_public'] %}
+                      <span class="icon icon-lock" style="color: #e74c3c;"></span>
+                      <strong>{{ _('Private') }}</strong>
+                      {% endif %}
+                      {% if cqdoc['answered'] %}
+                      <span class="icon icon-check" style="color: #27ae60;"></span>
+                      <strong>{{ _('Answered') }}</strong>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <h3>
+                    <a href="{{ reverse_url('contest_clarification_detail', tid=tdoc['doc_id'], cqid=cqdoc['doc_id']) }}">
+                      {{ cqdoc['title'] }}
+                    </a>
+                  </h3>
+                  <p class="typo">{{ cqdoc['content']|markdown|truncate(200) }}</p>
+                  <div class="supplementary__meta">
+                    <span class="time">{{ datetime_span(cqdoc['update_at']) }}</span>
+                  </div>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+          </ul>
+          {% else %}
+          <p>{{ _('No clarification questions yet.') }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/contest_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}

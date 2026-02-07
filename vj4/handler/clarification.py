@@ -19,6 +19,79 @@ def is_moderator_or_admin(handler, tdoc):
           handler.has_perm(builtin.PERM_EDIT_CONTEST))
 
 
+@app.route('/contest/{tid:\w{24}}/clarifications', 'contest_clarifications')
+class ContestClarificationListHandler(base.Handler):
+  @base.require_perm(builtin.PERM_VIEW_CONTEST)
+  @base.require_perm(builtin.PERM_VIEW_CLARIFICATION)
+  @base.route_argument
+  @base.sanitize
+  async def get(self, *, tid: objectid.ObjectId):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
+    # Get clarification questions for this contest
+    query = {'parent_doc_type': document.TYPE_CONTEST, 'parent_doc_id': tdoc['doc_id']}
+    # Check if user is moderator or admin
+    is_moderator = (contest.is_contest_moderator(tdoc, self.user['_id']) or 
+                   self.has_perm(builtin.PERM_EDIT_CONTEST))
+    # If not owner, not moderator, and not admin, only show public questions
+    if tdoc['owner_uid'] != self.user['_id'] and not is_moderator:
+        query['is_public'] = True
+    cqdocs = await clarification.get_multi(self.domain_id, **query).to_list()
+    
+    path_components = self.build_path(
+        (self.translate('contest_main'), self.reverse_url('contest_main')),
+        (tdoc['title'], self.reverse_url('contest_detail', tid=tdoc['doc_id'])),
+        (self.translate('Clarifications'), None))
+    
+    self.render('contest_clarifications.html', tdoc=tdoc, cqdocs=cqdocs,
+                is_moderator=is_moderator, page_title=tdoc['title'],
+                path_components=path_components)
+
+
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}', 'contest_clarification_detail')
+class ContestClarificationDetailHandler(base.Handler):
+  @base.require_perm(builtin.PERM_VIEW_CONTEST)
+  @base.require_perm(builtin.PERM_VIEW_CLARIFICATION)
+  @base.route_argument
+  @base.sanitize
+  async def get(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
+    cqdoc = await clarification.get(self.domain_id, cqid)
+    if not cqdoc:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
+    # Check if user is moderator or admin
+    is_moderator = (contest.is_contest_moderator(tdoc, self.user['_id']) or 
+                   self.has_perm(builtin.PERM_EDIT_CONTEST))
+    
+    # Check permissions for private questions
+    if not cqdoc['is_public']:
+      if cqdoc['owner_uid'] != self.user['_id'] and not is_moderator:
+        raise error.PermissionError(builtin.PERM_VIEW_CLARIFICATION)
+    
+    # Get the owner user info
+    owner = await user.get_by_uid(cqdoc['owner_uid'])
+    
+    path_components = self.build_path(
+        (self.translate('contest_main'), self.reverse_url('contest_main')),
+        (tdoc['title'], self.reverse_url('contest_detail', tid=tdoc['doc_id'])),
+        (self.translate('Clarifications'), self.reverse_url('contest_clarifications', tid=tdoc['doc_id'])),
+        (cqdoc['title'], None))
+    
+    self.render('contest_clarification_detail.html', tdoc=tdoc, cqdoc=cqdoc,
+                owner=owner, is_moderator=is_moderator, page_title=cqdoc['title'],
+                path_components=path_components)
+
+
 @app.route('/contest/{tid:\w{24}}/clarify', 'clarification_create')
 class ClarificationCreateHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
@@ -40,7 +113,7 @@ class ClarificationCreateHandler(base.Handler):
                                    content,
                                    is_public,
                                    self.remote_ip)
-    self.json_or_redirect(self.reverse_url('contest_detail', tid=tdoc['doc_id']))
+    self.json_or_redirect(self.reverse_url('contest_clarifications', tid=tdoc['doc_id']))
 
 
 @app.route('/clarify/{cqid:\w{24}}/answer', 'clarification_answer')
@@ -80,9 +153,11 @@ class ClarificationAnswerHandler(base.Handler):
       except Exception:
         pass  # Don't fail if notification fails
     
-    # Redirect back to the parent contest
+    # Redirect back to the clarification detail page
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
+      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                               tid=cqdoc['parent_doc_id'], 
+                                               cqid=cqdoc['doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -117,9 +192,11 @@ class ClarificationToggleVisibilityHandler(base.Handler):
         self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
     
     await clarification.set_visibility(self.domain_id, cqid, is_public)
-    # Redirect back to the parent contest
+    # Redirect back to the clarification detail page
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
+      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                               tid=cqdoc['parent_doc_id'], 
+                                               cqid=cqdoc['doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -174,9 +251,11 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
       self.check_perm(builtin.PERM_ANSWER_CLARIFICATION)
     
     await clarification.set_announcement(self.domain_id, cqid, is_announcement)
-    # Redirect back to the parent contest
+    # Redirect back to the clarification detail page
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
+      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                               tid=cqdoc['parent_doc_id'], 
+                                               cqid=cqdoc['doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -198,9 +277,11 @@ class ClarificationEditHandler(base.Handler):
     else:
       self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
     await clarification.edit(self.domain_id, cqid, title=title, content=content)
-    # Redirect back to the parent contest
+    # Redirect back to the clarification detail page
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
+      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                               tid=cqdoc['parent_doc_id'], 
+                                               cqid=cqdoc['doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -230,8 +311,8 @@ class ClarificationDeleteHandler(base.Handler):
         self.check_perm(builtin.PERM_DELETE_CLARIFICATION_SELF)
     
     await clarification.delete(self.domain_id, cqid)
-    # Redirect back to the parent contest
+    # Redirect back to the clarifications list page
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
+      self.json_or_redirect(self.reverse_url('contest_clarifications', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)

@@ -1,0 +1,117 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">
+          {% if cqdoc['is_announcement'] %}
+          <span class="icon icon-megaphone" style="color: #f39c12;"></span>
+          {% endif %}
+          {% if not cqdoc['is_public'] %}
+          <span class="icon icon-lock" style="color: #e74c3c;"></span>
+          {% endif %}
+          {{ cqdoc['title'] }}
+        </h1>
+      </div>
+      <div class="section__body">
+        <div class="section__body">
+          <div class="clearfix" style="margin-bottom: 15px;">
+            {% if cqdoc['is_announcement'] %}
+            <span class="label label-warning">{{ _('Announcement') }}</span>
+            {% endif %}
+            {% if not cqdoc['is_public'] %}
+            <span class="label label-danger">{{ _('Private') }}</span>
+            {% endif %}
+            {% if cqdoc['answered'] %}
+            <span class="label label-success">{{ _('Answered') }}</span>
+            {% endif %}
+          </div>
+          
+          <div class="media">
+            <div class="media__left medium">
+              <img class="small user-profile-avatar" src="{{ gravatar_url(owner['gravatar']) }}" width="50" height="50">
+            </div>
+            <div class="media__body">
+              <h3>{{ _('Question') }}</h3>
+              <p class="typo">{{ cqdoc['content']|markdown }}</p>
+              <div class="supplementary__meta">
+                <span>{{ _('Asked by') }} <a href="{{ reverse_url('user_detail', uid=owner['_id']) }}">{{ owner['uname'] }}</a></span>
+                <span class="time">{{ datetime_span(cqdoc['_id'].generation_time) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          {% if cqdoc['answered'] %}
+          <hr>
+          <div class="section__body" style="background-color: #ecf0f1; padding: 15px; margin-top: 15px;">
+            <h3>{{ _('Answer') }}</h3>
+            <p class="typo">{{ cqdoc['answer_content']|markdown }}</p>
+            <div class="supplementary__meta">
+              <span class="time">{{ datetime_span(cqdoc['update_at']) }}</span>
+            </div>
+          </div>
+          {% endif %}
+          
+          {% if is_moderator %}
+          <hr>
+          <div class="section__body" style="margin-top: 15px;">
+            <h3>{{ _('Moderator Actions') }}</h3>
+            
+            {% if not cqdoc['answered'] %}
+            <form method="post" action="{{ reverse_url('clarification_answer', cqid=cqdoc['doc_id']) }}" style="margin-bottom: 10px;">
+              <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+              <div class="row">
+                <div class="medium-12 columns">
+                  <label>
+                    {{ _('Answer') }}
+                    <textarea name="answer_content" class="textbox" rows="3" required></textarea>
+                  </label>
+                </div>
+              </div>
+              <button type="submit" class="button rounded primary">{{ _('Submit Answer') }}</button>
+            </form>
+            {% endif %}
+            
+            <div class="button-group">
+              <form method="post" action="{{ reverse_url('clarification_toggle_announcement', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                <input type="hidden" name="is_announcement" value="{{ 'false' if cqdoc['is_announcement'] else 'true' }}">
+                <button type="submit" class="button rounded small">
+                  {{ _('Mark as Announcement') if not cqdoc['is_announcement'] else _('Unmark Announcement') }}
+                </button>
+              </form>
+              
+              <form method="post" action="{{ reverse_url('clarification_toggle_visibility', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                <input type="hidden" name="is_public" value="{{ 'false' if cqdoc['is_public'] else 'true' }}">
+                <button type="submit" class="button rounded small">
+                  {{ _('Make Private') if cqdoc['is_public'] else _('Make Public') }}
+                </button>
+              </form>
+              
+              <form method="post" action="{{ reverse_url('clarification_delete', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                <button type="submit" class="button rounded small alert" onclick="return confirm('{{ _('Are you sure you want to delete this clarification?') }}');">
+                  {{ _('Delete') }}
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 15px;">
+      <a href="{{ reverse_url('contest_clarifications', tid=tdoc['doc_id']) }}" class="button rounded">
+        ← {{ _('Back to All Clarifications') }}
+      </a>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/contest_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}
