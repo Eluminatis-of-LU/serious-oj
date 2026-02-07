@@ -107,7 +107,7 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             self.DISCUSSIONS_PER_PAGE,
         )
         # announcements (clarifications marked as announcement) - only if clarifications enabled
-        if tdoc.get('clarification_enabled', True):
+        if tdoc.get('clarification_enabled', False):
             cqdocs, cqpcount, cqcount = await pagination.paginate(
                 clarification.get_multi(
                     self.domain_id,
@@ -543,7 +543,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         password: str,
         freeze_before: int,
         hidden: bool = False,
-        clarification_enabled: bool = True,
+        clarification_enabled: bool = False,
         moderator_uids: str = ""
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -657,7 +657,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         password: str,
         freeze_before: int,
         hidden: bool = False,
-        clarification_enabled: bool = True,
+        clarification_enabled: bool = False,
         moderator_uids: str = ""
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)

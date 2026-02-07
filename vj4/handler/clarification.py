@@ -34,7 +34,7 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
       raise error.ContestNotFoundError(self.domain_id, tid)
     
     # Check if clarifications are enabled for this contest
-    if not tdoc.get('clarification_enabled', True):
+    if not tdoc.get('clarification_enabled', False):
       raise error.ForbiddenError('Clarifications are disabled for this contest')
     
     # Get contest status, owner info in parallel
@@ -137,7 +137,7 @@ class ClarificationCreateHandler(base.Handler):
       raise error.ContestNotFoundError(self.domain_id, tid)
     
     # Check if clarifications are enabled for this contest
-    if not tdoc.get('clarification_enabled', True):
+    if not tdoc.get('clarification_enabled', False):
       raise error.ForbiddenError('Clarifications are disabled for this contest')
     
     cqid = await clarification.add(self.domain_id,

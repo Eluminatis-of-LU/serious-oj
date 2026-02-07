@@ -76,7 +76,7 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) and tdoc.get('clarification_enabled', True) %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) and tdoc.get('clarification_enabled', False) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_clarifications', tid=tdoc['doc_id']) }}">
         <span class="icon icon-comment--multiple"></span> {{ _('Clarifications') }}
       </a></li>
