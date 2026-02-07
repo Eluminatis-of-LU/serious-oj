@@ -19,6 +19,9 @@
             {{ form.form_text(columns=6, label='Freeze ranklist before (minutes)', name='freeze_before', value=tdoc['freeze_before']|default('0'), row=False) }}
           </div>
           <div class="row">
+            {{ form.form_text(columns=12, label='Contest Moderators (UIDs, comma-separated)', name='moderator_uids', value=tdoc['moderator_uids']|default([])|join(', '), row=False) }}
+          </div>
+          <div class="row">
             {{ form.form_checkbox(label='Hidden', name='hidden', value=tdoc['hidden']|default(False), row=False) }}
           </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}

@@ -534,7 +534,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         pids: str,
         password: str,
         freeze_before: int,
-        hidden: bool = False
+        hidden: bool = False,
+        moderator_uids: str = ""
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -554,6 +555,15 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("duration")
         pids = contest._parse_pids(pids)
         await self.verify_problems(pids)
+        
+        # Parse moderator UIDs (comma-separated list of integers)
+        mod_uids = []
+        if moderator_uids:
+            try:
+                mod_uids = [int(uid.strip()) for uid in moderator_uids.split(',') if uid.strip()]
+            except ValueError:
+                raise error.ValidationError("moderator_uids")
+        
         tid = await contest.add(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -567,6 +577,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -635,7 +646,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         pids: str,
         password: str,
         freeze_before: int,
-        hidden: bool = False
+        hidden: bool = False,
+        moderator_uids: str = ""
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -658,6 +670,15 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("duration")
         pids = contest._parse_pids(pids)
         await self.verify_problems(pids)
+        
+        # Parse moderator UIDs (comma-separated list of integers)
+        mod_uids = []
+        if moderator_uids:
+            try:
+                mod_uids = [int(uid.strip()) for uid in moderator_uids.split(',') if uid.strip()]
+            except ValueError:
+                raise error.ValidationError("moderator_uids")
+        
         await contest.edit(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -671,6 +692,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)
         if (
