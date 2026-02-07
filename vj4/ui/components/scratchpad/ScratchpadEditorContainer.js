@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import CodeMirror from 'react-codemirror';
+import { Controlled as CodeMirror } from 'react-codemirror2';
 
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/mode/clike/clike';
@@ -40,14 +40,14 @@ const mapDispatchToProps = dispatch => ({
 @connect(mapStateToProps, mapDispatchToProps)
 export default class ScratchpadEditorContainer extends React.PureComponent {
   componentDidMount() {
-    this.refs.editor.getCodeMirror().setOption('theme', 'vjcm');
+    this.refs.editor.editor.setOption('theme', 'vjcm');
   }
 
   render() {
     return (
       <CodeMirror
         value={this.props.code}
-        onChange={code => this.props.handleUpdateCode(code)}
+        onBeforeChange={(editor, data, value) => this.props.handleUpdateCode(value)}
         options={getOptions(this.props.lang)}
         ref="editor"
       />

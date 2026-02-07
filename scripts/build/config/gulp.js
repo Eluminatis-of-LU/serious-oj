@@ -9,6 +9,7 @@ import iconfont from 'gulp-iconfont';
 import nunjucks from 'gulp-nunjucks';
 import plumber from 'gulp-plumber';
 import gulpif from 'gulp-if';
+import rename from 'gulp-rename';
 import vjGenerateConstants from '../plugins/gulpGenerateConstants';
 import vjGenerateLocales from '../plugins/gulpGenerateLocales';
 import vjTouch from '../plugins/gulpTouch';
@@ -37,6 +38,10 @@ export default function ({ watch, production, errorHandler }) {
   tasks['iconfont:template'] = () => gulp
     .src('vj4/ui/misc/icons/template/*.styl')
     .pipe(nunjucks.compile(iconfontTemplateArgs))
+    .pipe(rename(function (path) {
+      // nunjucks.compile changes extension to .html, change it back to .styl
+      path.extname = '.styl';
+    }))
     .pipe(gulp.dest('vj4/ui/misc/.iconfont'))
     .pipe(offsetMtimeAtFirstBuild());
 
