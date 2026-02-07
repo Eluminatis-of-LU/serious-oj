@@ -8,11 +8,11 @@ from vj4.model import document
 from vj4.model import user
 from vj4.model import domain
 from vj4.model.adaptor import clarification
-from vj4.model.adaptor import problem
+from vj4.model.adaptor import contest
 from vj4.handler import base
 
 
-@app.route('/p/{pid}/clarify', 'clarification_create')
+@app.route('/contest/{tid}/clarify', 'clarification_create')
 class ClarificationCreateHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CLARIFICATION)
@@ -20,20 +20,20 @@ class ClarificationCreateHandler(base.Handler):
   @base.route_argument
   @base.post_argument
   @base.sanitize
-  async def post(self, *, pid: document.convert_doc_id, title: str, content: str,
+  async def post(self, *, tid: objectid.ObjectId, title: str, content: str,
                  is_public: bool=True):
-    pdoc = await problem.get(self.domain_id, pid)
-    if not pdoc:
-      raise error.ProblemNotFoundError(self.domain_id, pid)
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
     cqid = await clarification.add(self.domain_id,
-                                   document.TYPE_PROBLEM,
-                                   pdoc['doc_id'],
+                                   document.TYPE_CONTEST,
+                                   tdoc['doc_id'],
                                    self.user['_id'],
                                    title,
                                    content,
                                    is_public,
                                    self.remote_ip)
-    self.json_or_redirect(self.reverse_url('problem_detail', pid=pdoc['doc_id']))
+    self.json_or_redirect(self.reverse_url('contest_detail', tid=tdoc['doc_id']))
 
 
 @app.route('/clarify/{cqid}/answer', 'clarification_answer')
@@ -49,9 +49,9 @@ class ClarificationAnswerHandler(base.Handler):
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     await clarification.answer(self.domain_id, cqid, self.user['_id'], answer_content)
-    # Redirect back to the parent problem
-    if cqdoc.get('parent_doc_type') == document.TYPE_PROBLEM:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=cqdoc['parent_doc_id']))
+    # Redirect back to the parent contest
+    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
+      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -73,9 +73,9 @@ class ClarificationToggleVisibilityHandler(base.Handler):
     else:
       self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
     await clarification.set_visibility(self.domain_id, cqid, is_public)
-    # Redirect back to the parent problem
-    if cqdoc.get('parent_doc_type') == document.TYPE_PROBLEM:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=cqdoc['parent_doc_id']))
+    # Redirect back to the parent contest
+    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
+      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -93,9 +93,9 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     await clarification.set_announcement(self.domain_id, cqid, is_announcement)
-    # Redirect back to the parent problem
-    if cqdoc.get('parent_doc_type') == document.TYPE_PROBLEM:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=cqdoc['parent_doc_id']))
+    # Redirect back to the parent contest
+    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
+      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -117,9 +117,9 @@ class ClarificationEditHandler(base.Handler):
     else:
       self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
     await clarification.edit(self.domain_id, cqid, title=title, content=content)
-    # Redirect back to the parent problem
-    if cqdoc.get('parent_doc_type') == document.TYPE_PROBLEM:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=cqdoc['parent_doc_id']))
+    # Redirect back to the parent contest
+    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
+      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)
 
@@ -140,8 +140,8 @@ class ClarificationDeleteHandler(base.Handler):
     else:
       self.check_perm(builtin.PERM_DELETE_CLARIFICATION_SELF)
     await clarification.delete(self.domain_id, cqid)
-    # Redirect back to the parent problem
-    if cqdoc.get('parent_doc_type') == document.TYPE_PROBLEM:
-      self.json_or_redirect(self.reverse_url('problem_detail', pid=cqdoc['parent_doc_id']))
+    # Redirect back to the parent contest
+    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
+      self.json_or_redirect(self.reverse_url('contest_detail', tid=cqdoc['parent_doc_id']))
     else:
       self.json_or_redirect(self.url)

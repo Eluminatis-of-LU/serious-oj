@@ -17,6 +17,7 @@ from vj4.model import domain
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
+from vj4.model.adaptor import clarification
 from vj4.handler import base
 from vj4.util import pagination
 
@@ -108,6 +109,14 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
         uids.add(tdoc["owner_uid"])
         udict = await user.get_dict(uids)
         dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
+        # Get clarification questions for this contest
+        cqdocs = []
+        if self.has_perm(builtin.PERM_VIEW_CLARIFICATION):
+            query = {'parent_doc_type': document.TYPE_CONTEST, 'parent_doc_id': tdoc['doc_id']}
+            # If not owner and not admin, only show public questions
+            if tdoc['owner_uid'] != self.user['_id'] and not self.has_perm(builtin.PERM_ANSWER_CLARIFICATION):
+                query['is_public'] = True
+            cqdocs = await clarification.get_multi(self.domain_id, **query).to_list(None)
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
             (tdoc["title"], None),
@@ -123,6 +132,7 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             psdict=psdict,
             rdict=rdict,
             ddocs=ddocs,
+            cqdocs=cqdocs,
             page=page,
             dpcount=dpcount,
             dcount=dcount,
