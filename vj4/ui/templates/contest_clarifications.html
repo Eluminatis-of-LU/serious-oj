@@ -1,5 +1,7 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% import "components/nothing.html" as nothing with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
@@ -39,45 +41,57 @@
         {% endif %}
         
         <div class="section__body">
-          <h2>{{ _('All Questions') }}</h2>
-          {% if cqdocs %}
-          <ul class="supplementary list">
-          {% for cqdoc in cqdocs %}
-            <li class="supplementary__item">
-              <div class="media">
-                <div class="media__body medium-12 columns">
-                  <div class="clearfix">
-                    <div style="float: left;">
-                      {% if cqdoc['is_announcement'] %}
-                      <span class="icon icon-megaphone" style="color: #f39c12;"></span>
-                      <strong>{{ _('Announcement') }}</strong>
-                      {% endif %}
-                      {% if not cqdoc['is_public'] %}
-                      <span class="icon icon-lock" style="color: #e74c3c;"></span>
-                      <strong>{{ _('Private') }}</strong>
-                      {% endif %}
-                      {% if cqdoc['answered'] %}
-                      <span class="icon icon-check" style="color: #27ae60;"></span>
-                      <strong>{{ _('Answered') }}</strong>
-                      {% endif %}
-                    </div>
-                  </div>
-                  <h3>
+          <h2>{{ _('All Questions') }} ({{ cqcount }})</h2>
+          {% if not cqdocs %}
+            {{ nothing.render('No clarification questions yet.') }}
+          {% else %}
+          <div class="section__body no-padding">
+            <table class="data-table">
+              <colgroup>
+                <col class="col--status" style="width: 120px;">
+                <col class="col--title">
+                <col class="col--preview" style="width: 30%;">
+                <col class="col--time" style="width: 150px;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="col--status">{{ _('Status') }}</th>
+                  <th class="col--title">{{ _('Title') }}</th>
+                  <th class="col--preview">{{ _('Preview') }}</th>
+                  <th class="col--time">{{ _('Last Updated') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for cqdoc in cqdocs %}
+                <tr>
+                  <td class="col--status">
+                    {% if cqdoc['is_announcement'] %}
+                    <span class="icon icon-megaphone" style="color: #f39c12;" data-tooltip="{{ _('Announcement') }}"></span>
+                    {% endif %}
+                    {% if not cqdoc['is_public'] %}
+                    <span class="icon icon-lock" style="color: #e74c3c;" data-tooltip="{{ _('Private') }}"></span>
+                    {% endif %}
+                    {% if cqdoc['answered'] %}
+                    <span class="icon icon-check" style="color: #27ae60;" data-tooltip="{{ _('Answered') }}"></span>
+                    {% endif %}
+                  </td>
+                  <td class="col--title">
                     <a href="{{ reverse_url('contest_clarification_detail', tid=tdoc['doc_id'], cqid=cqdoc['doc_id']) }}">
                       {{ cqdoc['title'] }}
                     </a>
-                  </h3>
-                  <p class="typo">{{ cqdoc['content']|markdown|truncate(200) }}</p>
-                  <div class="supplementary__meta">
+                  </td>
+                  <td class="col--preview">
+                    <span class="typo">{{ cqdoc['content']|striptags|truncate(100) }}</span>
+                  </td>
+                  <td class="col--time">
                     <span class="time">{{ datetime_span(cqdoc['update_at']) }}</span>
-                  </div>
-                </div>
-              </div>
-            </li>
-          {% endfor %}
-          </ul>
-          {% else %}
-          <p>{{ _('No clarification questions yet.') }}</p>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {{ paginator.render(page, ppcount) }}
           {% endif %}
         </div>
       </div>

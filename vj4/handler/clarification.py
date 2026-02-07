@@ -21,11 +21,14 @@ def is_moderator_or_admin(handler, tdoc):
 
 @app.route('/contest/{tid:\w{24}}/clarifications', 'contest_clarifications')
 class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
+  CLARIFICATIONS_PER_PAGE = 20
+  
   @base.require_perm(builtin.PERM_VIEW_CONTEST)
   @base.require_perm(builtin.PERM_VIEW_CLARIFICATION)
   @base.route_argument
+  @base.get_argument
   @base.sanitize
-  async def get(self, *, tid: objectid.ObjectId):
+  async def get(self, *, tid: objectid.ObjectId, page: int=1):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
@@ -38,7 +41,7 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
     )
     attended = tsdoc and tsdoc.get('attend') == 1
     
-    # Get clarification questions for this contest
+    # Get clarification questions for this contest with pagination
     query = {'parent_doc_type': document.TYPE_CONTEST, 'parent_doc_id': tdoc['doc_id']}
     # Check if user is moderator or admin
     is_moderator = (contest.is_contest_moderator(tdoc, self.user['_id']) or 
@@ -46,7 +49,11 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
     # If not owner, not moderator, and not admin, only show public questions
     if tdoc['owner_uid'] != self.user['_id'] and not is_moderator:
         query['is_public'] = True
-    cqdocs = await clarification.get_multi(self.domain_id, **query).to_list()
+    
+    from vj4.util import pagination
+    cqdocs, ppcount, cqcount = await pagination.paginate(
+        clarification.get_multi(self.domain_id, **query).sort([('_id', -1)]),
+        page, self.CLARIFICATIONS_PER_PAGE)
     
     path_components = self.build_path(
         (self.translate('contest_main'), self.reverse_url('contest_main')),
@@ -54,6 +61,7 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
         (self.translate('Clarifications'), None))
     
     self.render('contest_clarifications.html', tdoc=tdoc, cqdocs=cqdocs,
+                page=page, ppcount=ppcount, cqcount=cqcount,
                 attended=attended, owner_udoc=owner_udoc, owner_dudoc=owner_dudoc,
                 is_moderator=is_moderator, page_title=tdoc['title'],
                 path_components=path_components)
