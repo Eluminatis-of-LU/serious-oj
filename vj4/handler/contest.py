@@ -111,10 +111,14 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
         dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
         # Get clarification questions for this contest
         cqdocs = []
+        is_moderator = False
         if self.has_perm(builtin.PERM_VIEW_CLARIFICATION):
             query = {'parent_doc_type': document.TYPE_CONTEST, 'parent_doc_id': tdoc['doc_id']}
-            # If not owner and not admin, only show public questions
-            if tdoc['owner_uid'] != self.user['_id'] and not self.has_perm(builtin.PERM_ANSWER_CLARIFICATION):
+            # Check if user is moderator or admin
+            is_moderator = (contest.is_contest_moderator(tdoc, self.user['_id']) or 
+                           self.has_perm(builtin.PERM_EDIT_CONTEST))
+            # If not owner, not moderator, and not admin, only show public questions
+            if tdoc['owner_uid'] != self.user['_id'] and not is_moderator:
                 query['is_public'] = True
             cqdocs = await clarification.get_multi(self.domain_id, **query).to_list(None)
         path_components = self.build_path(
@@ -133,6 +137,7 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             rdict=rdict,
             ddocs=ddocs,
             cqdocs=cqdocs,
+            is_moderator=is_moderator,
             page=page,
             dpcount=dpcount,
             dcount=dcount,

@@ -146,28 +146,28 @@
                   {% endif %}
                   <div class="supplementary__meta">
                     <span class="time">{{ cqdoc['update_at']|datetime }}</span>
-                    {% if handler.has_perm(vj4.model.builtin.PERM_ANSWER_CLARIFICATION) and not cqdoc['answered'] %}
+                    {% if is_moderator and not cqdoc['answered'] %}
                     <form method="post" action="{{ reverse_url('clarification_answer', cqid=cqdoc['doc_id']) }}" style="display: inline;">
                       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                       <input type="text" name="answer_content" placeholder="{{ _('Type answer...') }}" style="width: 300px; display: inline;" required>
                       <button type="submit" class="button rounded small">{{ _('Answer') }}</button>
                     </form>
                     {% endif %}
-                    {% if handler.has_perm(vj4.model.builtin.PERM_ANSWER_CLARIFICATION) %}
+                    {% if is_moderator %}
                     <form method="post" action="{{ reverse_url('clarification_toggle_announcement', cqid=cqdoc['doc_id']) }}" style="display: inline;">
                       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                       <input type="hidden" name="is_announcement" value="{{ 'false' if cqdoc['is_announcement'] else 'true' }}">
                       <button type="submit" class="button rounded small">{{ _('Mark as Announcement') if not cqdoc['is_announcement'] else _('Unmark Announcement') }}</button>
                     </form>
                     {% endif %}
-                    {% if cqdoc['owner_uid'] == handler.user['_id'] or handler.has_perm(vj4.model.builtin.PERM_EDIT_CLARIFICATION) %}
+                    {% if is_moderator %}
                     <form method="post" action="{{ reverse_url('clarification_toggle_visibility', cqid=cqdoc['doc_id']) }}" style="display: inline;">
                       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                       <input type="hidden" name="is_public" value="{{ 'false' if cqdoc['is_public'] else 'true' }}">
                       <button type="submit" class="button rounded small">{{ _('Make Private') if cqdoc['is_public'] else _('Make Public') }}</button>
                     </form>
                     {% endif %}
-                    {% if cqdoc['owner_uid'] == handler.user['_id'] or handler.has_perm(vj4.model.builtin.PERM_DELETE_CLARIFICATION) %}
+                    {% if is_moderator %}
                     <form method="post" action="{{ reverse_url('clarification_delete', cqid=cqdoc['doc_id']) }}" style="display: inline;">
                       <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                       <button type="submit" class="button rounded small alert">{{ _('Delete') }}</button>
