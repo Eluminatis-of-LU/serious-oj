@@ -186,7 +186,7 @@ class ClarificationToggleVisibilityHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, is_public: bool):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
@@ -199,15 +199,18 @@ class ClarificationToggleVisibilityHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
+    # Toggle the visibility
+    new_is_public = not cqdoc['is_public']
+    
     # Only contest moderators or admins can mark as private
-    if not is_public:  # Making it private
+    if not new_is_public:  # Making it private
       if not is_moderator_or_admin(self, tdoc):
         raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
     # Anyone can make their own question public, moderators can change any
     elif cqdoc['owner_uid'] != self.user['_id'] and not is_moderator_or_admin(self, tdoc):
       raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
     
-    await clarification.set_visibility(self.domain_id, cqid, is_public)
+    await clarification.set_visibility(self.domain_id, cqid, new_is_public)
     # Redirect back to the clarification detail page
     self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
                                              tid=tdoc['doc_id'], 
@@ -221,7 +224,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, is_announcement: bool):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
@@ -238,8 +241,11 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
     if not is_moderator_or_admin(self, tdoc):
       raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
     
+    # Toggle the announcement status
+    new_is_announcement = not cqdoc['is_announcement']
+    
     # If marking as announcement, send notifications to all contest attendees
-    if is_announcement:
+    if new_is_announcement:
       # Get all contest attendees
       try:
         tsdocs = await contest.get_multi_status(
@@ -265,7 +271,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
       except Exception:
         pass  # Don't fail if notification system fails
     
-    await clarification.set_announcement(self.domain_id, cqid, is_announcement)
+    await clarification.set_announcement(self.domain_id, cqid, new_is_announcement)
     # Redirect back to the clarification detail page
     self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
                                              tid=tdoc['doc_id'], 

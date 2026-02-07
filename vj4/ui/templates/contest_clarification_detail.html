@@ -77,7 +77,6 @@
             <div class="button-group">
               <form method="post" action="{{ reverse_url('clarification_toggle_announcement', tid=tdoc['doc_id'], cqid=cqdoc['doc_id']) }}" style="display: inline;">
                 <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
-                <input type="hidden" name="is_announcement" value="{{ 'false' if cqdoc['is_announcement'] else 'true' }}">
                 <button type="submit" class="button rounded small">
                   {{ _('Mark as Announcement') if not cqdoc['is_announcement'] else _('Unmark Announcement') }}
                 </button>
@@ -85,7 +84,6 @@
               
               <form method="post" action="{{ reverse_url('clarification_toggle_visibility', tid=tdoc['doc_id'], cqid=cqdoc['doc_id']) }}" style="display: inline;">
                 <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
-                <input type="hidden" name="is_public" value="{{ 'false' if cqdoc['is_public'] else 'true' }}">
                 <button type="submit" class="button rounded small">
                   {{ _('Make Private') if cqdoc['is_public'] else _('Make Public') }}
                 </button>
