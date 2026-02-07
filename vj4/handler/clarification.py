@@ -173,7 +173,7 @@ class ClarificationAnswerHandler(base.Handler):
     
     # Only contest moderators or admins can answer
     if not is_moderator_or_admin(self, tdoc):
-      raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
+      raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
     
     await clarification.answer(self.domain_id, cqid, self.user['_id'], answer_content)
     
@@ -222,10 +222,10 @@ class ClarificationToggleVisibilityHandler(base.Handler):
     # Only contest moderators or admins can mark as private
     if not new_is_public:  # Making it private
       if not is_moderator_or_admin(self, tdoc):
-        raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
+        raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
     # Anyone can make their own question public, moderators can change any
     elif cqdoc['owner_uid'] != self.user['_id'] and not is_moderator_or_admin(self, tdoc):
-      raise error.PermissionError(builtin.PERM_EDIT_CLARIFICATION)
+      raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
     
     await clarification.set_visibility(self.domain_id, cqid, new_is_public)
     # Redirect back to the clarification detail page
@@ -256,7 +256,7 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
     
     # Only contest moderators or admins can mark as announcement
     if not is_moderator_or_admin(self, tdoc):
-      raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
+      raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
     
     # Toggle the announcement status
     new_is_announcement = not cqdoc['is_announcement']
@@ -315,11 +315,10 @@ class ClarificationEditHandler(base.Handler):
     if cqdoc['parent_doc_id'] != tdoc['doc_id']:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
-    # Check permissions
-    if cqdoc['owner_uid'] != self.user['_id']:
-      self.check_perm(builtin.PERM_EDIT_CLARIFICATION)
-    else:
-      self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
+    # Check permissions - only owner or moderators/admins can edit
+    if cqdoc['owner_uid'] != self.user['_id'] and not is_moderator_or_admin(self, tdoc):
+      raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
+    
     await clarification.edit(self.domain_id, cqid, title=title, content=content)
     # Redirect back to the clarification detail page
     self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
@@ -349,7 +348,7 @@ class ClarificationDeleteHandler(base.Handler):
     
     # Only contest moderators or admins can delete
     if not is_moderator_or_admin(self, tdoc):
-      raise error.PermissionError(builtin.PERM_DELETE_CLARIFICATION)
+      raise error.PermissionError(builtin.PERM_EDIT_CONTEST)
     
     await clarification.delete(self.domain_id, cqid)
     # Redirect back to the clarifications list page
