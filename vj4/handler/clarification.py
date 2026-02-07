@@ -326,6 +326,7 @@ class ClarificationEditHandler(base.Handler):
 class ClarificationDeleteHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
+  @base.post_argument
   @base.require_csrf_token
   @base.sanitize
   async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id):
