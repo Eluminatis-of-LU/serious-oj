@@ -76,6 +76,11 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) %}
+      <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_clarifications', tid=tdoc['doc_id']) }}">
+        <span class="icon icon-chat"></span> {{ _('Clarifications') }}
+      </a></li>
+    {% endif %}
     {% if handler.can_edit_contest(tdoc) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_edit', tid=tdoc['doc_id']) }}">
         <span class="icon icon-edit"></span>  {{ _('Edit Contest') }}

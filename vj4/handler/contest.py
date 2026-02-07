@@ -17,6 +17,7 @@ from vj4.model import domain
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
+from vj4.model.adaptor import clarification
 from vj4.handler import base
 from vj4.util import pagination
 
@@ -65,12 +66,13 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
 @app.route("/contest/{tid:\w{24}}", "contest_detail")
 class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
     DISCUSSIONS_PER_PAGE = 15
+    ANNOUNCEMENTS_PER_PAGE = 5
 
     @base.route_argument
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
     @base.get_argument
     @base.sanitize
-    async def get(self, *, tid: objectid.ObjectId, page: int = 1):
+    async def get(self, *, tid: objectid.ObjectId, page: int = 1, announcement_page: int = 1):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         tsdoc, pdict = await asyncio.gather(
             contest.get_status(
@@ -104,8 +106,22 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             page,
             self.DISCUSSIONS_PER_PAGE,
         )
+        # announcements (clarifications marked as announcement)
+        cqdocs, cqpcount, cqcount = await pagination.paginate(
+            clarification.get_multi(
+                self.domain_id,
+                parent_doc_type=tdoc["doc_type"],
+                parent_doc_id=tdoc["doc_id"],
+                is_announcement=True,
+            ).sort([('_id', -1)]),
+            announcement_page,
+            self.ANNOUNCEMENTS_PER_PAGE,
+        )
         uids = set(ddoc["owner_uid"] for ddoc in ddocs)
         uids.add(tdoc["owner_uid"])
+        # Add clarification owner uids
+        for cqdoc in cqdocs:
+            uids.add(cqdoc["owner_uid"])
         udict = await user.get_dict(uids)
         dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
         path_components = self.build_path(
@@ -126,6 +142,10 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             page=page,
             dpcount=dpcount,
             dcount=dcount,
+            cqdocs=cqdocs,
+            announcement_page=announcement_page,
+            cqpcount=cqpcount,
+            cqcount=cqcount,
             datetime_stamp=self.datetime_stamp,
             page_title=tdoc["title"],
             path_components=path_components,

@@ -2,6 +2,8 @@
 {% import "components/contest.html" as contest with context %}
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% import "components/nothing.html" as nothing with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
@@ -83,14 +85,53 @@
   {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) %}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Clarifications') }}</h1>
+        <h1 class="section__title">{{ _('Announcements') }}
+          {% if cqcount %} ({{ cqcount }}){% endif %}
+        </h1>
+        <div class="section__header-right">
+          <a href="{{ reverse_url('contest_clarifications', tid=tdoc['doc_id']) }}" class="button rounded primary">
+            {{ _('View All Clarifications') }}
+          </a>
+        </div>
       </div>
+    {% if cqdocs %}
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <colgroup>
+            <col class="col--title">
+            <col class="col--updated">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--title">{{ _('Title') }}</th>
+              <th class="col--updated">{{ _('Last Updated') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for cqdoc in cqdocs %}
+            <tr>
+              <td class="col--title">
+                <a href="{{ reverse_url('contest_clarification_detail', tid=tdoc['doc_id'], cqid=cqdoc['doc_id']) }}">
+                  <span class="icon icon-flag text-orange" title="{{ _('Announcement') }}"></span>
+                  {{ cqdoc['title'] }}
+                </a>
+              </td>
+              <td class="col--updated">{{ datetime_span(cqdoc['update_at']) }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if cqpcount > 1 %}
       <div class="section__body">
-        <p>{{ _('View and ask clarification questions about this contest.') }}</p>
-        <a href="{{ reverse_url('contest_clarifications', tid=tdoc['doc_id']) }}" class="button rounded primary">
-          {{ _('Go to Clarifications') }}
-        </a>
+        {{ paginator.render(announcement_page, cqpcount, 'announcement_page') }}
       </div>
+      {% endif %}
+    {% else %}
+      <div class="section__body">
+        {{ nothing.render('No announcements yet.') }}
+      </div>
+    {% endif %}
     </div>
   {% endif %}
   </div>
