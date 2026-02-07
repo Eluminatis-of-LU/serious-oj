@@ -23,6 +23,7 @@
           </div>
           <div class="row">
             {{ form.form_checkbox(label='Hidden', name='hidden', value=tdoc['hidden']|default(False), row=False) }}
+            {{ form.form_checkbox(label='Enable Clarifications', name='clarification_enabled', value=tdoc.get('clarification_enabled', True), row=False) }}
           </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
           {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}

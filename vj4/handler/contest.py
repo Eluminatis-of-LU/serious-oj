@@ -106,17 +106,20 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             page,
             self.DISCUSSIONS_PER_PAGE,
         )
-        # announcements (clarifications marked as announcement)
-        cqdocs, cqpcount, cqcount = await pagination.paginate(
-            clarification.get_multi(
-                self.domain_id,
-                parent_doc_type=tdoc["doc_type"],
-                parent_doc_id=tdoc["doc_id"],
-                is_announcement=True,
-            ).sort([('_id', -1)]),
-            announcement_page,
-            self.ANNOUNCEMENTS_PER_PAGE,
-        )
+        # announcements (clarifications marked as announcement) - only if clarifications enabled
+        if tdoc.get('clarification_enabled', True):
+            cqdocs, cqpcount, cqcount = await pagination.paginate(
+                clarification.get_multi(
+                    self.domain_id,
+                    parent_doc_type=tdoc["doc_type"],
+                    parent_doc_id=tdoc["doc_id"],
+                    is_announcement=True,
+                ).sort([('_id', -1)]),
+                announcement_page,
+                self.ANNOUNCEMENTS_PER_PAGE,
+            )
+        else:
+            cqdocs, cqpcount, cqcount = [], 0, 0
         uids = set(ddoc["owner_uid"] for ddoc in ddocs)
         uids.add(tdoc["owner_uid"])
         # Add clarification owner uids
@@ -540,6 +543,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         password: str,
         freeze_before: int,
         hidden: bool = False,
+        clarification_enabled: bool = True,
         moderator_uids: str = ""
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -582,6 +586,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            clarification_enabled=clarification_enabled,
             moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)
@@ -652,6 +657,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         password: str,
         freeze_before: int,
         hidden: bool = False,
+        clarification_enabled: bool = True,
         moderator_uids: str = ""
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
@@ -697,6 +703,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            clarification_enabled=clarification_enabled,
             moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)

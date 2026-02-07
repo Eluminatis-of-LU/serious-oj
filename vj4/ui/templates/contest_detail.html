@@ -82,7 +82,7 @@
     {% endif %}
     </div>
   {% endif %}
-  {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) %}
+  {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) and tdoc.get('clarification_enabled', True) %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Announcements') }}

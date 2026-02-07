@@ -33,6 +33,10 @@ class ContestClarificationListHandler(contest.ContestMixin, base.Handler):
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
     
+    # Check if clarifications are enabled for this contest
+    if not tdoc.get('clarification_enabled', True):
+      raise error.ForbiddenError('Clarifications are disabled for this contest')
+    
     # Get contest status, owner info in parallel
     tsdoc, owner_udoc, owner_dudoc = await asyncio.gather(
         contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id']),
@@ -131,6 +135,11 @@ class ClarificationCreateHandler(base.Handler):
     tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
     if not tdoc:
       raise error.ContestNotFoundError(self.domain_id, tid)
+    
+    # Check if clarifications are enabled for this contest
+    if not tdoc.get('clarification_enabled', True):
+      raise error.ForbiddenError('Clarifications are disabled for this contest')
+    
     cqid = await clarification.add(self.domain_id,
                                    document.TYPE_CONTEST,
                                    tdoc['doc_id'],
