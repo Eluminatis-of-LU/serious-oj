@@ -22,6 +22,7 @@ from vj4.model import record
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
 from vj4.model.adaptor import training
+from vj4.model.adaptor import clarification
 from vj4.service import bus
 from vj4.util import pagination
 from vj4.util import options
@@ -229,11 +230,19 @@ class ProblemDetailHandler(base.OperationHandler):
     tdocs, ctdocs, htdocs = await asyncio.gather(self._get_related_trainings(pid),
                                                  self._get_related_contests(pid),
                                                  self._get_related_homework(pid))
+    # Get clarification questions for this problem
+    cqdocs = []
+    if self.has_perm(builtin.PERM_VIEW_CLARIFICATION):
+      query = {'parent_doc_type': document.TYPE_PROBLEM, 'parent_doc_id': pdoc['doc_id']}
+      # If not owner and not admin, only show public questions
+      if pdoc['owner_uid'] != uid and not self.has_perm(builtin.PERM_ANSWER_CLARIFICATION):
+        query['is_public'] = True
+      cqdocs = await clarification.get_multi(self.domain_id, **query).to_list(None)
     path_components = self.build_path(
         (self.translate('problem_main'), self.reverse_url('problem_main')),
         (pdoc['title'], None))
     self.render('problem_detail.html', pdoc=pdoc, udoc=udoc, dudoc=dudoc,
-                tdocs=tdocs, ctdocs=ctdocs, htdocs=htdocs,
+                tdocs=tdocs, ctdocs=ctdocs, htdocs=htdocs, cqdocs=cqdocs,
                 page_title=pdoc['title'], path_components=path_components)
 
   @base.require_priv(builtin.PRIV_USER_PROFILE)

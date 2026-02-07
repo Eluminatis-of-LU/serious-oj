@@ -122,6 +122,112 @@
         </div>
       </div></div>
     </div>
+    {% if handler.has_perm(vj4.model.builtin.PERM_VIEW_CLARIFICATION) %}
+    <div class="section">
+      <div class="section__header">
+        <h1>{{ _('Clarification Questions') }}</h1>
+      </div>
+      <div class="section__body">
+        {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_CLARIFICATION) %}
+        <div class="section__body">
+          <form method="post" action="{{ reverse_url('clarification_create', pid=pdoc['doc_id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+            <div class="row">
+              <div class="medium-12 columns">
+                <label>
+                  {{ _('Title') }}
+                  <input name="title" type="text" class="textbox" required>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <label>
+                  {{ _('Question') }}
+                  <textarea name="content" class="textbox" rows="3" required></textarea>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <label class="checkbox">
+                  <input type="checkbox" name="is_public" checked> {{ _('Public (visible to all users)') }}
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="medium-12 columns">
+                <button type="submit" class="button rounded primary">{{ _('Ask Question') }}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+        {% if cqdocs %}
+        <div class="section__body">
+          <ul class="supplementary list">
+          {% for cqdoc in cqdocs %}
+            <li class="supplementary__item">
+              <div class="media">
+                <div class="media__body medium-12 columns">
+                  {% if cqdoc['is_announcement'] %}
+                  <span class="icon icon-megaphone" style="color: #f39c12;"></span>
+                  <strong>{{ _('Announcement') }}</strong>
+                  {% endif %}
+                  {% if not cqdoc['is_public'] %}
+                  <span class="icon icon-lock" style="color: #e74c3c;"></span>
+                  <strong>{{ _('Private') }}</strong>
+                  {% endif %}
+                  <h3>{{ cqdoc['title'] }}</h3>
+                  <p class="typo">{{ cqdoc['content']|markdown }}</p>
+                  {% if cqdoc['answered'] %}
+                  <div class="section__body" style="background-color: #ecf0f1; padding: 10px; margin-top: 10px;">
+                    <strong>{{ _('Answer:') }}</strong>
+                    <p class="typo">{{ cqdoc['answer_content']|markdown }}</p>
+                  </div>
+                  {% endif %}
+                  <div class="supplementary__meta">
+                    <span class="time">{{ cqdoc['update_at']|datetime }}</span>
+                    {% if handler.has_perm(vj4.model.builtin.PERM_ANSWER_CLARIFICATION) and not cqdoc['answered'] %}
+                    <form method="post" action="{{ reverse_url('clarification_answer', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                      <input type="text" name="answer_content" placeholder="{{ _('Type answer...') }}" style="width: 300px; display: inline;" required>
+                      <button type="submit" class="button rounded small">{{ _('Answer') }}</button>
+                    </form>
+                    {% endif %}
+                    {% if handler.has_perm(vj4.model.builtin.PERM_ANSWER_CLARIFICATION) %}
+                    <form method="post" action="{{ reverse_url('clarification_toggle_announcement', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                      <input type="hidden" name="is_announcement" value="{{ 'false' if cqdoc['is_announcement'] else 'true' }}">
+                      <button type="submit" class="button rounded small">{{ _('Mark as Announcement') if not cqdoc['is_announcement'] else _('Unmark Announcement') }}</button>
+                    </form>
+                    {% endif %}
+                    {% if cqdoc['owner_uid'] == handler.user['_id'] or handler.has_perm(vj4.model.builtin.PERM_EDIT_CLARIFICATION) %}
+                    <form method="post" action="{{ reverse_url('clarification_toggle_visibility', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                      <input type="hidden" name="is_public" value="{{ 'false' if cqdoc['is_public'] else 'true' }}">
+                      <button type="submit" class="button rounded small">{{ _('Make Private') if cqdoc['is_public'] else _('Make Public') }}</button>
+                    </form>
+                    {% endif %}
+                    {% if cqdoc['owner_uid'] == handler.user['_id'] or handler.has_perm(vj4.model.builtin.PERM_DELETE_CLARIFICATION) %}
+                    <form method="post" action="{{ reverse_url('clarification_delete', cqid=cqdoc['doc_id']) }}" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                      <button type="submit" class="button rounded small alert">{{ _('Delete') }}</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+          </ul>
+        </div>
+        {% else %}
+        <p>{{ _('No clarification questions yet.') }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
   <div class="medium-3 columns">
     {% with owner_udoc=udoc, owner_dudoc=dudoc %}
