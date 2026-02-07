@@ -92,7 +92,7 @@ class ContestClarificationDetailHandler(base.Handler):
                 path_components=path_components)
 
 
-@app.route('/contest/{tid:\w{24}}/clarify', 'clarification_create')
+@app.route('/contest/{tid:\w{24}}/clarifications/', 'clarification_create')
 class ClarificationCreateHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CLARIFICATION)
@@ -116,21 +116,28 @@ class ClarificationCreateHandler(base.Handler):
     self.json_or_redirect(self.reverse_url('contest_clarifications', tid=tdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid:\w{24}}/answer', 'clarification_answer')
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/answer', 'clarification_answer')
 class ClarificationAnswerHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, cqid: document.convert_doc_id, answer_content: str):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, answer_content: str):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
     # Get contest document to check moderator status
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, cqdoc['parent_doc_id'])
       # Only contest moderators or admins can answer
       if not is_moderator_or_admin(self, tdoc):
         raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
@@ -154,29 +161,33 @@ class ClarificationAnswerHandler(base.Handler):
         pass  # Don't fail if notification fails
     
     # Redirect back to the clarification detail page
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
-                                               tid=cqdoc['parent_doc_id'], 
-                                               cqid=cqdoc['doc_id']))
-    else:
-      self.json_or_redirect(self.url)
+    self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                             tid=tdoc['doc_id'], 
+                                             cqid=cqdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid:\w{24}}/toggle-visibility', 'clarification_toggle_visibility')
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/toggle-visibility', 'clarification_toggle_visibility')
 class ClarificationToggleVisibilityHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, cqid: document.convert_doc_id, is_public: bool):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, is_public: bool):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
     # Get contest document to check moderator status
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, cqdoc['parent_doc_id'])
       # Only contest moderators or admins can mark as private
       if not is_public:  # Making it private
         if not is_moderator_or_admin(self, tdoc):
@@ -193,29 +204,33 @@ class ClarificationToggleVisibilityHandler(base.Handler):
     
     await clarification.set_visibility(self.domain_id, cqid, is_public)
     # Redirect back to the clarification detail page
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
-                                               tid=cqdoc['parent_doc_id'], 
-                                               cqid=cqdoc['doc_id']))
-    else:
-      self.json_or_redirect(self.url)
+    self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                             tid=tdoc['doc_id'], 
+                                             cqid=cqdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid:\w{24}}/toggle-announcement', 'clarification_toggle_announcement')
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/toggle-announcement', 'clarification_toggle_announcement')
 class ClarificationToggleAnnouncementHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, cqid: document.convert_doc_id, is_announcement: bool):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, is_announcement: bool):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
     # Get contest document to check moderator status
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, cqdoc['parent_doc_id'])
       # Only contest moderators or admins can mark as announcement
       if not is_moderator_or_admin(self, tdoc):
         raise error.PermissionError(builtin.PERM_ANSWER_CLARIFICATION)
@@ -252,25 +267,31 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
     
     await clarification.set_announcement(self.domain_id, cqid, is_announcement)
     # Redirect back to the clarification detail page
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
-                                               tid=cqdoc['parent_doc_id'], 
-                                               cqid=cqdoc['doc_id']))
-    else:
-      self.json_or_redirect(self.url)
+    self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                             tid=tdoc['doc_id'], 
+                                             cqid=cqdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid:\w{24}}/edit', 'clarification_edit')
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/edit', 'clarification_edit')
 class ClarificationEditHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, cqid: document.convert_doc_id, title: str, content: str):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id, title: str, content: str):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
     # Check permissions
     if cqdoc['owner_uid'] != self.user['_id']:
       self.check_perm(builtin.PERM_EDIT_CLARIFICATION)
@@ -278,28 +299,32 @@ class ClarificationEditHandler(base.Handler):
       self.check_perm(builtin.PERM_EDIT_CLARIFICATION_SELF)
     await clarification.edit(self.domain_id, cqid, title=title, content=content)
     # Redirect back to the clarification detail page
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
-                                               tid=cqdoc['parent_doc_id'], 
-                                               cqid=cqdoc['doc_id']))
-    else:
-      self.json_or_redirect(self.url)
+    self.json_or_redirect(self.reverse_url('contest_clarification_detail', 
+                                             tid=tdoc['doc_id'], 
+                                             cqid=cqdoc['doc_id']))
 
 
-@app.route('/clarify/{cqid:\w{24}}/delete', 'clarification_delete')
+@app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/delete', 'clarification_delete')
 class ClarificationDeleteHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.require_csrf_token
   @base.sanitize
-  async def post(self, *, cqid: document.convert_doc_id):
+  async def post(self, *, tid: objectid.ObjectId, cqid: document.convert_doc_id):
+    tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+    if not tdoc:
+      raise error.ContestNotFoundError(self.domain_id, tid)
+    
     cqdoc = await clarification.get(self.domain_id, cqid)
     if not cqdoc:
       raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
     
+    # Verify the clarification belongs to this contest
+    if cqdoc['parent_doc_id'] != tdoc['doc_id']:
+      raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CLARIFICATION_QUESTION, cqid)
+    
     # Get contest document to check moderator status
     if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, cqdoc['parent_doc_id'])
       # Only contest moderators or admins can delete
       if not is_moderator_or_admin(self, tdoc):
         raise error.PermissionError(builtin.PERM_DELETE_CLARIFICATION)
@@ -312,7 +337,4 @@ class ClarificationDeleteHandler(base.Handler):
     
     await clarification.delete(self.domain_id, cqid)
     # Redirect back to the clarifications list page
-    if cqdoc.get('parent_doc_type') == document.TYPE_CONTEST:
-      self.json_or_redirect(self.reverse_url('contest_clarifications', tid=cqdoc['parent_doc_id']))
-    else:
-      self.json_or_redirect(self.url)
+    self.json_or_redirect(self.reverse_url('contest_clarifications', tid=tdoc['doc_id']))
