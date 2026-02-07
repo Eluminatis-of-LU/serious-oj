@@ -17,6 +17,7 @@ from vj4.model import domain
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
+from vj4.model.adaptor import clarification
 from vj4.handler import base
 from vj4.util import pagination
 
@@ -65,12 +66,13 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
 @app.route("/contest/{tid:\w{24}}", "contest_detail")
 class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
     DISCUSSIONS_PER_PAGE = 15
+    ANNOUNCEMENTS_PER_PAGE = 5
 
     @base.route_argument
     @base.require_perm(builtin.PERM_VIEW_CONTEST)
     @base.get_argument
     @base.sanitize
-    async def get(self, *, tid: objectid.ObjectId, page: int = 1):
+    async def get(self, *, tid: objectid.ObjectId, page: int = 1, announcement_page: int = 1):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         tsdoc, pdict = await asyncio.gather(
             contest.get_status(
@@ -104,8 +106,25 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             page,
             self.DISCUSSIONS_PER_PAGE,
         )
+        # announcements (clarifications marked as announcement) - only if clarifications enabled
+        if tdoc.get('clarification_enabled', False):
+            cqdocs, cqpcount, cqcount = await pagination.paginate(
+                clarification.get_multi(
+                    self.domain_id,
+                    parent_doc_type=tdoc["doc_type"],
+                    parent_doc_id=tdoc["doc_id"],
+                    is_announcement=True,
+                ).sort([('_id', -1)]),
+                announcement_page,
+                self.ANNOUNCEMENTS_PER_PAGE,
+            )
+        else:
+            cqdocs, cqpcount, cqcount = [], 0, 0
         uids = set(ddoc["owner_uid"] for ddoc in ddocs)
         uids.add(tdoc["owner_uid"])
+        # Add clarification owner uids
+        for cqdoc in cqdocs:
+            uids.add(cqdoc["owner_uid"])
         udict = await user.get_dict(uids)
         dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
         path_components = self.build_path(
@@ -126,6 +145,10 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
             page=page,
             dpcount=dpcount,
             dcount=dcount,
+            cqdocs=cqdocs,
+            announcement_page=announcement_page,
+            cqpcount=cqpcount,
+            cqcount=cqcount,
             datetime_stamp=self.datetime_stamp,
             page_title=tdoc["title"],
             path_components=path_components,
@@ -519,7 +542,9 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         pids: str,
         password: str,
         freeze_before: int,
-        hidden: bool = False
+        hidden: bool = False,
+        clarification_enabled: bool = False,
+        moderator_uids: str = ""
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -539,6 +564,15 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("duration")
         pids = contest._parse_pids(pids)
         await self.verify_problems(pids)
+        
+        # Parse moderator UIDs (comma-separated list of integers)
+        mod_uids = []
+        if moderator_uids:
+            try:
+                mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
+            except ValueError:
+                raise error.ValidationError("moderator_uids")
+        
         tid = await contest.add(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -552,6 +586,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            clarification_enabled=clarification_enabled,
+            moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -620,7 +656,9 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         pids: str,
         password: str,
         freeze_before: int,
-        hidden: bool = False
+        hidden: bool = False,
+        clarification_enabled: bool = False,
+        moderator_uids: str = ""
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -643,6 +681,15 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             raise error.ValidationError("duration")
         pids = contest._parse_pids(pids)
         await self.verify_problems(pids)
+        
+        # Parse moderator UIDs (comma-separated list of integers)
+        mod_uids = []
+        if moderator_uids:
+            try:
+                mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
+            except ValueError:
+                raise error.ValidationError("moderator_uids")
+        
         await contest.edit(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -656,6 +703,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             password=password,
             freeze_before=freeze_before,
             hidden=hidden,
+            clarification_enabled=clarification_enabled,
+            moderator_uids=mod_uids,
         )
         await self.hide_problems(pids)
         if (

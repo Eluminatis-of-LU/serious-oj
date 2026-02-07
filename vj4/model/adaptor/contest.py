@@ -338,6 +338,12 @@ async def get(domain_id: str, doc_type: int, tid: objectid.ObjectId):
   return tdoc
 
 
+def is_contest_moderator(tdoc, uid: int):
+  """Check if a user is a contest moderator."""
+  moderator_uids = tdoc.get('moderator_uids', [])
+  return uid in moderator_uids
+
+
 async def edit(domain_id: str, doc_type: int, tid: objectid.ObjectId, **kwargs):
   if doc_type not in [document.TYPE_CONTEST, document.TYPE_HOMEWORK]:
     raise error.InvalidArgumentError('doc_type')

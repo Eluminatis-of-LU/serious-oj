@@ -89,6 +89,15 @@ PERM_VIEW_RANKING = 1 << 59
 # Rating.
 PERM_PROCESS_RATING = 1 << 60
 
+# Clarification.
+PERM_VIEW_CLARIFICATION = 1 << 62
+PERM_CREATE_CLARIFICATION = 1 << 63
+PERM_ANSWER_CLARIFICATION = 1 << 64
+PERM_EDIT_CLARIFICATION = 1 << 65
+PERM_EDIT_CLARIFICATION_SELF = 1 << 66
+PERM_DELETE_CLARIFICATION = 1 << 67
+PERM_DELETE_CLARIFICATION_SELF = 1 << 68
+
 PERM_ALL = -1
 
 Permission = collections.namedtuple('Permission',
@@ -187,6 +196,20 @@ PERMS = [
                'Edit own training plans'),
     Permission('perm_ranking', PERM_VIEW_RANKING, 'View ranking'),
     Permission('perm_rating', PERM_PROCESS_RATING, 'Process rating'),
+    Permission('perm_clarification', PERM_VIEW_CLARIFICATION,
+               'View clarification questions'),
+    Permission('perm_clarification', PERM_CREATE_CLARIFICATION,
+               'Create clarification questions'),
+    Permission('perm_clarification', PERM_ANSWER_CLARIFICATION,
+               'Answer clarification questions'),
+    Permission('perm_clarification', PERM_EDIT_CLARIFICATION,
+               'Edit clarification questions'),
+    Permission('perm_clarification', PERM_EDIT_CLARIFICATION_SELF,
+               'Edit own clarification questions'),
+    Permission('perm_clarification', PERM_DELETE_CLARIFICATION,
+               'Delete clarification questions'),
+    Permission('perm_clarification', PERM_DELETE_CLARIFICATION_SELF,
+               'Delete own clarification questions'),
 ]
 
 PERMS_BY_FAMILY = collections.OrderedDict(
@@ -237,7 +260,8 @@ BASIC_PERMISSIONS = (
     PERM_VIEW_CONTEST_SCOREBOARD |
     PERM_VIEW_HOMEWORK |
     PERM_VIEW_HOMEWORK_SCOREBOARD |
-    PERM_VIEW_TRAINING
+    PERM_VIEW_TRAINING |
+    PERM_VIEW_CLARIFICATION
 )
 DEFAULT_PERMISSIONS = (
     PERM_VIEW |
@@ -273,7 +297,11 @@ DEFAULT_PERMISSIONS = (
     PERM_VIEW_TRAINING |
     PERM_CREATE_TRAINING |
     PERM_EDIT_TRAINING_SELF |
-    PERM_VIEW_RANKING
+    PERM_VIEW_RANKING |
+    PERM_VIEW_CLARIFICATION |
+    PERM_CREATE_CLARIFICATION |
+    PERM_EDIT_CLARIFICATION_SELF |
+    PERM_DELETE_CLARIFICATION_SELF
 )
 ADMIN_PERMISSIONS = PERM_ALL
 
@@ -312,7 +340,11 @@ CONTRIBUTOR_PERMISSIONS = (
     PERM_VIEW_TRAINING |
     PERM_CREATE_TRAINING |
     PERM_EDIT_TRAINING_SELF |
-    PERM_VIEW_RANKING
+    PERM_VIEW_RANKING |
+    PERM_VIEW_CLARIFICATION |
+    PERM_CREATE_CLARIFICATION |
+    PERM_EDIT_CLARIFICATION_SELF |
+    PERM_DELETE_CLARIFICATION_SELF
 )
 
 COORDINATOR_PERMISSIONS = (
@@ -351,7 +383,12 @@ COORDINATOR_PERMISSIONS = (
     PERM_VIEW_TRAINING |
     PERM_CREATE_TRAINING |
     PERM_EDIT_TRAINING_SELF |
-    PERM_VIEW_RANKING
+    PERM_VIEW_RANKING |
+    PERM_VIEW_CLARIFICATION |
+    PERM_CREATE_CLARIFICATION |
+    PERM_ANSWER_CLARIFICATION |
+    PERM_EDIT_CLARIFICATION |
+    PERM_DELETE_CLARIFICATION_SELF
 )
 
 TEMP_USER_PERMISSIONS = (

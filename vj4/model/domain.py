@@ -80,7 +80,7 @@ def get_multi(*, fields=None, **kwargs):
 @argmethod.wrap
 async def get_list(*, fields=None, limit: int=None, **kwargs):
   coll = db.coll('domain')
-  return await coll.find(kwargs, fields).limit(limit).to_list(None)
+  return await coll.find(kwargs, fields).limit(limit).to_list()
 
 
 def get_pending(**kwargs):

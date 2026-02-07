@@ -104,6 +104,7 @@ class Application(web.Application):
     from vj4.handler import rating
     from vj4.handler import user
     from vj4.handler import i18n
+    from vj4.handler import clarification
     from vj4.handler.api import announcement
     from vj4.handler.api import contest
     if options.static:
