@@ -31,7 +31,7 @@
           
           <div class="media">
             <div class="media__left medium">
-              <img class="small user-profile-avatar" src="{{ gravatar_url(owner['gravatar']) }}" width="50" height="50">
+              <img class="small user-profile-avatar" src="{{ owner['gravatar']|gravatar_url }}" width="50" height="50">
             </div>
             <div class="media__body">
               <h3>{{ _('Question') }}</h3>
