@@ -23,9 +23,9 @@ def is_moderator_or_admin(handler, tdoc):
 class ClarificationCreateHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CLARIFICATION)
-  @base.require_csrf_token
   @base.route_argument
   @base.post_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, tid: objectid.ObjectId, title: str, content: str,
                  is_public: bool=True):
@@ -46,9 +46,9 @@ class ClarificationCreateHandler(base.Handler):
 @app.route('/clarify/{cqid:\w{24}}/answer', 'clarification_answer')
 class ClarificationAnswerHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
   @base.route_argument
   @base.post_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, cqid: document.convert_doc_id, answer_content: str):
     cqdoc = await clarification.get(self.domain_id, cqid)
@@ -90,9 +90,9 @@ class ClarificationAnswerHandler(base.Handler):
 @app.route('/clarify/{cqid:\w{24}}/toggle-visibility', 'clarification_toggle_visibility')
 class ClarificationToggleVisibilityHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
   @base.route_argument
   @base.post_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, cqid: document.convert_doc_id, is_public: bool):
     cqdoc = await clarification.get(self.domain_id, cqid)
@@ -127,9 +127,9 @@ class ClarificationToggleVisibilityHandler(base.Handler):
 @app.route('/clarify/{cqid:\w{24}}/toggle-announcement', 'clarification_toggle_announcement')
 class ClarificationToggleAnnouncementHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
   @base.route_argument
   @base.post_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, cqid: document.convert_doc_id, is_announcement: bool):
     cqdoc = await clarification.get(self.domain_id, cqid)
@@ -184,9 +184,9 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
 @app.route('/clarify/{cqid:\w{24}}/edit', 'clarification_edit')
 class ClarificationEditHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
   @base.route_argument
   @base.post_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, cqid: document.convert_doc_id, title: str, content: str):
     cqdoc = await clarification.get(self.domain_id, cqid)
@@ -208,8 +208,8 @@ class ClarificationEditHandler(base.Handler):
 @app.route('/clarify/{cqid:\w{24}}/delete', 'clarification_delete')
 class ClarificationDeleteHandler(base.Handler):
   @base.require_priv(builtin.PRIV_USER_PROFILE)
-  @base.require_csrf_token
   @base.route_argument
+  @base.require_csrf_token
   @base.sanitize
   async def post(self, *, cqid: document.convert_doc_id):
     cqdoc = await clarification.get(self.domain_id, cqid)
