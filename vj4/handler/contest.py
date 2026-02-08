@@ -885,85 +885,6 @@ class ContestTempUserSyncAllHandler(contest.ContestMixin, base.Handler):
         })
 
 
-@app.route("/contest/{tid}/tempuser/{temp_user_id}", "contest_tempuser_detail")
-class ContestTempUserDetailHandler(contest.ContestMixin, base.Handler):
-    """Handler for individual temp user operations using HTTP methods."""
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def patch(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId,
-                    display_name: str = None):
-        """Update a temp user (PATCH method)."""
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
-        
-        if not display_name:
-            raise error.ValidationError('display_name')
-        
-        # Get current temp user
-        temp_user = await contest_temp_user.get(self.domain_id, tid, temp_user_id)
-        if not temp_user:
-            raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CONTEST, temp_user_id)
-        
-        # Regenerate username and email based on new display name
-        new_uname = contest_temp_user.generate_username(tdoc['title'], display_name)
-        new_email = contest_temp_user.generate_email(new_uname)
-        
-        # Update display name, username, email, and synced user if exists
-        await contest_temp_user.edit_and_update_user(
-            self.domain_id, tid, temp_user_id,
-            display_name=display_name,
-            uname=new_uname,
-            email=new_email
-        )
-        
-        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def delete(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
-        """Delete a temp user (DELETE method)."""
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
-        
-        # Delete temp user, associated user and attendance
-        await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
-        
-        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-
-
-@app.route("/contest/{tid}/tempuser/{temp_user_id}/regenerate-password", "contest_tempuser_regenerate_password")
-class ContestTempUserRegeneratePasswordHandler(contest.ContestMixin, base.Handler):
-    """Handler for regenerating temp user password."""
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def post(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
-        """Regenerate password for a temp user."""
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
-        
-        password = await contest_temp_user.regenerate_password(
-            self.domain_id, tid, temp_user_id
-        )
-        self.json({
-            'success': True,
-            'password': password
-        })
-
-
 @app.route("/contest/{tid}/tempuser/import", "contest_tempuser_import")
 class ContestTempUserImportHandler(contest.ContestMixin, base.Handler):
     """Handler for importing temp users from CSV."""
@@ -1047,3 +968,82 @@ class ContestTempUserExportHandler(contest.ContestMixin, base.Handler):
             csv_content.encode('utf-8-sig'),
             file_name="{}-tempusers.csv".format(tdoc["title"]),
         )
+
+
+@app.route("/contest/{tid}/tempuser/{temp_user_id}", "contest_tempuser_detail")
+class ContestTempUserDetailHandler(contest.ContestMixin, base.Handler):
+    """Handler for individual temp user operations using HTTP methods."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def patch(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId,
+                    display_name: str = None):
+        """Update a temp user (PATCH method)."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        if not display_name:
+            raise error.ValidationError('display_name')
+        
+        # Get current temp user
+        temp_user = await contest_temp_user.get(self.domain_id, tid, temp_user_id)
+        if not temp_user:
+            raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CONTEST, temp_user_id)
+        
+        # Regenerate username and email based on new display name
+        new_uname = contest_temp_user.generate_username(tdoc['title'], display_name)
+        new_email = contest_temp_user.generate_email(new_uname)
+        
+        # Update display name, username, email, and synced user if exists
+        await contest_temp_user.edit_and_update_user(
+            self.domain_id, tid, temp_user_id,
+            display_name=display_name,
+            uname=new_uname,
+            email=new_email
+        )
+        
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def delete(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+        """Delete a temp user (DELETE method)."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Delete temp user, associated user and attendance
+        await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
+        
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+
+
+@app.route("/contest/{tid}/tempuser/{temp_user_id}/regenerate-password", "contest_tempuser_regenerate_password")
+class ContestTempUserRegeneratePasswordHandler(contest.ContestMixin, base.Handler):
+    """Handler for regenerating temp user password."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+        """Regenerate password for a temp user."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        password = await contest_temp_user.regenerate_password(
+            self.domain_id, tid, temp_user_id
+        )
+        self.json({
+            'success': True,
+            'password': password
+        })
