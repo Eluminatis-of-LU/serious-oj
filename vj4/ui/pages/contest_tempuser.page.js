@@ -29,6 +29,9 @@ const page = new NamedPage('contest_tempuser', () => {
     
     fetch(`/contest/${tid}/tempuser/${userId}/regenerate-password`, {
       method: 'POST',
+      headers: {
+        'Accept': 'application/json'
+      },
       body: formData
     })
     .then(response => response.json())
@@ -62,6 +65,9 @@ const page = new NamedPage('contest_tempuser', () => {
     
     fetch(`/contest/${tid}/tempuser/sync-all`, {
       method: 'POST',
+      headers: {
+        'Accept': 'application/json'
+      },
       body: formData
     })
     .then(response => response.json())
@@ -95,19 +101,22 @@ const page = new NamedPage('contest_tempuser', () => {
     
     fetch(form.attr('action'), {
       method: method,
+      headers: {
+        'Accept': 'application/json'
+      },
       body: formData
     })
     .then(response => {
-      if (response.redirected) {
-        window.location.href = response.url;
-      } else {
-        return response.json();
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
+      return response.json();
     })
     .then(data => {
-      if (data && data.success === false) {
-        alert($('body').attr('data-operation-error') || 'Operation failed');
-      } else if (data) {
+      if (data.error) {
+        alert(data.error.message || ($('body').attr('data-operation-error') || 'Operation failed'));
+      } else {
+        // Success - reload the page to show updated data
         window.location.reload();
       }
     })
