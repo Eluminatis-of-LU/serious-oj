@@ -840,95 +840,49 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
     
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.get_argument
     @base.post_argument
     @base.require_csrf_token
     @base.sanitize
-    async def post(self, *, tid: objectid.ObjectId, operation: str,
-                   temp_user_id: objectid.ObjectId = None,
-                   display_name: str = None,
-                   uid: int = None):
+    async def post(self, *, tid: objectid.ObjectId, display_name: str):
+        """Add a new temp user."""
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
-        if operation == 'add':
-            if not display_name:
-                raise error.ValidationError('display_name')
-            temp_user_id = await contest_temp_user.add(
-                self.domain_id, tid, tdoc['title'], display_name, self.user["_id"]
-            )
-            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+        if not display_name:
+            raise error.ValidationError('display_name')
         
-        elif operation == 'edit':
-            if not temp_user_id:
-                raise error.ValidationError('temp_user_id')
-            if not display_name:
-                raise error.ValidationError('display_name')
-            
-            # Get current temp user
-            temp_user = await contest_temp_user.get(self.domain_id, tid, temp_user_id)
-            if not temp_user:
-                raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CONTEST, temp_user_id)
-            
-            # Regenerate username and email based on new display name
-            new_uname = contest_temp_user.generate_username(tdoc['title'], display_name)
-            new_email = contest_temp_user.generate_email(new_uname)
-            
-            # Update display name, username, email, and synced user if exists
-            await contest_temp_user.edit_and_update_user(
-                self.domain_id, tid, temp_user_id, 
-                display_name=display_name,
-                uname=new_uname,
-                email=new_email
-            )
-            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+        temp_user_id = await contest_temp_user.add(
+            self.domain_id, tid, tdoc['title'], display_name, self.user["_id"]
+        )
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+
+
+@app.route("/contest/{tid}/tempuser/sync-all", "contest_tempuser_sync_all")
+class ContestTempUserSyncAllHandler(contest.ContestMixin, base.Handler):
+    """Handler for bulk syncing all unsynced temp users."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId):
+        """Bulk sync all unsynced temp users."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
         
-        elif operation == 'delete':
-            if not temp_user_id:
-                raise error.ValidationError('temp_user_id')
-            # Delete temp user, associated user and attendance
-            await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
-            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-        
-        elif operation == 'regenerate_password':
-            if not temp_user_id:
-                raise error.ValidationError('temp_user_id')
-            password = await contest_temp_user.regenerate_password(
-                self.domain_id, tid, temp_user_id
-            )
-            self.json({
-                'success': True,
-                'password': password
-            })
-        
-        elif operation == 'sync_all':
-            # Bulk sync all unsynced temp users
-            results, errors = await contest_temp_user.sync_all_to_real_users(
-                self.domain_id, tid, self.remote_ip
-            )
-            self.json({
-                'success': True,
-                'synced_count': len(results),
-                'results': results,
-                'errors': errors
-            })
-        
-        elif operation == 'sync':
-            if not temp_user_id:
-                raise error.ValidationError('temp_user_id')
-            if not uid:
-                raise error.ValidationError('uid')
-            password = await contest_temp_user.sync_to_real_user(
-                self.domain_id, tid, temp_user_id, uid, self.remote_ip
-            )
-            self.json({
-                'success': True,
-                'password': password
-            })
-        
-        else:
-            raise error.ValidationError('operation')
+        # Bulk sync all unsynced temp users
+        results, errors = await contest_temp_user.sync_all_to_real_users(
+            self.domain_id, tid, self.remote_ip
+        )
+        self.json({
+            'success': True,
+            'synced_count': len(results),
+            'results': results,
+            'errors': errors
+        })
 
 
 @app.route("/contest/{tid}/tempuser/{temp_user_id}", "contest_tempuser_detail")
@@ -984,6 +938,30 @@ class ContestTempUserDetailHandler(contest.ContestMixin, base.Handler):
         await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
         
         self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+
+
+@app.route("/contest/{tid}/tempuser/{temp_user_id}/regenerate-password", "contest_tempuser_regenerate_password")
+class ContestTempUserRegeneratePasswordHandler(contest.ContestMixin, base.Handler):
+    """Handler for regenerating temp user password."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+        """Regenerate password for a temp user."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        password = await contest_temp_user.regenerate_password(
+            self.domain_id, tid, temp_user_id
+        )
+        self.json({
+            'success': True,
+            'password': password
+        })
 
 
 @app.route("/contest/{tid}/tempuser/import", "contest_tempuser_import")
