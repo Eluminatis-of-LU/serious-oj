@@ -110,6 +110,28 @@ async def edit(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.Ob
 
 
 @argmethod.wrap
+async def edit_and_update_user(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId, 
+                               display_name: str, uname: str, email: str):
+    """Edit a temp user and update the synced real user if exists."""
+    # Update temp user
+    temp_user_doc = await edit(domain_id, tid, temp_user_id, 
+                               display_name=display_name,
+                               uname=uname,
+                               email=email)
+    
+    # If synced, update the real user as well
+    if temp_user_doc and temp_user_doc.get('synced', False) and temp_user_doc.get('synced_uid'):
+        synced_uid = temp_user_doc['synced_uid']
+        try:
+            # Update user's uname and mail
+            await user.set_by_uid(synced_uid, uname=uname, mail=email)
+        except Exception:
+            pass  # If update fails, at least temp_user is updated
+    
+    return temp_user_doc
+
+
+@argmethod.wrap
 async def delete(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
     """Delete a temp user."""
     coll = db.coll('contest.temp_user')

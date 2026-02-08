@@ -115,9 +115,8 @@
           {% for temp_user in temp_users %}
             <tr>
               <td>
-                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=edit" class="tempuser-displayname-form">
+                <form method="post" action="{{ reverse_url('contest_tempuser_detail', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="tempuser-displayname-form" data-method="PATCH">
                   <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
-                  <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
                   <input type="text" name="display_name" value="{{ temp_user.get('display_name', '') }}" class="tempuser-displayname-input">
                   <button type="submit" class="button tiny">{{ _('Update') }}</button>
                 </form>
@@ -141,9 +140,8 @@
               </td>
               <td>{{ temp_user.get('synced_uid', '-') }}</td>
               <td>
-                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=delete" class="tempuser-displayname-form" onsubmit="return confirm('{{ _('Are you sure? This will delete the temp user, real user account, and attendance.') }}');">
+                <form method="post" action="{{ reverse_url('contest_tempuser_detail', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="tempuser-displayname-form" data-method="DELETE" onsubmit="return confirm('{{ _('Are you sure? This will delete the temp user, real user account, and attendance.') }}');">
                   <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
-                  <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
                   <button type="submit" class="button tiny alert">{{ _('Delete') }}</button>
                 </form>
               </td>
@@ -267,5 +265,40 @@ function syncAll() {
     alert('{{ _("Error syncing users") }}');
   });
 }
+
+// Handle forms with custom HTTP methods (PATCH, DELETE)
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('form[data-method]').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      var method = form.getAttribute('data-method');
+      var formData = new FormData(form);
+      
+      fetch(form.action, {
+        method: method,
+        body: formData
+      })
+      .then(response => {
+        if (response.redirected) {
+          window.location.href = response.url;
+        } else {
+          return response.json();
+        }
+      })
+      .then(data => {
+        if (data && data.success === false) {
+          alert('{{ _("Operation failed") }}');
+        } else if (data) {
+          window.location.reload();
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('{{ _("Error performing operation") }}');
+      });
+    });
+  });
+});
 </script>
 {% endblock %}
