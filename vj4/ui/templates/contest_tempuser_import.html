@@ -1,117 +1,75 @@
 {% extends "layout/basic.html" %}
-{% import "components/contest.html" as contest with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Import Temp Users from CSV') }}</h1>
+        <h1 class="section__title">{{ _('Import Temp Users') }}</h1>
       </div>
       <div class="section__body">
-        <div class="typo">
-          <h3>{{ _('CSV Format') }}</h3>
-          <p>{{ _('The CSV file should have the following format:') }}</p>
-          <pre>uname,display_name
-user1,Display Name 1
-user2,Display Name 2
-user3,</pre>
-          <p>{{ _('Notes:') }}</p>
-          <ul>
-            <li>{{ _('First row must be the header: uname,display_name') }}</li>
-            <li>{{ _('uname is required, display_name is optional') }}</li>
-            <li>{{ _('If display_name is empty, the username will be used') }}</li>
-          </ul>
-        </div>
-
-        <form method="post" id="importForm">
+        <form method="post" action="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          
           <div class="row">
             <div class="columns">
               <label>
                 {{ _('CSV Content') }}
-                <textarea name="csv_content" rows="15" required 
-                          placeholder="uname,display_name&#10;user1,Display Name 1&#10;user2,Display Name 2"></textarea>
+                <textarea name="csv_content" rows="15" required placeholder="{{ _('Paste CSV content here') }}"></textarea>
               </label>
+              
+              <p class="help-text">
+                {{ _('CSV Format: One column with header "display_name"') }}<br>
+                {{ _('Example:') }}<br>
+                <pre style="background: #f0f0f0; padding: 10px; border-radius: 3px;">
+display_name
+John Doe
+Jane Smith
+Alice Johnson</pre>
+                <strong>{{ _('Note:') }}</strong> {{ _('Username and email will be auto-generated from display names') }}
+              </p>
             </div>
           </div>
+          
           <div class="row">
             <div class="columns">
               <button type="submit" class="expanded button">{{ _('Import Temp Users') }}</button>
-              <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}" 
-                 class="expanded button secondary">{{ _('Cancel') }}</a>
+              <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}" class="button secondary">{{ _('Cancel') }}</a>
             </div>
           </div>
         </form>
-
-        <div id="importResult" style="display: none; margin-top: 20px;">
-          <div class="section">
-            <div class="section__header">
-              <h2 class="section__title">{{ _('Import Results') }}</h2>
-            </div>
-            <div class="section__body">
-              <div id="resultMessage"></div>
-              <div id="errorList" style="display: none;">
-                <h4>{{ _('Errors:') }}</h4>
-                <ul id="errors"></ul>
-              </div>
-              <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}" 
-                 class="button">{{ _('Back to Temp Users') }}</a>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
-  </div>
-
-  <div class="medium-3 columns">
-    {% include "partials/contest_sidebar.html" %}
   </div>
 </div>
 
 <script>
-document.getElementById('importForm').addEventListener('submit', function(e) {
+document.querySelector('form').addEventListener('submit', function(e) {
   e.preventDefault();
   
   var formData = new FormData(this);
   
-  fetch('{{ reverse_url("contest_tempuser_import", tid=tdoc["doc_id"]) }}', {
+  fetch(this.action, {
     method: 'POST',
     body: formData
   })
   .then(response => response.json())
   .then(data => {
-    var resultDiv = document.getElementById('importResult');
-    var messageDiv = document.getElementById('resultMessage');
-    var errorListDiv = document.getElementById('errorList');
-    var errorsList = document.getElementById('errors');
-    
-    resultDiv.style.display = 'block';
-    
     if (data.success) {
-      var message = '{{ _("Successfully imported") }} ' + data.imported + ' {{ _("temp users") }}.';
-      messageDiv.innerHTML = '<div class="alert alert-success">' + message + '</div>';
-      
+      var msg = '{{ _("Imported") }} ' + data.imported + ' {{ _("temp users") }}';
       if (data.errors && data.errors.length > 0) {
-        errorListDiv.style.display = 'block';
-        errorsList.innerHTML = '';
-        data.errors.forEach(function(error) {
-          var li = document.createElement('li');
-          li.textContent = error;
-          errorsList.appendChild(li);
-        });
-      } else {
-        errorListDiv.style.display = 'none';
+        msg += '\n\n{{ _("Errors:") }}\n' + data.errors.join('\n');
       }
-      
-      // Hide form after successful import
-      document.getElementById('importForm').style.display = 'none';
+      alert(msg);
+      if (data.imported > 0) {
+        window.location.href = '{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}';
+      }
     } else {
-      messageDiv.innerHTML = '<div class="alert alert-error">{{ _("Error importing temp users") }}</div>';
+      alert('{{ _("Error importing users") }}');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('{{ _("Error importing temp users") }}');
+    alert('{{ _("Error importing users") }}');
   });
 });
 </script>

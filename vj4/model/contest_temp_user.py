@@ -1,6 +1,7 @@
 """Contest temp user management model."""
 import csv
 import io
+import re
 import secrets
 import string
 from bson import objectid
@@ -19,18 +20,66 @@ def generate_password(length=8):
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
+def make_slug(text):
+    """Convert text to email-safe slug."""
+    # Convert to lowercase and remove special characters
+    text = text.lower()
+    # Replace spaces and special chars with underscore
+    text = re.sub(r'[^a-z0-9]+', '_', text)
+    # Remove leading/trailing underscores
+    text = text.strip('_')
+    # Collapse multiple underscores
+    text = re.sub(r'_+', '_', text)
+    return text
+
+
+def generate_username(contest_title, display_name):
+    """Generate username from contest title acronym and display name.
+    
+    Format: slug(contest_title_acronym) + slug(display_name)
+    """
+    # Get acronym from contest title (first letter of each word)
+    words = contest_title.split()
+    acronym = ''.join(word[0] for word in words if word).lower()
+    
+    # Make email-safe slugs
+    acronym_slug = make_slug(acronym)
+    name_slug = make_slug(display_name)
+    
+    # Combine with underscore
+    username = f"{acronym_slug}_{name_slug}"
+    
+    return username
+
+
+def generate_email(username):
+    """Generate email from username."""
+    return f"{username}@serious-oj.com"
+
+
 @argmethod.wrap
-async def add(domain_id: str, tid: objectid.ObjectId, uname: str, display_name: str = '', owner_uid: int = None):
-    """Add a temp user for a contest."""
+async def add(domain_id: str, tid: objectid.ObjectId, contest_title: str, display_name: str, owner_uid: int = None):
+    """Add a temp user for a contest with auto-generated username, email, and password."""
     coll = db.coll('contest.temp_user')
     temp_user_id = objectid.ObjectId()
+    
+    # Generate username from contest title and display name
+    uname = generate_username(contest_title, display_name)
+    
+    # Generate email
+    email = generate_email(uname)
+    
+    # Generate password immediately
+    password = generate_password()
     
     doc = {
         '_id': temp_user_id,
         'domain_id': domain_id,
         'tid': tid,
         'uname': uname,
-        'display_name': display_name or uname,
+        'display_name': display_name,
+        'email': email,
+        'password': password,
         'synced': False,
         'synced_uid': None,
         'created_by': owner_uid,
@@ -74,9 +123,17 @@ def get_multi(domain_id: str, tid: objectid.ObjectId):
 
 
 @argmethod.wrap
+async def regenerate_password(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+    """Regenerate password for a temp user."""
+    password = generate_password()
+    await edit(domain_id, tid, temp_user_id, password=password)
+    return password
+
+
+@argmethod.wrap
 async def sync_to_real_user(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId, 
-                           uid: int, mail: str, regip: str = ''):
-    """Sync a temp user to the real user table and generate password."""
+                           uid: int, regip: str = ''):
+    """Sync a temp user to the real user table using already generated password and email."""
     temp_user_doc = await get(domain_id, tid, temp_user_id)
     if not temp_user_doc:
         raise error.DocumentNotFoundError(domain_id, document.TYPE_CONTEST, temp_user_id)
@@ -84,68 +141,68 @@ async def sync_to_real_user(domain_id: str, tid: objectid.ObjectId, temp_user_id
     if temp_user_doc.get('synced', False):
         raise error.ValidationError('temp_user', 'Already synced')
     
-    # Generate a random password
-    password = generate_password()
+    # Use the already generated password and email
+    password = temp_user_doc.get('password')
+    email = temp_user_doc.get('email')
+    uname = temp_user_doc.get('uname')
+    
+    if not password or not email:
+        raise error.ValidationError('temp_user', 'Missing password or email')
     
     # Add the user to the real user table
-    await user.add(uid, temp_user_doc['uname'], password, mail, regip)
+    await user.add(uid, uname, password, email, regip)
     
     # Mark as synced
-    await edit(domain_id, tid, temp_user_id, synced=True, synced_uid=uid, synced_password=password)
+    await edit(domain_id, tid, temp_user_id, synced=True, synced_uid=uid)
     
     return password
 
 
 @argmethod.wrap
-async def import_from_csv(domain_id: str, tid: objectid.ObjectId, csv_content: str, owner_uid: int):
+async def import_from_csv(domain_id: str, tid: objectid.ObjectId, contest_title: str, csv_content: str, owner_uid: int):
     """Import temp users from CSV content.
     
-    CSV format: uname,display_name (optional)
+    CSV format: display_name (required)
     """
     reader = csv.DictReader(io.StringIO(csv_content))
     imported_count = 0
     errors = []
     
     for row_num, row in enumerate(reader, start=2):  # Start from 2 (1 is header)
-        uname = row.get('uname', '').strip()
         display_name = row.get('display_name', '').strip()
         
-        if not uname:
-            errors.append(f"Row {row_num}: Missing username")
+        if not display_name:
+            errors.append(f"Row {row_num}: Missing display name")
             continue
         
         try:
-            await add(domain_id, tid, uname, display_name, owner_uid)
+            await add(domain_id, tid, contest_title, display_name, owner_uid)
             imported_count += 1
         except Exception as e:
-            errors.append(f"Row {row_num} ({uname}): {str(e)}")
+            errors.append(f"Row {row_num} ({display_name}): {str(e)}")
     
     return imported_count, errors
 
 
 @argmethod.wrap
-async def export_to_csv(domain_id: str, tid: objectid.ObjectId, include_password: bool = False):
-    """Export temp users to CSV content."""
+async def export_to_csv(domain_id: str, tid: objectid.ObjectId):
+    """Export temp users to CSV content with passwords."""
     output = io.StringIO()
     
-    if include_password:
-        fieldnames = ['uname', 'display_name', 'synced', 'synced_uid', 'password']
-    else:
-        fieldnames = ['uname', 'display_name', 'synced', 'synced_uid']
+    fieldnames = ['display_name', 'username', 'email', 'password', 'synced', 'synced_uid']
     
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     
     async for temp_user in get_multi(domain_id, tid):
         row = {
-            'uname': temp_user.get('uname', ''),
             'display_name': temp_user.get('display_name', ''),
+            'username': temp_user.get('uname', ''),
+            'email': temp_user.get('email', ''),
+            'password': temp_user.get('password', ''),
             'synced': 'Yes' if temp_user.get('synced', False) else 'No',
             'synced_uid': temp_user.get('synced_uid', '') or '',
         }
-        
-        if include_password:
-            row['password'] = temp_user.get('synced_password', '') if temp_user.get('synced', False) else ''
         
         writer.writerow(row)
     

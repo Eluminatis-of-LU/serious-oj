@@ -833,32 +833,27 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
     @base.sanitize
     async def post(self, *, tid: objectid.ObjectId, operation: str,
                    temp_user_id: objectid.ObjectId = None,
-                   uname: str = None, display_name: str = None,
-                   uid: int = None, mail: str = None):
+                   display_name: str = None,
+                   uid: int = None):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
         if operation == 'add':
-            if not uname:
-                raise error.ValidationError('uname')
+            if not display_name:
+                raise error.ValidationError('display_name')
             temp_user_id = await contest_temp_user.add(
-                self.domain_id, tid, uname, display_name or '', self.user["_id"]
+                self.domain_id, tid, tdoc['title'], display_name, self.user["_id"]
             )
             self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
         elif operation == 'edit':
             if not temp_user_id:
                 raise error.ValidationError('temp_user_id')
-            update_fields = {}
-            if uname is not None:
-                update_fields['uname'] = uname
-            if display_name is not None:
-                update_fields['display_name'] = display_name
+            if not display_name:
+                raise error.ValidationError('display_name')
             
-            if update_fields:
-                await contest_temp_user.edit(self.domain_id, tid, temp_user_id, **update_fields)
-            
+            await contest_temp_user.edit(self.domain_id, tid, temp_user_id, display_name=display_name)
             self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
         elif operation == 'delete':
@@ -867,15 +862,24 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
             await contest_temp_user.delete(self.domain_id, tid, temp_user_id)
             self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
+        elif operation == 'regenerate_password':
+            if not temp_user_id:
+                raise error.ValidationError('temp_user_id')
+            password = await contest_temp_user.regenerate_password(
+                self.domain_id, tid, temp_user_id
+            )
+            self.json({
+                'success': True,
+                'password': password
+            })
+        
         elif operation == 'sync':
             if not temp_user_id:
                 raise error.ValidationError('temp_user_id')
             if not uid:
                 raise error.ValidationError('uid')
-            if not mail:
-                raise error.ValidationError('mail')
             password = await contest_temp_user.sync_to_real_user(
-                self.domain_id, tid, temp_user_id, uid, mail, self.remote_ip
+                self.domain_id, tid, temp_user_id, uid, self.remote_ip
             )
             self.json({
                 'success': True,
@@ -923,7 +927,7 @@ class ContestTempUserImportHandler(contest.ContestMixin, base.Handler):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
         imported_count, errors = await contest_temp_user.import_from_csv(
-            self.domain_id, tid, csv_content, self.user["_id"]
+            self.domain_id, tid, tdoc['title'], csv_content, self.user["_id"]
         )
         
         self.json({
@@ -940,13 +944,13 @@ class ContestTempUserExportHandler(contest.ContestMixin, base.Handler):
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
     @base.sanitize
-    async def get(self, *, tid: objectid.ObjectId, include_password: bool = False):
+    async def get(self, *, tid: objectid.ObjectId):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
         csv_content = await contest_temp_user.export_to_csv(
-            self.domain_id, tid, include_password
+            self.domain_id, tid
         )
         
         # Use UTF-8 with BOM encoding for maximum Excel compatibility
