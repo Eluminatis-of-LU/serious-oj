@@ -7,14 +7,14 @@
         <h1 class="section__title">{{ _('Import Temp Users') }}</h1>
       </div>
       <div class="section__body">
-        <form method="post" action="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}">
+        <form method="post" action="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}" enctype="multipart/form-data">
           <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
           
           <div class="row">
             <div class="columns">
               <label>
-                {{ _('CSV Content') }}
-                <textarea name="csv_content" rows="15" required placeholder="{{ _('Paste CSV content here') }}"></textarea>
+                {{ _('CSV File') }}
+                <input type="file" name="csv_file" accept=".csv,text/csv" required>
               </label>
               
               <p class="help-text">

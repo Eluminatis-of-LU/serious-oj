@@ -18,6 +18,30 @@
   .password-hidden {
     color: #999;
   }
+  .sync-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 1001;
+    min-width: 400px;
+  }
+  .sync-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+  }
 </style>
 <div class="row">
   <div class="medium-9 columns">
@@ -101,6 +125,9 @@
               <td>{{ _('Yes') if temp_user.get('synced', False) else _('No') }}</td>
               <td>
                 {% if not temp_user.get('synced', False) %}
+                <button class="button tiny" onclick="showSyncDialog('{{ temp_user['_id'] }}', '{{ temp_user['uname'] }}', '{{ temp_user.get('email', '') }}')">
+                  {{ _('Sync to User') }}
+                </button>
                 <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=delete" class="tempuser-displayname-form" onsubmit="return confirm('{{ _('Are you sure?') }}');">
                   <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                   <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
@@ -128,6 +155,48 @@
     {% include "partials/contest_sidebar.html" %}
   {% endwith %}
   </div>
+</div>
+
+<!-- Sync Dialog -->
+<div id="syncOverlay" class="sync-overlay" onclick="closeSyncDialog()"></div>
+<div id="syncDialog" class="sync-dialog">
+  <h3>{{ _('Sync Temp User to Real User') }}</h3>
+  <form id="syncForm">
+    <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+    <input type="hidden" id="syncTempUserId" name="temp_user_id">
+    
+    <div style="margin-bottom: 15px;">
+      <label>
+        <strong>{{ _('Username') }}:</strong>
+        <input type="text" id="syncUsername" readonly style="background: #f5f5f5; width: 100%;">
+      </label>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label>
+        <strong>{{ _('Email') }}:</strong>
+        <input type="text" id="syncEmail" readonly style="background: #f5f5f5; width: 100%;">
+      </label>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label>
+        <strong>{{ _('User ID (UID)') }}:</strong>
+        <input type="number" name="uid" id="syncUid" required style="width: 100%;">
+      </label>
+      <p class="help-text">{{ _('Enter the numeric user ID to sync this temp user to') }}</p>
+    </div>
+    
+    <div>
+      <button type="submit" class="button">{{ _('Sync User') }}</button>
+      <button type="button" class="button secondary" onclick="closeSyncDialog()">{{ _('Cancel') }}</button>
+    </div>
+    
+    <div id="syncResult" style="display: none; margin-top: 15px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px;">
+      <strong>{{ _('Success!') }}</strong><br>
+      {{ _('User synced successfully. Password:') }} <code id="syncPassword"></code>
+    </div>
+  </form>
 </div>
 
 <script>
@@ -176,5 +245,47 @@ function regeneratePassword(userId) {
     alert('{{ _("Error regenerating password") }}');
   });
 }
+
+function showSyncDialog(tempUserId, username, email) {
+  document.getElementById('syncTempUserId').value = tempUserId;
+  document.getElementById('syncUsername').value = username;
+  document.getElementById('syncEmail').value = email;
+  document.getElementById('syncUid').value = '';
+  document.getElementById('syncResult').style.display = 'none';
+  document.getElementById('syncDialog').style.display = 'block';
+  document.getElementById('syncOverlay').style.display = 'block';
+}
+
+function closeSyncDialog() {
+  document.getElementById('syncDialog').style.display = 'none';
+  document.getElementById('syncOverlay').style.display = 'none';
+}
+
+document.getElementById('syncForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  var formData = new FormData(this);
+  
+  fetch('{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}?operation=sync', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('syncPassword').textContent = data.password;
+      document.getElementById('syncResult').style.display = 'block';
+      setTimeout(function() {
+        location.reload();
+      }, 3000);
+    } else {
+      alert('{{ _("Error syncing user") }}');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('{{ _("Error syncing user") }}');
+  });
+});
 </script>
 {% endblock %}

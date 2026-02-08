@@ -853,7 +853,20 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
             if not display_name:
                 raise error.ValidationError('display_name')
             
-            await contest_temp_user.edit(self.domain_id, tid, temp_user_id, display_name=display_name)
+            # Get current temp user
+            temp_user = await contest_temp_user.get(self.domain_id, tid, temp_user_id)
+            if not temp_user:
+                raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CONTEST, temp_user_id)
+            
+            # Regenerate username and email based on new display name
+            new_uname = contest_temp_user.generate_username(tdoc['title'], display_name)
+            new_email = contest_temp_user.generate_email(new_uname)
+            
+            # Update display name, username, and email
+            await contest_temp_user.edit(self.domain_id, tid, temp_user_id, 
+                                        display_name=display_name,
+                                        uname=new_uname,
+                                        email=new_email)
             self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
         elif operation == 'delete':
@@ -918,13 +931,26 @@ class ContestTempUserImportHandler(contest.ContestMixin, base.Handler):
     
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
     @base.sanitize
-    async def post(self, *, tid: objectid.ObjectId, csv_content: str):
+    async def post(self, *, tid: objectid.ObjectId):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Read CSV content from uploaded file
+        csv_content = None
+        async for part in await self.request.multipart():
+            if part.name == 'csrf_token':
+                # Skip CSRF token
+                continue
+            elif part.name == 'csv_file' and part.filename:
+                # Read CSV file content
+                csv_bytes = await part.read()
+                csv_content = csv_bytes.decode('utf-8')
+                break
+        
+        if not csv_content:
+            raise error.ValidationError('csv_file', 'No CSV file uploaded')
         
         imported_count, errors = await contest_temp_user.import_from_csv(
             self.domain_id, tid, tdoc['title'], csv_content, self.user["_id"]
