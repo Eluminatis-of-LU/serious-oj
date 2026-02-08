@@ -42,7 +42,7 @@ def generate_username(contest_title, display_name):
     """
     # Get acronym from contest title (first letter of each word)
     words = contest_title.split()
-    acronym = ''.join(word[0] for word in words if word).lower()
+    acronym = ''.join(word[0] for word in words if word and word[0].isalpha()).lower()
     
     # Make email-safe slugs
     acronym_slug = make_slug(acronym)
