@@ -57,9 +57,12 @@
       </div>
       
       <div class="bulk-actions">
-        <button class="button primary" onclick="syncAll('{{ tdoc['doc_id'] }}')">
-          <i class="icon icon-refresh"></i> {{ _('Sync All to Real Users') }}
-        </button>
+        <form id="sync-all-form" method="post" action="{{ reverse_url('contest_tempuser_sync_all', tid=tdoc['doc_id']) }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <button type="button" class="button primary" onclick="syncAll()">
+            <i class="icon icon-refresh"></i> {{ _('Sync All to Real Users') }}
+          </button>
+        </form>
         <p class="help-text">{{ _('This will create real user accounts for all temp users and make them contest attendees') }}</p>
       </div>
       
@@ -113,7 +116,10 @@
                 {% endif %}
               </td>
               <td>
-                <button onclick="regeneratePassword('{{ temp_user['_id'] }}', '{{ tdoc['doc_id'] }}')" class="button tiny">{{ _('Regenerate') }}</button>
+                <form method="post" action="{{ reverse_url('contest_tempuser_regenerate_password', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="regenerate-password-form" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <button type="button" onclick="regeneratePassword('{{ temp_user['_id'] }}')" class="button tiny">{{ _('Regenerate') }}</button>
+                </form>
                 <form method="post" action="{{ reverse_url('contest_tempuser_detail', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="tempuser-displayname-form" data-method="DELETE" onsubmit="return confirm('{{ _('Are you sure? This will delete the temp user, real user account, and attendance.') }}');">
                   <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                   <button type="submit" class="button tiny alert">{{ _('Delete') }}</button>

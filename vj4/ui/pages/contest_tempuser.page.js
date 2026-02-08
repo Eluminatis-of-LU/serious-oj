@@ -18,16 +18,17 @@ const page = new NamedPage('contest_tempuser', () => {
   };
   
   // Regenerate password for a temp user
-  window.regeneratePassword = function(userId, tid) {
+  window.regeneratePassword = function(userId) {
     if (!confirm($('body').attr('data-regenerate-confirm') || 'Are you sure you want to regenerate the password?')) {
       return;
     }
     
-    const csrfToken = $('meta[name="csrf_token"]').attr('content') || UiContext.csrfToken;
-    const formData = new FormData();
-    formData.append('csrf_token', csrfToken);
+    // Find the form for this specific user
+    const button = event.target;
+    const form = $(button).closest('form')[0];
+    const formData = new FormData(form);
     
-    fetch(`/contest/${tid}/tempuser/${userId}/regenerate-password`, {
+    fetch(form.action, {
       method: 'POST',
       headers: {
         'Accept': 'application/json'
@@ -54,16 +55,15 @@ const page = new NamedPage('contest_tempuser', () => {
   };
   
   // Bulk sync all unsynced temp users
-  window.syncAll = function(tid) {
+  window.syncAll = function() {
     if (!confirm($('body').attr('data-sync-confirm') || 'Are you sure you want to sync all unsynced temp users?')) {
       return;
     }
     
-    const csrfToken = $('meta[name="csrf_token"]').attr('content') || UiContext.csrfToken;
-    const formData = new FormData();
-    formData.append('csrf_token', csrfToken);
+    const form = document.getElementById('sync-all-form');
+    const formData = new FormData(form);
     
-    fetch(`/contest/${tid}/tempuser/sync-all`, {
+    fetch(form.action, {
       method: 'POST',
       headers: {
         'Accept': 'application/json'
