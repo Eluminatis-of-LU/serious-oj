@@ -1,40 +1,90 @@
+// Section spacing
+.section
+  margin-bottom: 24px
+
+// Form styling
 .tempuser-displayname-form
   display: inline
+  margin: 0
+  
+  button
+    margin-left: 8px
 
 .tempuser-displayname-input
   display: inline-block
   width: 200px
   margin: 0
-  padding: 2px
+  padding: 6px 8px
+  vertical-align: middle
 
+// Table improvements
+.data-table
+  td
+    padding: 12px
+    vertical-align: middle
+  
+  td:last-child
+    white-space: nowrap
+  
+  form
+    display: inline-block
+    margin-right: 8px
+    
+    &:last-child
+      margin-right: 0
+
+// Password cell
 .password-cell
   font-family: monospace
   cursor: pointer
+  user-select: none
 
 .password-hidden
   color: #999
 
+// Pagination
 .pagination
   text-align: center
-  margin: 20px 0
+  margin: 24px 0
+  padding: 16px 0
   
   a, span
     display: inline-block
-    padding: 5px 10px
-    margin: 0 2px
+    padding: 8px 12px
+    margin: 0 4px
     border: 1px solid #ddd
     text-decoration: none
+    border-radius: 4px
+    transition: all 0.2s
   
   a:hover
-    background: #f0f0f0
+    background: #f5f5f5
+    border-color: #bbb
   
   .current
     background: #0078d7
     color: white
     border-color: #0078d7
+    font-weight: 600
 
+// Bulk actions section
 .bulk-actions
-  margin: 20px 0
-  padding: 15px
+  margin: 24px 0
+  padding: 16px 20px
   background: #f9f9f9
-  border-radius: 5px
+  border-radius: 6px
+  border: 1px solid #e0e0e0
+  
+  .button
+    margin-bottom: 8px
+  
+  .help-text
+    margin: 8px 0 0 0
+    color: #666
+
+// Action buttons in table
+.data-table td button
+  margin-right: 4px
+  
+  &:last-child
+    margin-right: 0
