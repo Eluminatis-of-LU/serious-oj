@@ -797,15 +797,16 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
         async for temp_user in contest_temp_user.get_multi(self.domain_id, tid):
             temp_users.append(temp_user)
         
-        # Get contest owner and attendance status for sidebar
-        tsdoc, owner_udoc, owner_dudoc = await asyncio.gather(
-            contest.get_status(
-                self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
-            ),
-            user.get_by_uid(tdoc["owner_uid"]),
-            domain.get_user(domain_id=self.domain_id, uid=tdoc["owner_uid"]),
+        # Get contest status and user info for sidebar
+        tsdoc = await contest.get_status(
+            self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
         )
         attended = tsdoc and tsdoc.get("attend") == 1
+        
+        # Get user dictionaries including contest owner
+        uids = {tdoc["owner_uid"]}
+        udict = await user.get_dict(uids)
+        dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
         
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
@@ -817,8 +818,8 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
             "contest_tempuser.html",
             tdoc=tdoc,
             temp_users=temp_users,
-            owner_udoc=owner_udoc,
-            owner_dudoc=owner_dudoc,
+            udict=udict,
+            dudict=dudict,
             attended=attended,
             path_components=path_components,
             page_title="Temp Users - " + tdoc["title"],

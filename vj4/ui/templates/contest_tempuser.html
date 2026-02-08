@@ -147,7 +147,9 @@
   </div>
 
   <div class="medium-3 columns">
+  {% with owner_udoc=udict.get(tdoc['owner_uid'], {}), owner_dudoc=dudict.get(tdoc['owner_uid'], {}) %}
     {% include "partials/contest_sidebar.html" %}
+  {% endwith %}
   </div>
 </div>
 
