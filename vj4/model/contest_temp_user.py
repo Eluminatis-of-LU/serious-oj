@@ -123,14 +123,15 @@ async def edit_and_update_user(domain_id: str, tid: objectid.ObjectId, temp_user
     if temp_user_doc and temp_user_doc.get('synced', False) and temp_user_doc.get('synced_uid'):
         synced_uid = temp_user_doc['synced_uid']
         try:
-            # Update user's uname, mail, display name (prname), and derived fields
+            # Update user's uname, mail, and derived fields
             await user.set_by_uid(synced_uid, 
                                  uname=uname,
                                  uname_lower=uname.strip().lower(),
                                  mail=email,
                                  mail_lower=email.strip().lower(),
-                                 gravatar=email,
-                                 prname=display_name)
+                                 gravatar=email)
+            # Set display name in domain.user table
+            await domain.set_display_name(domain_id, synced_uid, display_name)
         except Exception:
             pass  # If update fails, at least temp_user is updated
     
@@ -223,15 +224,18 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
                                              uname_lower=uname.strip().lower(),
                                              mail=email,
                                              mail_lower=email.strip().lower(),
-                                             gravatar=email,
-                                             prname=display_name)
+                                             gravatar=email)
                         await user.set_password(synced_uid, password)
+                        # Set display name in domain.user table
+                        await domain.set_display_name(domain_id, synced_uid, display_name)
                         uid = synced_uid
                     else:
                         # UID doesn't exist, create new user
                         uid = await system.inc_user_counter()
                         await user.add(uid, uname, password, email, regip)
-                        await user.set_by_uid(uid, temp_user=True, prname=display_name)
+                        await user.set_by_uid(uid, temp_user=True)
+                        # Set display name in domain.user table
+                        await domain.set_display_name(domain_id, uid, display_name)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
                     continue
@@ -240,7 +244,9 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
                 try:
                     uid = await system.inc_user_counter()
                     await user.add(uid, uname, password, email, regip)
-                    await user.set_by_uid(uid, temp_user=True, prname=display_name)
+                    await user.set_by_uid(uid, temp_user=True)
+                    # Set display name in domain.user table
+                    await domain.set_display_name(domain_id, uid, display_name)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
                     continue
@@ -327,8 +333,11 @@ async def sync_to_real_user(domain_id: str, tid: objectid.ObjectId, temp_user_id
     # Add the user to the real user table
     await user.add(uid, uname, password, email, regip)
     
-    # Set display name and temp_user flag
-    await user.set_by_uid(uid, temp_user=True, prname=display_name)
+    # Set temp_user flag
+    await user.set_by_uid(uid, temp_user=True)
+    
+    # Set display name in domain.user table
+    await domain.set_display_name(domain_id, uid, display_name)
     
     # Mark as synced
     await edit(domain_id, tid, temp_user_id, synced=True, synced_uid=uid)
