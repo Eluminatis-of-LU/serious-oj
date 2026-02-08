@@ -98,15 +98,16 @@
                   -
                 {% endif %}
               </td>
-              <td id="pwd-{{ temp_user['_id'] }}" class="password-cell {% if temp_user.get('password') %}password-hidden{% endif %}" 
-                  onclick="togglePassword('{{ temp_user['_id'] }}')">
-                <span class="password-value" data-password="{{ temp_user.get('password', '') }}">
-                  {% if temp_user.get('password') %}
-                    ••••••••
-                  {% else %}
-                    {{ _('No password') }}
-                  {% endif %}
-                </span>
+              <td class="password-cell">
+                {% if temp_user.get('password') %}
+                  <span class="password-text" style="user-select: all;" id="pwd-{{ temp_user['_id'] }}">{{ temp_user['password'] }}</span>
+                  <button class="copy-password-btn" type="button" data-password="{{ temp_user['password'] }}" title="{{ _('Copy password') }}">
+                    <i class="icon icon-copy"></i>
+                  </button>
+                  <span class="copy-feedback">{{ _('Copied!') }}</span>
+                {% else %}
+                  {{ _('No password') }}
+                {% endif %}
               </td>
               <td>
                 {% if temp_user.get('synced', False) %}

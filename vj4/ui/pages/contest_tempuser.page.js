@@ -2,20 +2,56 @@ import { NamedPage } from 'vj/misc/PageLoader';
 
 const page = new NamedPage('contest_tempuser', () => {
   
-  // Toggle password visibility
-  window.togglePassword = function(userId) {
-    const cell = document.getElementById('pwd-' + userId);
-    const valueSpan = cell.querySelector('.password-value');
-    const currentPassword = valueSpan.getAttribute('data-password');
+  // Copy password to clipboard
+  window.copyPassword = function(button) {
+    const password = button.getAttribute('data-password');
+    const feedback = button.nextElementSibling;
     
-    if (cell.classList.contains('password-hidden')) {
-      valueSpan.textContent = currentPassword;
-      cell.classList.remove('password-hidden');
+    // Try using modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(password).then(() => {
+        showCopyFeedback(feedback);
+      }).catch(err => {
+        // Fallback if Clipboard API fails
+        fallbackCopyToClipboard(password, feedback);
+      });
     } else {
-      valueSpan.textContent = '••••••••';
-      cell.classList.add('password-hidden');
+      // Fallback for older browsers
+      fallbackCopyToClipboard(password, feedback);
     }
   };
+  
+  function showCopyFeedback(feedback) {
+    feedback.classList.add('show');
+    setTimeout(() => {
+      feedback.classList.remove('show');
+    }, 2000);
+  }
+  
+  function fallbackCopyToClipboard(text, feedback) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showCopyFeedback(feedback);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+    document.body.removeChild(textArea);
+  }
+  
+  // Attach click handlers to copy buttons
+  document.querySelectorAll('.copy-password-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      copyPassword(this);
+    });
+  });
   
   // Regenerate password for a temp user
   window.regeneratePassword = function(userId) {
@@ -38,11 +74,16 @@ const page = new NamedPage('contest_tempuser', () => {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        const cell = document.getElementById('pwd-' + userId);
-        const valueSpan = cell.querySelector('.password-value');
-        valueSpan.setAttribute('data-password', data.password);
-        valueSpan.textContent = data.password;
-        cell.classList.remove('password-hidden');
+        // Update the password display
+        const passwordCell = document.querySelector('#pwd-' + userId);
+        if (passwordCell) {
+          passwordCell.textContent = data.password;
+        }
+        // Update copy button data
+        const copyBtn = passwordCell.parentElement.querySelector('.copy-password-btn');
+        if (copyBtn) {
+          copyBtn.setAttribute('data-password', data.password);
+        }
         alert($('body').attr('data-regenerate-success') || 'Password regenerated successfully!');
       } else {
         alert($('body').attr('data-regenerate-error') || 'Error regenerating password');
@@ -54,9 +95,9 @@ const page = new NamedPage('contest_tempuser', () => {
     });
   };
   
-  // Bulk sync all unsynced temp users
+  // Bulk sync all temp users (always updates for safety)
   window.syncAll = function() {
-    if (!confirm($('body').attr('data-sync-confirm') || 'Are you sure you want to sync all unsynced temp users?')) {
+    if (!confirm($('body').attr('data-sync-confirm') || 'Are you sure you want to sync all temp users? This will update all user accounts.')) {
       return;
     }
     

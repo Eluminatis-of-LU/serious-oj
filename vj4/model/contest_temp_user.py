@@ -123,13 +123,14 @@ async def edit_and_update_user(domain_id: str, tid: objectid.ObjectId, temp_user
     if temp_user_doc and temp_user_doc.get('synced', False) and temp_user_doc.get('synced_uid'):
         synced_uid = temp_user_doc['synced_uid']
         try:
-            # Update user's uname, mail, and derived fields (uname_lower, mail_lower, gravatar)
+            # Update user's uname, mail, display name (prname), and derived fields
             await user.set_by_uid(synced_uid, 
                                  uname=uname,
                                  uname_lower=uname.strip().lower(),
                                  mail=email,
                                  mail_lower=email.strip().lower(),
-                                 gravatar=email)
+                                 gravatar=email,
+                                 prname=display_name)
         except Exception:
             pass  # If update fails, at least temp_user is updated
     
@@ -181,11 +182,12 @@ async def regenerate_password(domain_id: str, tid: objectid.ObjectId, temp_user_
 
 @argmethod.wrap
 async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: str = ''):
-    """Sync all unsynced temp users to real user table.
+    """Sync all temp users to real user table (always updates for safety).
     
     For each temp user:
-    - If synced_uid exists, update existing user with temp_user=True
-    - Else create new user with temp_user=True and store uid back
+    - If synced_uid exists, update existing user with latest data
+    - Else create new user and store uid back
+    - Always updates username, email, password, display name for consistency
     - Mark user as contest attendee
     """
     from vj4.model.adaptor import contest as contest_model
@@ -194,34 +196,42 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
     errors = []
     
     async for temp_user_doc in get_multi(domain_id, tid):
-        if temp_user_doc.get('synced', False):
-            continue  # Skip already synced users
+        # Always sync - don't skip synced users (ensures data consistency)
         
         try:
             temp_user_id = temp_user_doc['_id']
             uname = temp_user_doc.get('uname')
             email = temp_user_doc.get('email')
             password = temp_user_doc.get('password')
+            display_name = temp_user_doc.get('display_name')
             synced_uid = temp_user_doc.get('synced_uid')
             
             if not password or not email or not uname:
-                errors.append(f"{temp_user_doc.get('display_name', 'Unknown')}: Missing credentials")
+                errors.append(f"{display_name or 'Unknown'}: Missing credentials")
                 continue
             
             # Check if user should be updated or created
             if synced_uid:
-                # Update existing user
+                # Update existing user with latest data
                 try:
                     udoc = await user.get_by_uid(synced_uid)
                     if udoc:
-                        # Mark as temp user
-                        await user.set_by_uid(synced_uid, temp_user=True)
+                        # Update all user fields to match temp_user
+                        await user.set_by_uid(synced_uid,
+                                             temp_user=True,
+                                             uname=uname,
+                                             uname_lower=uname.strip().lower(),
+                                             mail=email,
+                                             mail_lower=email.strip().lower(),
+                                             gravatar=email,
+                                             prname=display_name)
+                        await user.set_password(synced_uid, password)
                         uid = synced_uid
                     else:
                         # UID doesn't exist, create new user
                         uid = await system.inc_user_counter()
                         await user.add(uid, uname, password, email, regip)
-                        await user.set_by_uid(uid, temp_user=True)
+                        await user.set_by_uid(uid, temp_user=True, prname=display_name)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
                     continue
@@ -230,7 +240,7 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
                 try:
                     uid = await system.inc_user_counter()
                     await user.add(uid, uname, password, email, regip)
-                    await user.set_by_uid(uid, temp_user=True)
+                    await user.set_by_uid(uid, temp_user=True, prname=display_name)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
                     continue
@@ -309,12 +319,16 @@ async def sync_to_real_user(domain_id: str, tid: objectid.ObjectId, temp_user_id
     password = temp_user_doc.get('password')
     email = temp_user_doc.get('email')
     uname = temp_user_doc.get('uname')
+    display_name = temp_user_doc.get('display_name')
     
     if not password or not email:
         raise error.ValidationError('temp_user', 'Missing password or email')
     
     # Add the user to the real user table
     await user.add(uid, uname, password, email, regip)
+    
+    # Set display name and temp_user flag
+    await user.set_by_uid(uid, temp_user=True, prname=display_name)
     
     # Mark as synced
     await edit(domain_id, tid, temp_user_id, synced=True, synced_uid=uid)
