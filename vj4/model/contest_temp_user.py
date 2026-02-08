@@ -11,6 +11,7 @@ from vj4 import db
 from vj4 import error
 from vj4.model import user
 from vj4.model import document
+from vj4.model import system
 from vj4.util import argmethod
 
 
@@ -177,7 +178,8 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
                         uid = synced_uid
                     else:
                         # UID doesn't exist, create new user
-                        uid = await user.add(uname, password, email, regip)
+                        uid = await system.inc_user_counter()
+                        await user.add(uid, uname, password, email, regip)
                         await user.set_by_uid(uid, temp_user=True)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
@@ -185,7 +187,8 @@ async def sync_all_to_real_users(domain_id: str, tid: objectid.ObjectId, regip: 
             else:
                 # Create new user
                 try:
-                    uid = await user.add(uname, password, email, regip)
+                    uid = await system.inc_user_counter()
+                    await user.add(uid, uname, password, email, regip)
                     await user.set_by_uid(uid, temp_user=True)
                 except Exception as e:
                     errors.append(f"{temp_user_doc.get('display_name', uname)}: {str(e)}")
