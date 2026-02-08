@@ -1,0 +1,194 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Temp Users for Contest: ') }}{{ tdoc['title'] }}</h1>
+      </div>
+      <div class="section__body">
+        <div class="row">
+          <div class="columns">
+            <a href="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}" class="button">{{ _('Import from CSV') }}</a>
+            <a href="{{ reverse_url('contest_tempuser_export', tid=tdoc['doc_id']) }}" class="button">{{ _('Export to CSV') }}</a>
+            <a href="{{ reverse_url('contest_tempuser_export', tid=tdoc['doc_id'], include_password=True) }}" class="button">{{ _('Export with Passwords') }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Add New Temp User') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=add">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <div class="row">
+            <div class="medium-6 columns">
+              <label>
+                {{ _('Username') }}
+                <input type="text" name="uname" required>
+              </label>
+            </div>
+            <div class="medium-6 columns">
+              <label>
+                {{ _('Display Name') }}
+                <input type="text" name="display_name">
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="columns">
+              <button type="submit" class="expanded button">{{ _('Add Temp User') }}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Existing Temp Users') }}</h1>
+      </div>
+      <div class="section__body no-padding">
+        {% if temp_users %}
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ _('Username') }}</th>
+              <th>{{ _('Display Name') }}</th>
+              <th>{{ _('Synced') }}</th>
+              <th>{{ _('Synced UID') }}</th>
+              <th>{{ _('Actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for temp_user in temp_users %}
+            <tr>
+              <td>{{ temp_user['uname'] }}</td>
+              <td>
+                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=edit" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
+                  <input type="text" name="display_name" value="{{ temp_user.get('display_name', '') }}" 
+                         style="display: inline-block; width: 200px; margin: 0; padding: 2px;">
+                  <button type="submit" class="button tiny">{{ _('Update') }}</button>
+                </form>
+              </td>
+              <td>{{ _('Yes') if temp_user.get('synced', False) else _('No') }}</td>
+              <td>{{ temp_user.get('synced_uid', '-') }}</td>
+              <td>
+                {% if not temp_user.get('synced', False) %}
+                <button class="button tiny" onclick="showSyncDialog('{{ temp_user['_id'] }}', '{{ temp_user['uname'] }}')">
+                  {{ _('Sync to Real User') }}
+                </button>
+                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=delete" 
+                      style="display: inline;" onsubmit="return confirm('{{ _('Are you sure?') }}');">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
+                  <button type="submit" class="button tiny alert">{{ _('Delete') }}</button>
+                </form>
+                {% else %}
+                <span class="label success">{{ _('Already synced') }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="section__body typo">
+          <p>{{ _('No temp users yet.') }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="medium-3 columns">
+    {% include "partials/contest_sidebar.html" %}
+  </div>
+</div>
+
+<!-- Sync Dialog -->
+<div id="syncDialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+     background: white; padding: 20px; border: 1px solid #ccc; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <h3>{{ _('Sync Temp User to Real User') }}</h3>
+  <form id="syncForm" method="post">
+    <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+    <input type="hidden" id="syncTempUserId" name="temp_user_id">
+    <div>
+      <label>
+        {{ _('Username') }}
+        <input type="text" id="syncUsername" readonly style="background: #f0f0f0;">
+      </label>
+    </div>
+    <div>
+      <label>
+        {{ _('User ID (UID)') }}
+        <input type="number" name="uid" required>
+      </label>
+    </div>
+    <div>
+      <label>
+        {{ _('Email') }}
+        <input type="email" name="mail" required>
+      </label>
+    </div>
+    <div>
+      <button type="submit" class="button">{{ _('Sync & Generate Password') }}</button>
+      <button type="button" class="button secondary" onclick="closeSyncDialog()">{{ _('Cancel') }}</button>
+    </div>
+  </form>
+  <div id="syncResult" style="display: none; margin-top: 15px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb;">
+    <strong>{{ _('Password generated:') }}</strong> <code id="generatedPassword"></code>
+  </div>
+</div>
+<div id="syncOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+     background: rgba(0,0,0,0.5); z-index: 999;" onclick="closeSyncDialog()"></div>
+
+<script>
+function showSyncDialog(tempUserId, username) {
+  document.getElementById('syncTempUserId').value = tempUserId;
+  document.getElementById('syncUsername').value = username;
+  document.getElementById('syncDialog').style.display = 'block';
+  document.getElementById('syncOverlay').style.display = 'block';
+  document.getElementById('syncResult').style.display = 'none';
+}
+
+function closeSyncDialog() {
+  document.getElementById('syncDialog').style.display = 'none';
+  document.getElementById('syncOverlay').style.display = 'none';
+}
+
+document.getElementById('syncForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  var formData = new FormData(this);
+  var tid = '{{ tdoc["doc_id"] }}';
+  
+  fetch('{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}?operation=sync', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('generatedPassword').textContent = data.password;
+      document.getElementById('syncResult').style.display = 'block';
+      setTimeout(function() {
+        location.reload();
+      }, 3000);
+    } else {
+      alert('{{ _("Error syncing user") }}');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('{{ _("Error syncing user") }}');
+  });
+});
+</script>
+{% endblock %}
