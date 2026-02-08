@@ -123,8 +123,13 @@ async def edit_and_update_user(domain_id: str, tid: objectid.ObjectId, temp_user
     if temp_user_doc and temp_user_doc.get('synced', False) and temp_user_doc.get('synced_uid'):
         synced_uid = temp_user_doc['synced_uid']
         try:
-            # Update user's uname and mail
-            await user.set_by_uid(synced_uid, uname=uname, mail=email)
+            # Update user's uname, mail, and derived fields (uname_lower, mail_lower, gravatar)
+            await user.set_by_uid(synced_uid, 
+                                 uname=uname,
+                                 uname_lower=uname.strip().lower(),
+                                 mail=email,
+                                 mail_lower=email.strip().lower(),
+                                 gravatar=email)
         except Exception:
             pass  # If update fails, at least temp_user is updated
     
