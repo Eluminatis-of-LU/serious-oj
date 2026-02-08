@@ -159,9 +159,23 @@ async def get_count(domain_id: str, tid: objectid.ObjectId):
 
 @argmethod.wrap
 async def regenerate_password(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
-    """Regenerate password for a temp user."""
+    """Regenerate password for a temp user and update user table if synced."""
     password = generate_password()
+    
+    # Get temp user to check if synced
+    temp_user_doc = await get(domain_id, tid, temp_user_id)
+    
+    # Update temp user password
     await edit(domain_id, tid, temp_user_id, password=password)
+    
+    # If synced, also update user table password hash
+    if temp_user_doc and temp_user_doc.get('synced', False) and temp_user_doc.get('synced_uid'):
+        synced_uid = temp_user_doc['synced_uid']
+        try:
+            await user.set_password(synced_uid, password)
+        except Exception:
+            pass  # If update fails, at least temp_user password is updated
+    
     return password
 
 
