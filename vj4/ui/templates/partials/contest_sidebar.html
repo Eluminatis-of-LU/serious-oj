@@ -86,7 +86,7 @@
         <span class="icon icon-edit"></span>  {{ _('Edit Contest') }}
       </a></li>
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}">
-        <span class="icon icon-group"></span>  {{ _('Manage Temp Users') }}
+        <span class="icon icon-user"></span>  {{ _('Manage Temp Users') }}
       </a></li>
     {% endif %}
     {% if handler.has_perm(vj4.model.builtin.PERM_READ_RECORD_CODE) %}
