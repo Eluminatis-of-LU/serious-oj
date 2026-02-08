@@ -49,7 +49,7 @@ const page = new NamedPage('contest_tempuser', () => {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      copyPassword(this);
+      window.copyPassword(this);
     });
   });
   
@@ -71,7 +71,12 @@ const page = new NamedPage('contest_tempuser', () => {
       },
       body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         // Update the password display
