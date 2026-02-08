@@ -126,7 +126,7 @@ def get_multi(domain_id: str, tid: objectid.ObjectId, skip: int = 0, limit: int 
 async def get_count(domain_id: str, tid: objectid.ObjectId):
     """Get count of temp users for a contest."""
     coll = db.coll('contest.temp_user')
-    return coll.find({'domain_id': domain_id, 'tid': tid}).count()
+    return await coll.find({'domain_id': domain_id, 'tid': tid}).count()
 
 
 @argmethod.wrap
