@@ -158,7 +158,3 @@ async def ensure_indexes():
     coll = db.coll('contest.temp_user')
     await coll.create_index([('domain_id', 1), ('tid', 1)])
     await coll.create_index([('domain_id', 1), ('tid', 1), ('uname', 1)], unique=True)
-
-
-if __name__ == '__main__':
-    argmethod.invoke_by_args()

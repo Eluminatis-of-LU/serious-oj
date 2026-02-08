@@ -947,7 +947,10 @@ class ContestTempUserExportHandler(contest.ContestMixin, base.Handler):
             self.domain_id, tid, include_password
         )
         
+        # Use UTF-8 with BOM encoding for maximum Excel compatibility
+        # BOM (Byte Order Mark) helps Excel detect UTF-8 encoding automatically
+        # which is important for international character support
         await self.binary(
-            csv_content.encode('utf-8-sig'),  # UTF-8 with BOM for Excel compatibility
+            csv_content.encode('utf-8-sig'),
             file_name="{}-tempusers.csv".format(tdoc["title"]),
         )
