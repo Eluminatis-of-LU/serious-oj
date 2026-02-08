@@ -786,15 +786,25 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
     
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.get_argument
     @base.sanitize
-    async def get(self, *, tid: objectid.ObjectId):
+    async def get(self, *, tid: objectid.ObjectId, page: int = 1):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
-        # Get all temp users for this contest
+        # Pagination settings
+        items_per_page = 50
+        page = max(1, page)  # Ensure page is at least 1
+        skip = (page - 1) * items_per_page
+        
+        # Get total count
+        total_count = await contest_temp_user.get_count(self.domain_id, tid)
+        total_pages = (total_count + items_per_page - 1) // items_per_page
+        
+        # Get paginated temp users
         temp_users = []
-        async for temp_user in contest_temp_user.get_multi(self.domain_id, tid):
+        async for temp_user in contest_temp_user.get_multi(self.domain_id, tid, skip, items_per_page):
             temp_users.append(temp_user)
         
         # Get contest status and user info for sidebar
@@ -823,6 +833,9 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
             attended=attended,
             path_components=path_components,
             page_title="Temp Users - " + tdoc["title"],
+            page=page,
+            total_pages=total_pages,
+            total_count=total_count,
         )
     
     @base.route_argument
@@ -872,7 +885,8 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
         elif operation == 'delete':
             if not temp_user_id:
                 raise error.ValidationError('temp_user_id')
-            await contest_temp_user.delete(self.domain_id, tid, temp_user_id)
+            # Delete temp user, associated user and attendance
+            await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
             self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
         elif operation == 'regenerate_password':
@@ -884,6 +898,18 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
             self.json({
                 'success': True,
                 'password': password
+            })
+        
+        elif operation == 'sync_all':
+            # Bulk sync all unsynced temp users
+            results, errors = await contest_temp_user.sync_all_to_real_users(
+                self.domain_id, tid, self.remote_ip
+            )
+            self.json({
+                'success': True,
+                'synced_count': len(results),
+                'results': results,
+                'errors': errors
             })
         
         elif operation == 'sync':

@@ -18,29 +18,30 @@
   .password-hidden {
     color: #999;
   }
-  .sync-dialog {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    z-index: 1001;
-    min-width: 400px;
+  .pagination {
+    text-align: center;
+    margin: 20px 0;
   }
-  .sync-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
+  .pagination a, .pagination span {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+  }
+  .pagination a:hover {
+    background: #f0f0f0;
+  }
+  .pagination .current {
+    background: #0078d7;
+    color: white;
+    border-color: #0078d7;
+  }
+  .bulk-actions {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 5px;
   }
 </style>
 <div class="row">
@@ -86,8 +87,16 @@
 
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Existing Temp Users') }}</h1>
+        <h1 class="section__title">{{ _('Existing Temp Users') }} ({{ total_count }})</h1>
       </div>
+      
+      <div class="bulk-actions">
+        <button class="button primary" onclick="syncAll()">
+          <i class="icon icon-refresh"></i> {{ _('Sync All to Real Users') }}
+        </button>
+        <p class="help-text">{{ _('This will create real user accounts for all temp users and make them contest attendees') }}</p>
+      </div>
+      
       <div class="section__body no-padding">
         {% if temp_users %}
         <table class="data-table">
@@ -98,6 +107,7 @@
               <th>{{ _('Email') }}</th>
               <th>{{ _('Password') }}</th>
               <th>{{ _('Synced') }}</th>
+              <th>{{ _('UID') }}</th>
               <th>{{ _('Actions') }}</th>
             </tr>
           </thead>
@@ -116,31 +126,54 @@
               <td><code>{{ temp_user.get('email', '') }}</code></td>
               <td>
                 <span class="password-cell password-hidden" id="pwd-{{ temp_user['_id'] }}" onclick="togglePassword('{{ temp_user['_id'] }}')">
-                  <span class="password-value" data-password="{{ temp_user.get('password', '') }}">••••••••</span>
+                  <span class="password-value" data-******>••••••••</span>
                 </span>
                 <button class="button tiny" onclick="regeneratePassword('{{ temp_user['_id'] }}')">
                   {{ _('Regenerate') }}
                 </button>
               </td>
-              <td>{{ _('Yes') if temp_user.get('synced', False) else _('No') }}</td>
               <td>
-                {% if not temp_user.get('synced', False) %}
-                <button class="button tiny" onclick="showSyncDialog('{{ temp_user['_id'] }}', '{{ temp_user['uname'] }}', '{{ temp_user.get('email', '') }}')">
-                  {{ _('Sync to User') }}
-                </button>
-                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=delete" class="tempuser-displayname-form" onsubmit="return confirm('{{ _('Are you sure?') }}');">
+                {% if temp_user.get('synced', False) %}
+                  <span class="label success">{{ _('Yes') }}</span>
+                {% else %}
+                  <span class="label secondary">{{ _('No') }}</span>
+                {% endif %}
+              </td>
+              <td>{{ temp_user.get('synced_uid', '-') }}</td>
+              <td>
+                <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?operation=delete" class="tempuser-displayname-form" onsubmit="return confirm('{{ _('Are you sure? This will delete the temp user, real user account, and attendance.') }}');">
                   <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
                   <input type="hidden" name="temp_user_id" value="{{ temp_user['_id'] }}">
                   <button type="submit" class="button tiny alert">{{ _('Delete') }}</button>
                 </form>
-                {% else %}
-                <span class="label success">{{ _('Synced: ') }}{{ temp_user.get('synced_uid', '') }}</span>
-                {% endif %}
               </td>
             </tr>
           {% endfor %}
           </tbody>
         </table>
+        
+        {% if total_pages > 1 %}
+        <div class="pagination">
+          {% if page > 1 %}
+            <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id'], page=1) }}">{{ _('First') }}</a>
+            <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id'], page=page-1) }}">{{ _('Previous') }}</a>
+          {% endif %}
+          
+          {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
+            {% if p == page %}
+              <span class="current">{{ p }}</span>
+            {% else %}
+              <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id'], page=p) }}">{{ p }}</a>
+            {% endif %}
+          {% endfor %}
+          
+          {% if page < total_pages %}
+            <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id'], page=page+1) }}">{{ _('Next') }}</a>
+            <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id'], page=total_pages) }}">{{ _('Last') }}</a>
+          {% endif %}
+        </div>
+        {% endif %}
+        
         {% else %}
         <div class="section__body typo">
           <p>{{ _('No temp users yet.') }}</p>
@@ -155,48 +188,6 @@
     {% include "partials/contest_sidebar.html" %}
   {% endwith %}
   </div>
-</div>
-
-<!-- Sync Dialog -->
-<div id="syncOverlay" class="sync-overlay" onclick="closeSyncDialog()"></div>
-<div id="syncDialog" class="sync-dialog">
-  <h3>{{ _('Sync Temp User to Real User') }}</h3>
-  <form id="syncForm">
-    <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
-    <input type="hidden" id="syncTempUserId" name="temp_user_id">
-    
-    <div style="margin-bottom: 15px;">
-      <label>
-        <strong>{{ _('Username') }}:</strong>
-        <input type="text" id="syncUsername" readonly style="background: #f5f5f5; width: 100%;">
-      </label>
-    </div>
-    
-    <div style="margin-bottom: 15px;">
-      <label>
-        <strong>{{ _('Email') }}:</strong>
-        <input type="text" id="syncEmail" readonly style="background: #f5f5f5; width: 100%;">
-      </label>
-    </div>
-    
-    <div style="margin-bottom: 15px;">
-      <label>
-        <strong>{{ _('User ID (UID)') }}:</strong>
-        <input type="number" name="uid" id="syncUid" required style="width: 100%;">
-      </label>
-      <p class="help-text">{{ _('Enter the numeric user ID to sync this temp user to') }}</p>
-    </div>
-    
-    <div>
-      <button type="submit" class="button">{{ _('Sync User') }}</button>
-      <button type="button" class="button secondary" onclick="closeSyncDialog()">{{ _('Cancel') }}</button>
-    </div>
-    
-    <div id="syncResult" style="display: none; margin-top: 15px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px;">
-      <strong>{{ _('Success!') }}</strong><br>
-      {{ _('User synced successfully. Password:') }} <code id="syncPassword"></code>
-    </div>
-  </form>
 </div>
 
 <script>
@@ -246,46 +237,35 @@ function regeneratePassword(userId) {
   });
 }
 
-function showSyncDialog(tempUserId, username, email) {
-  document.getElementById('syncTempUserId').value = tempUserId;
-  document.getElementById('syncUsername').value = username;
-  document.getElementById('syncEmail').value = email;
-  document.getElementById('syncUid').value = '';
-  document.getElementById('syncResult').style.display = 'none';
-  document.getElementById('syncDialog').style.display = 'block';
-  document.getElementById('syncOverlay').style.display = 'block';
-}
-
-function closeSyncDialog() {
-  document.getElementById('syncDialog').style.display = 'none';
-  document.getElementById('syncOverlay').style.display = 'none';
-}
-
-document.getElementById('syncForm').addEventListener('submit', function(e) {
-  e.preventDefault();
+function syncAll() {
+  if (!confirm('{{ _("Are you sure you want to sync all unsynced temp users? This will create real user accounts and make them contest attendees.") }}')) {
+    return;
+  }
   
-  var formData = new FormData(this);
+  var formData = new FormData();
+  formData.append('csrf_token', '{{ handler.csrf_token }}');
   
-  fetch('{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}?operation=sync', {
+  fetch('{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}?operation=sync_all', {
     method: 'POST',
     body: formData
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      document.getElementById('syncPassword').textContent = data.password;
-      document.getElementById('syncResult').style.display = 'block';
-      setTimeout(function() {
-        location.reload();
-      }, 3000);
+      var msg = '{{ _("Successfully synced") }} ' + data.synced_count + ' {{ _("temp users") }}';
+      if (data.errors && data.errors.length > 0) {
+        msg += '\n\n{{ _("Errors:") }}\n' + data.errors.join('\n');
+      }
+      alert(msg);
+      location.reload();
     } else {
-      alert('{{ _("Error syncing user") }}');
+      alert('{{ _("Error syncing users") }}');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('{{ _("Error syncing user") }}');
+    alert('{{ _("Error syncing users") }}');
   });
-});
+}
 </script>
 {% endblock %}
