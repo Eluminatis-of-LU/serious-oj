@@ -27,7 +27,7 @@ class ContestTempUserTest(base.DatabaseTestCase):
         
         # Test with numbers
         username = contest_temp_user.generate_username('Contest 2024', 'User123')
-        self.assertEqual(username, 'c_user123')
+        self.assertEqual(username, 'c2024_user123')
     
     def test_generate_email(self):
         """Test email generation from username."""
