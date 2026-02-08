@@ -827,75 +827,63 @@ class ContestTempUserHandler(contest.ContestMixin, base.Handler):
     
     @base.route_argument
     @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.get_argument
     @base.post_argument
     @base.require_csrf_token
     @base.sanitize
-    async def post_add(self, *, tid: objectid.ObjectId, uname: str, display_name: str = ""):
+    async def post(self, *, tid: objectid.ObjectId, operation: str,
+                   temp_user_id: objectid.ObjectId = None,
+                   uname: str = None, display_name: str = None,
+                   uid: int = None, mail: str = None):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
             self.check_perm(builtin.PERM_EDIT_CONTEST)
         
-        temp_user_id = await contest_temp_user.add(
-            self.domain_id, tid, uname, display_name, self.user["_id"]
-        )
+        if operation == 'add':
+            if not uname:
+                raise error.ValidationError('uname')
+            temp_user_id = await contest_temp_user.add(
+                self.domain_id, tid, uname, display_name or '', self.user["_id"]
+            )
+            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
-        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def post_edit(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId,
-                       uname: str = None, display_name: str = None):
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        elif operation == 'edit':
+            if not temp_user_id:
+                raise error.ValidationError('temp_user_id')
+            update_fields = {}
+            if uname is not None:
+                update_fields['uname'] = uname
+            if display_name is not None:
+                update_fields['display_name'] = display_name
+            
+            if update_fields:
+                await contest_temp_user.edit(self.domain_id, tid, temp_user_id, **update_fields)
+            
+            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
-        update_fields = {}
-        if uname is not None:
-            update_fields['uname'] = uname
-        if display_name is not None:
-            update_fields['display_name'] = display_name
+        elif operation == 'delete':
+            if not temp_user_id:
+                raise error.ValidationError('temp_user_id')
+            await contest_temp_user.delete(self.domain_id, tid, temp_user_id)
+            self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
         
-        if update_fields:
-            await contest_temp_user.edit(self.domain_id, tid, temp_user_id, **update_fields)
+        elif operation == 'sync':
+            if not temp_user_id:
+                raise error.ValidationError('temp_user_id')
+            if not uid:
+                raise error.ValidationError('uid')
+            if not mail:
+                raise error.ValidationError('mail')
+            password = await contest_temp_user.sync_to_real_user(
+                self.domain_id, tid, temp_user_id, uid, mail, self.remote_ip
+            )
+            self.json({
+                'success': True,
+                'password': password
+            })
         
-        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def post_delete(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
-        
-        await contest_temp_user.delete(self.domain_id, tid, temp_user_id)
-        
-        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
-    
-    @base.route_argument
-    @base.require_priv(builtin.PRIV_USER_PROFILE)
-    @base.post_argument
-    @base.require_csrf_token
-    @base.sanitize
-    async def post_sync(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId,
-                       uid: int, mail: str):
-        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
-        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
-            self.check_perm(builtin.PERM_EDIT_CONTEST)
-        
-        password = await contest_temp_user.sync_to_real_user(
-            self.domain_id, tid, temp_user_id, uid, mail, self.remote_ip
-        )
-        
-        self.json({
-            'success': True,
-            'password': password
-        })
+        else:
+            raise error.ValidationError('operation')
 
 
 @app.route("/contest/{tid}/tempuser/import", "contest_tempuser_import")
