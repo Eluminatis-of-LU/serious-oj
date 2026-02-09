@@ -3,6 +3,10 @@
 This test validates permission constants directly to ensure temp users
 have the necessary clarification permissions without requiring full
 database setup.
+
+Note: Clarification handlers also require:
+- PRIV_USER_PROFILE: Temp users have this via DEFAULT_PRIV (set during user.add())
+- Contest attendance: Enforced in ClarificationCreateHandler by checking tsdoc.get('attend') == 1
 """
 import unittest
 
