@@ -71,6 +71,9 @@ def _acm_stat(tdoc, journal):
           'time': sum(d['time'] for d in detail if d['accept']),
           'detail': detail}
 
+def _cf_stat(tdoc, journal):
+  return {'score': 0, 'detail': []}
+
 
 def _assignment_stat(tdoc, journal):
   effective = {}
@@ -213,6 +216,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
       
   return rows
 
+def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
+  rows = []
+  return rows
 
 def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
@@ -284,6 +290,12 @@ RULES = {
                                   [('accept', -1), ('time', 1)],
                                   functools.partial(enumerate, start=1),
                                   _acm_scoreboard),
+  constant.constant.RULE_CF: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
+                                  lambda tdoc, now: now >= tdoc['begin_at'],
+                                  _cf_stat,
+                                  [('score', -1)],
+                                  functools.partial(rank.ranked, equ_func=_oi_equ_func),
+                                  _cf_scoreboard),
   constant.contest.RULE_ASSIGNMENT: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
                                          lambda tdoc, now: False,  # TODO: show scoreboard according to assignment preference
                                          _assignment_stat,
