@@ -140,6 +140,12 @@ class ClarificationCreateHandler(base.Handler):
     if not tdoc.get('clarification_enabled', False):
       raise error.ForbiddenError('Clarifications are disabled for this contest')
     
+    # Check if user is attending the contest
+    tsdoc = await contest.get_status(self.domain_id, document.TYPE_CONTEST, tdoc['doc_id'], self.user['_id'])
+    attended = tsdoc and tsdoc.get('attend') == 1
+    if not attended:
+      raise error.ContestNotAttendedError(tdoc['doc_id'])
+    
     cqid = await clarification.add(self.domain_id,
                                    document.TYPE_CONTEST,
                                    tdoc['doc_id'],
