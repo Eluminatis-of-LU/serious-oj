@@ -14,6 +14,7 @@ from vj4.model import document
 from vj4.model import record
 from vj4.model import user
 from vj4.model import domain
+from vj4.model import contest_temp_user
 from vj4.model.adaptor import discussion
 from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
@@ -777,3 +778,272 @@ class ContestProblemSetDownloadHandler(contest.ContestMixin, base.Handler):
             )
         else:
             raise error.ValidationError("ext")
+
+
+@app.route("/contest/{tid}/tempuser", "contest_tempuser")
+class ContestTempUserHandler(contest.ContestMixin, base.Handler):
+    """Handler for managing temp users for a contest."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.get_argument
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId, page: int = 1):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Pagination settings
+        items_per_page = 50
+        page = max(1, page)  # Ensure page is at least 1
+        skip = (page - 1) * items_per_page
+        
+        # Get total count
+        total_count = await contest_temp_user.get_count(self.domain_id, tid)
+        total_pages = (total_count + items_per_page - 1) // items_per_page
+        
+        # Get paginated temp users
+        temp_users = []
+        async for temp_user in contest_temp_user.get_multi(self.domain_id, tid, skip, items_per_page):
+            temp_users.append(temp_user)
+        
+        # Get contest status and user info for sidebar
+        tsdoc = await contest.get_status(
+            self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
+        )
+        attended = tsdoc and tsdoc.get("attend") == 1
+        
+        # Get user dictionaries including contest owner
+        uids = {tdoc["owner_uid"]}
+        udict = await user.get_dict(uids)
+        dudict = await domain.get_dict_user_by_uid(domain_id=self.domain_id, uids=uids)
+        
+        path_components = self.build_path(
+            (self.translate("contest_main"), self.reverse_url("contest_main")),
+            (tdoc["title"], self.reverse_url("contest_detail", tid=tid)),
+            (self.translate("Temp Users"), None),
+        )
+        
+        self.render(
+            "contest_tempuser.html",
+            tdoc=tdoc,
+            temp_users=temp_users,
+            udict=udict,
+            dudict=dudict,
+            attended=attended,
+            path_components=path_components,
+            page_title="Temp Users - " + tdoc["title"],
+            page=page,
+            total_pages=total_pages,
+            total_count=total_count,
+        )
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId, display_name: str):
+        """Add a new temp user."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        if not display_name:
+            raise error.ValidationError('display_name')
+        
+        temp_user_id = await contest_temp_user.add(
+            self.domain_id, tid, tdoc['title'], display_name, self.user["_id"]
+        )
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+
+
+@app.route("/contest/{tid}/tempuser/sync-all", "contest_tempuser_sync_all")
+class ContestTempUserSyncAllHandler(contest.ContestMixin, base.Handler):
+    """Handler for bulk syncing all unsynced temp users."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId):
+        """Bulk sync all unsynced temp users."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Bulk sync all unsynced temp users
+        results, errors = await contest_temp_user.sync_all_to_real_users(
+            self.domain_id, tid, self.remote_ip
+        )
+        self.json({
+            'success': True,
+            'synced_count': len(results),
+            'results': results,
+            'errors': errors
+        })
+
+
+@app.route("/contest/{tid}/tempuser/import", "contest_tempuser_import")
+class ContestTempUserImportHandler(contest.ContestMixin, base.Handler):
+    """Handler for importing temp users from CSV."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        path_components = self.build_path(
+            (self.translate("contest_main"), self.reverse_url("contest_main")),
+            (tdoc["title"], self.reverse_url("contest_detail", tid=tid)),
+            (self.translate("Temp Users"), self.reverse_url("contest_tempuser", tid=tid)),
+            (self.translate("Import CSV"), None),
+        )
+        
+        self.render(
+            "contest_tempuser_import.html",
+            tdoc=tdoc,
+            path_components=path_components,
+            page_title="Import Temp Users - " + tdoc["title"],
+        )
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Read CSV content from uploaded file
+        csv_content = None
+        async for part in await self.request.multipart():
+            if part.name == 'csrf_token':
+                # Skip CSRF token
+                continue
+            elif part.name == 'csv_file' and part.filename:
+                # Read CSV file content
+                csv_bytes = await part.read()
+                csv_content = csv_bytes.decode('utf-8')
+                break
+        
+        if not csv_content:
+            raise error.ValidationError('csv_file', 'No CSV file uploaded')
+        
+        imported_count, errors = await contest_temp_user.import_from_csv(
+            self.domain_id, tid, tdoc['title'], csv_content, self.user["_id"]
+        )
+        
+        self.json({
+            'success': True,
+            'imported': imported_count,
+            'errors': errors
+        })
+
+
+@app.route("/contest/{tid}/tempuser/export", "contest_tempuser_export")
+class ContestTempUserExportHandler(contest.ContestMixin, base.Handler):
+    """Handler for exporting temp users to CSV."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        csv_content = await contest_temp_user.export_to_csv(
+            self.domain_id, tid
+        )
+        
+        # Use UTF-8 with BOM encoding for maximum Excel compatibility
+        # BOM (Byte Order Mark) helps Excel detect UTF-8 encoding automatically
+        # which is important for international character support
+        await self.binary(
+            csv_content.encode('utf-8-sig'),
+            file_name="{}-tempusers.csv".format(tdoc["title"]),
+        )
+
+
+@app.route("/contest/{tid}/tempuser/{temp_user_id}", "contest_tempuser_detail")
+class ContestTempUserDetailHandler(contest.ContestMixin, base.Handler):
+    """Handler for individual temp user operations using HTTP methods."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def patch(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId,
+                    display_name: str = None):
+        """Update a temp user (PATCH method)."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        if not display_name:
+            raise error.ValidationError('display_name')
+        
+        # Get current temp user
+        temp_user = await contest_temp_user.get(self.domain_id, tid, temp_user_id)
+        if not temp_user:
+            raise error.DocumentNotFoundError(self.domain_id, document.TYPE_CONTEST, temp_user_id)
+        
+        # Regenerate username and email based on new display name
+        new_uname = contest_temp_user.generate_username(tdoc['title'], display_name)
+        new_email = contest_temp_user.generate_email(new_uname)
+        
+        # Update display name, username, email, and synced user if exists
+        await contest_temp_user.edit_and_update_user(
+            self.domain_id, tid, temp_user_id,
+            display_name=display_name,
+            uname=new_uname,
+            email=new_email
+        )
+        
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def delete(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+        """Delete a temp user (DELETE method)."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        # Delete temp user, associated user and attendance
+        await contest_temp_user.delete_with_user(self.domain_id, tid, temp_user_id)
+        
+        self.json_or_redirect(self.reverse_url("contest_tempuser", tid=tid))
+
+
+@app.route("/contest/{tid}/tempuser/{temp_user_id}/regenerate-password", "contest_tempuser_regenerate_password")
+class ContestTempUserRegeneratePasswordHandler(contest.ContestMixin, base.Handler):
+    """Handler for regenerating temp user password."""
+    
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId, temp_user_id: objectid.ObjectId):
+        """Regenerate password for a temp user."""
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF):
+            self.check_perm(builtin.PERM_EDIT_CONTEST)
+        
+        password = await contest_temp_user.regenerate_password(
+            self.domain_id, tid, temp_user_id
+        )
+        self.json({
+            'success': True,
+            'password': password
+        })

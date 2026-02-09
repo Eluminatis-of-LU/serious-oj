@@ -1,0 +1,164 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+<div class="row" 
+     data-regenerate-confirm="{{ _('Are you sure you want to regenerate the password?') }}"
+     data-regenerate-success="{{ _('Password regenerated successfully!') }}"
+     data-regenerate-error="{{ _('Error regenerating password') }}"
+     data-sync-confirm="{{ _('Are you sure you want to sync all unsynced temp users? This will create real user accounts and make them contest attendees.') }}"
+     data-sync-success="{{ _('Successfully synced') }}"
+     data-sync-users="{{ _('temp users') }}"
+     data-sync-errors="{{ _('Errors:') }}"
+     data-sync-error="{{ _('Error syncing users') }}"
+     data-operation-error="{{ _('Error performing operation') }}">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Temp Users for Contest: ') }}{{ tdoc['title'] }}</h1>
+      </div>
+      <div class="section__body">
+        <div class="row">
+          <div class="columns">
+            <a href="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}" class="button">{{ _('Import from CSV') }}</a>
+            <a href="{{ reverse_url('contest_tempuser_export', tid=tdoc['doc_id']) }}" class="button">{{ _('Export to CSV with Passwords') }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Add New Temp User') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post" action="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <div class="row">
+            <div class="columns">
+              <label>
+                {{ _('Display Name') }}
+                <input type="text" name="display_name" required placeholder="{{ _('Enter full name or display name') }}">
+              </label>
+              <p class="help-text">{{ _('Username and email will be generated automatically from the display name') }}</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="columns">
+              <button type="submit" class="expanded button">{{ _('Add Temp User') }}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Existing Temp Users') }} ({{ total_count }})</h1>
+      </div>
+      
+      <div class="bulk-actions">
+        <form id="sync-all-form" method="post" action="{{ reverse_url('contest_tempuser_sync_all', tid=tdoc['doc_id']) }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <button type="button" class="button primary" onclick="syncAll()">
+            <i class="icon icon-refresh"></i> {{ _('Sync All to Real Users') }}
+          </button>
+        </form>
+        <p class="help-text">{{ _('This will create real user accounts for all temp users and make them contest attendees') }}</p>
+      </div>
+      
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ _('Display Name') }}</th>
+              <th>{{ _('Username') }}</th>
+              <th>{{ _('Email') }}</th>
+              <th>{{ _('UID') }}</th>
+              <th>{{ _('Password') }}</th>
+              <th>{{ _('Synced') }}</th>
+              <th>{{ _('Actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for temp_user in temp_users %}
+            <tr>
+              <td>
+                <form method="post" action="{{ reverse_url('contest_tempuser_detail', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="tempuser-displayname-form" data-method="PATCH">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <input type="text" name="display_name" value="{{ temp_user['display_name'] }}" class="tempuser-displayname-input" required>
+                  <button type="submit" class="button tiny">{{ _('Update') }}</button>
+                </form>
+              </td>
+              <td><code>{{ temp_user['uname'] }}</code></td>
+              <td><code>{{ temp_user['email'] }}</code></td>
+              <td>
+                {% if temp_user.get('synced_uid') %}
+                  {{ temp_user['synced_uid'] }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="password-cell">
+                {% if temp_user.get('password') %}
+                  <span class="password-text" style="user-select: all;" id="pwd-{{ temp_user['_id'] }}">{{ temp_user['password'] }}</span>
+                  <button class="copy-password-btn" type="button" data-password="{{ temp_user['password'] }}" title="{{ _('Copy password') }}">
+                    <i class="icon icon-copy"></i>
+                  </button>
+                  <span class="copy-feedback">{{ _('Copied!') }}</span>
+                {% else %}
+                  {{ _('No password') }}
+                {% endif %}
+              </td>
+              <td>
+                {% if temp_user.get('synced', False) %}
+                  <span class="label success">{{ _('Synced') }}</span>
+                {% else %}
+                  <span class="label secondary">{{ _('Not Synced') }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{{ reverse_url('contest_tempuser_regenerate_password', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="regenerate-password-form" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <button type="button" onclick="regeneratePassword('{{ temp_user['_id'] }}')" class="button tiny">{{ _('Regenerate') }}</button>
+                </form>
+                <form method="post" action="{{ reverse_url('contest_tempuser_detail', tid=tdoc['doc_id'], temp_user_id=temp_user['_id']) }}" class="tempuser-displayname-form" data-method="DELETE" onsubmit="return confirm('{{ _('Are you sure? This will delete the temp user, real user account, and attendance.') }}');">
+                  <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+                  <button type="submit" class="button tiny alert">{{ _('Delete') }}</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+          <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page=1">{{ _('First') }}</a>
+          <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page={{ page - 1 }}">{{ _('Previous') }}</a>
+        {% endif %}
+        
+        {% for p in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+          {% if p == page %}
+            <span class="current">{{ p }}</span>
+          {% else %}
+            <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page={{ p }}">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+        
+        {% if page < total_pages %}
+          <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page={{ page + 1 }}">{{ _('Next') }}</a>
+          <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page={{ total_pages }}">{{ _('Last') }}</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% with owner_udoc=udict.get(tdoc['owner_uid'], {}), owner_dudoc=dudict.get(tdoc['owner_uid'], {}) %}
+    {% include "partials/contest_sidebar.html" %}
+    {% endwith %}
+  </div>
+</div>
+{% endblock %}

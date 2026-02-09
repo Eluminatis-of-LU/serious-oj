@@ -1,0 +1,76 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Import Temp Users') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post" action="{{ reverse_url('contest_tempuser_import', tid=tdoc['doc_id']) }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          
+          <div class="row">
+            <div class="columns">
+              <label>
+                {{ _('CSV File') }}
+                <input type="file" name="csv_file" accept=".csv,text/csv" required>
+              </label>
+              
+              <p class="help-text">
+                {{ _('CSV Format: One column with header "display_name"') }}<br>
+                {{ _('Example:') }}<br>
+                <pre style="background: #f0f0f0; padding: 10px; border-radius: 3px;">
+display_name
+John Doe
+Jane Smith
+Alice Johnson</pre>
+                <strong>{{ _('Note:') }}</strong> {{ _('Username and email will be auto-generated from display names') }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="columns">
+              <button type="submit" class="expanded button">{{ _('Import Temp Users') }}</button>
+              <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}" class="button secondary">{{ _('Cancel') }}</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  var formData = new FormData(this);
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      var msg = '{{ _("Imported") }} ' + data.imported + ' {{ _("temp users") }}';
+      if (data.errors && data.errors.length > 0) {
+        msg += '\n\n{{ _("Errors:") }}\n' + data.errors.join('\n');
+      }
+      alert(msg);
+      if (data.imported > 0) {
+        window.location.href = '{{ reverse_url("contest_tempuser", tid=tdoc["doc_id"]) }}';
+      }
+    } else {
+      alert('{{ _("Error importing users") }}');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('{{ _("Error importing users") }}');
+  });
+});
+</script>
+{% endblock %}
