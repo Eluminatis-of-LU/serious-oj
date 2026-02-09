@@ -124,7 +124,6 @@ class ContestClarificationDetailHandler(contest.ContestMixin, base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/', 'clarification_create')
 class ClarificationCreateHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.require_perm(builtin.PERM_CREATE_CLARIFICATION)
   @base.route_argument
   @base.post_argument
@@ -153,7 +152,6 @@ class ClarificationCreateHandler(base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/answer', 'clarification_answer')
 class ClarificationAnswerHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
@@ -198,7 +196,6 @@ class ClarificationAnswerHandler(base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/toggle-visibility', 'clarification_toggle_visibility')
 class ClarificationToggleVisibilityHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
@@ -236,7 +233,6 @@ class ClarificationToggleVisibilityHandler(base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/toggle-announcement', 'clarification_toggle_announcement')
 class ClarificationToggleAnnouncementHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
@@ -297,7 +293,6 @@ class ClarificationToggleAnnouncementHandler(base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/edit', 'clarification_edit')
 class ClarificationEditHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
@@ -329,7 +324,6 @@ class ClarificationEditHandler(base.Handler):
 
 @app.route('/contest/{tid:\w{24}}/clarifications/{cqid:\w{24}}/delete', 'clarification_delete')
 class ClarificationDeleteHandler(base.Handler):
-  @base.require_priv(builtin.PRIV_USER_PROFILE)
   @base.route_argument
   @base.post_argument
   @base.require_csrf_token
