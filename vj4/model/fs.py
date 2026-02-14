@@ -14,8 +14,9 @@ async def add(content_type):
   """Add a file. Returns MotorGridIn."""
   fs = db.fs('fs')
   secret = pwhash.gen_secret()
-  return await fs.new_file(content_type=content_type,
-                           metadata={'link': 1, 'secret': secret})
+  # Motor's GridFSBucket uses open_upload_stream instead of new_file
+  # We need to provide a filename (can be empty string) and metadata
+  return fs.open_upload_stream('', metadata={'link': 1, 'secret': secret, 'contentType': content_type})
 
 
 @argmethod.wrap
@@ -45,7 +46,7 @@ async def add_file_object(content_type, file_object):
 async def get(file_id):
   """Get a file. Returns MotorGridOut."""
   fs = db.fs('fs')
-  return await fs.get(file_id)
+  return await fs.open_download_stream(file_id)
 
 
 async def get_by_secret(secret):
