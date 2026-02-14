@@ -1,5 +1,6 @@
 import logging
 import pkgutil
+import importlib.util
 from os import path
 
 from vj4.util import argmethod
@@ -14,7 +15,6 @@ async def ensure_all_indexes():
   for module_finder, name, ispkg in pkgutil.iter_modules([model_path]):
     if not ispkg:
       # Use importlib instead of deprecated find_module/load_module
-      import importlib.util
       spec = module_finder.find_spec(name)
       if spec and spec.loader:
         module = importlib.util.module_from_spec(spec)

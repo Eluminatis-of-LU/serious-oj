@@ -107,8 +107,7 @@ async def get_md5(file_id: objectid.ObjectId):
   doc = await coll.find_one(file_id)
   if doc:
     # MD5 is no longer calculated by default in Motor 3.x
-    return doc.get('md5', None)
-  return None
+    return doc.get('md5')
 
 
 @argmethod.wrap
