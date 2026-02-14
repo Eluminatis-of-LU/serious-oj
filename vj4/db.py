@@ -119,6 +119,9 @@ async def init():
                        query=query)
   _client = motor.motor_asyncio.AsyncIOMotorClient(str(url))
   _db = _client.get_default_database()
+  
+  # Verify connection by pinging the database
+  await _client.admin.command('ping')
 
 
 @functools.lru_cache()

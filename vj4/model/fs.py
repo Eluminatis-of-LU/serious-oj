@@ -10,13 +10,46 @@ from vj4.util import argmethod
 from vj4.util import pwhash
 
 
+class GridInWrapper:
+  """Wrapper around Motor's GridIn to add content_type support."""
+  def __init__(self, grid_in, content_type):
+    self._grid_in = grid_in
+    self._content_type = content_type
+    self._closed = False
+  
+  async def write(self, data):
+    """Write data to the file."""
+    return await self._grid_in.write(data)
+  
+  async def close(self):
+    """Close the file and update content_type field."""
+    if not self._closed:
+      await self._grid_in.close()
+      self._closed = True
+      # Update the files document to add contentType at top level
+      # This is for backward compatibility with old GridFS content_type property
+      if self._content_type:
+        coll = db.coll('fs.files')
+        await coll.update_one({'_id': self._grid_in._id}, {'$set': {'contentType': self._content_type}})
+  
+  @property
+  def _id(self):
+    """Get the file ID."""
+    return self._grid_in._id
+  
+  def __getattr__(self, name):
+    """Delegate all other attributes to the underlying GridIn."""
+    return getattr(self._grid_in, name)
+
+
 async def add(content_type):
   """Add a file. Returns MotorGridIn."""
   fs = db.fs('fs')
   secret = pwhash.gen_secret()
   # Motor's GridFSBucket uses open_upload_stream instead of new_file
-  # We need to provide a filename (can be empty string) and metadata
-  return fs.open_upload_stream('', metadata={'link': 1, 'secret': secret, 'contentType': content_type})
+  grid_in = fs.open_upload_stream('', metadata={'link': 1, 'secret': secret})
+  # Wrap to add content_type support
+  return GridInWrapper(grid_in, content_type)
 
 
 @argmethod.wrap
