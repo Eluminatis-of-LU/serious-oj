@@ -1,7 +1,7 @@
 import motor.motor_asyncio
 import functools
 import yarl
-from pymongo.operations import UpdateOne, UpdateMany, InsertOne, DeleteOne, ReplaceOne
+from pymongo.operations import UpdateOne, UpdateMany, InsertOne, DeleteOne, DeleteMany, ReplaceOne
 
 from vj4.util import options
 
@@ -74,9 +74,6 @@ class BulkOperationBuilder:
     """Add a delete_many operation."""
     if self._filter is None:
       raise ValueError("Must call find() before remove()")
-    # Note: DeleteMany doesn't exist in pymongo, we need to use DeleteOne for each
-    # or update to use delete_many directly
-    from pymongo.operations import DeleteMany
     self.operations.append(DeleteMany(self._filter))
     self._filter = None
     self._upsert = False
