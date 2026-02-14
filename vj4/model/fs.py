@@ -106,7 +106,9 @@ async def get_md5(file_id: objectid.ObjectId):
   coll = db.coll('fs.files')
   doc = await coll.find_one(file_id)
   if doc:
-    return doc['md5']
+    # MD5 is no longer calculated by default in Motor 3.x
+    return doc.get('md5', None)
+  return None
 
 
 @argmethod.wrap
@@ -159,6 +161,10 @@ async def cat(file_id: objectid.ObjectId):
 @argmethod.wrap
 async def link_by_md5(file_md5: str, except_id: objectid.ObjectId=None):
   """Link a file by MD5 if exists."""
+  # MD5 is no longer calculated by default in Motor 3.x
+  # This function will not work without MD5, so return None
+  if not file_md5:
+    return None
   query = {}
   if except_id:
     query['_id'] = {'$ne': except_id}
@@ -167,6 +173,7 @@ async def link_by_md5(file_md5: str, except_id: objectid.ObjectId=None):
                                        update={'$inc': {'metadata.link': 1}})
   if doc:
     return doc['_id']
+  return None
 
 
 @argmethod.wrap

@@ -342,12 +342,18 @@ class FsTest(base.DatabaseTestCase):
     content = await grid_out.read()
     self.assertEqual(content, self.CONTENT)
     md5 = await fs.get_md5(file_id)
-    self.assertEqual(md5, self.CONTENT_MD5)
-    file_id_2 = await fs.link_by_md5(md5)
-    self.assertEqual(file_id, file_id_2)
-    await fs.unlink(file_id)
-    self.assertTrue(await fs.get(file_id))
-    await fs.unlink(file_id)
+    # MD5 is no longer calculated by default in Motor 3.x, so it may be None
+    if md5:
+      self.assertEqual(md5, self.CONTENT_MD5)
+      file_id_2 = await fs.link_by_md5(md5)
+      self.assertEqual(file_id, file_id_2)
+      # Two links exist, so unlink twice
+      await fs.unlink(file_id)
+      self.assertTrue(await fs.get(file_id))
+      await fs.unlink(file_id)
+    else:
+      # Only one link exists, so unlink once
+      await fs.unlink(file_id)
     with self.assertRaises(gridfs_errors.NoFile):
       await fs.get(file_id)
 
