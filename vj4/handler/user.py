@@ -3,8 +3,10 @@ import datetime
 
 from vj4 import app
 from vj4 import constant
+from vj4 import db
 from vj4 import error
 from vj4.model import builtin
+from vj4.model import document
 from vj4.model import domain
 from vj4.model import record
 from vj4.model import system
@@ -216,18 +218,21 @@ class UserDetailHandler(base.Handler, UserSettingsMixin):
     else:
       f = {}
     pdocs = problem.get_multi(domain_id=self.domain_id, owner_uid=uid, **f).sort([('_id', -1)])
-    pcount = await pdocs.count()
+    # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+    pcount = await db.coll('document').count_documents({'domain_id': self.domain_id, 'doc_type': document.TYPE_PROBLEM, 'owner_uid': uid, **f})
     pdocs = await pdocs.limit(10).to_list()
 
     psdocs = problem.get_multi_solution_by_uid(self.domain_id, uid)
     psdocs_hot = problem.get_multi_solution_by_uid(self.domain_id, uid)
-    pscount = await psdocs.count()
+    # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+    pscount = await db.coll('document').count_documents({'domain_id': self.domain_id, 'doc_type': document.TYPE_PROBLEM_SOLUTION, 'owner_uid': uid})
     psdocs = await psdocs.limit(10).to_list()
     psdocs_hot = await psdocs_hot.sort([('vote', -1), ('doc_id', -1)]).limit(10).to_list()
 
     if self.has_perm(builtin.PERM_VIEW_DISCUSSION):
       ddocs = discussion.get_multi(self.domain_id, owner_uid=uid)
-      dcount = await ddocs.count()
+      # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+      dcount = await db.coll('document').count_documents({'domain_id': self.domain_id, 'doc_type': document.TYPE_DISCUSSION, 'owner_uid': uid})
       ddocs = await ddocs.limit(10).to_list()
       vndict = await discussion.get_dict_vnodes(self.domain_id, map(discussion.node_id, ddocs))
     else:

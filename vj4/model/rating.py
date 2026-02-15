@@ -90,7 +90,8 @@ async def list(**kwargs):
 @argmethod.wrap
 async def count(**kwargs):
     coll = db.coll("rating")
-    return await coll.find({**kwargs}).count()
+    # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+    return await coll.count_documents({**kwargs})
 
 
 async def get_sorted_by_attend_at(domain_id: str):

@@ -217,7 +217,8 @@ async def get_prefix_list(prefix: str, fields=PROJECTION_VIEW, limit: int=50):
 @argmethod.wrap
 async def count(**kwargs):
   coll = db.coll('user')
-  return coll.find({**kwargs}).count()
+  # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+  return await coll.count_documents({**kwargs})
 
 
 @argmethod.wrap
