@@ -138,8 +138,9 @@
           <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page=1">{{ _('First') }}</a>
           <a href="{{ reverse_url('contest_tempuser', tid=tdoc['doc_id']) }}?page={{ page - 1 }}">{{ _('Previous') }}</a>
         {% endif %}
-        
-        {% for p in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+        {% set start_page = (page - 2) | max(1) %}
+        {% set end_page = (page + 3) | min(total_pages + 1) %} 
+        {% for p in range(start_page, end_page) %}
           {% if p == page %}
             <span class="current">{{ p }}</span>
           {% else %}
