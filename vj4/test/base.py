@@ -27,8 +27,8 @@ class DatabaseTestCase(unittest.TestCase):
     wait(tools.ensure_all_indexes())
 
   def tearDown(self):
+    # Motor's close() is synchronous and doesn't require wait_closed()
     db._client.close()
-    wait(db._client.wait_closed())
     pymongo.MongoClient(options.db_host).drop_database(options.db_name)
 
 

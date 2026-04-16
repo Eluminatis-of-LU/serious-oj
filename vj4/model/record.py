@@ -113,7 +113,8 @@ async def get_count(begin_id: objectid.ObjectId=None):
   query = {}
   if begin_id:
     query['_id'] = {'$gte': begin_id}
-  return await coll.find(query).count()
+  # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+  return await coll.count_documents(query)
 
 
 @argmethod.wrap

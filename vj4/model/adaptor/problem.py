@@ -96,8 +96,9 @@ async def edit(domain_id: str, pid: document.convert_doc_id, **kwargs):
 
 @argmethod.wrap
 async def count(domain_id: str, **kwargs):
-  return await document.get_multi(domain_id=domain_id, doc_type=document.TYPE_PROBLEM,
-                                  **kwargs).count()
+  # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+  coll = db.coll('document')
+  return await coll.count_documents({'domain_id': domain_id, 'doc_type': document.TYPE_PROBLEM, **kwargs})
 
 
 def get_multi(*, fields=None, **kwargs):
@@ -106,9 +107,11 @@ def get_multi(*, fields=None, **kwargs):
 
 @argmethod.wrap
 async def get_random_id(domain_id: str, **kwargs):
-  pdocs = document.get_multi(domain_id=domain_id, doc_type=document.TYPE_PROBLEM, **kwargs)
-  pcount = await pdocs.count()
+  # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+  coll = db.coll('document')
+  pcount = await coll.count_documents({'domain_id': domain_id, 'doc_type': document.TYPE_PROBLEM, **kwargs})
   if pcount:
+    pdocs = document.get_multi(domain_id=domain_id, doc_type=document.TYPE_PROBLEM, **kwargs)
     async for pdoc in pdocs.skip(random.randrange(pcount)).limit(1):
       return pdoc['doc_id']
 

@@ -10,7 +10,7 @@ httpagentparser
 geoip2
 GitPython
 PyYAML
-aiomongo @ git+https://github.com/iceboy233/aiomongo
+motor>=3.7.0,<4.0.0
 yarl
 aiohttp-sentry
 aiosmtplib<3.0.0

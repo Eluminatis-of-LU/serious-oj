@@ -33,7 +33,9 @@ class FsGetHandler(base.Handler):
 
     # Cache control.
     self.response.last_modified = grid_out.upload_date
-    self.response.headers['Etag'] = '"{}"'.format(grid_out.md5)
+    # Use md5 if available (Motor 2.x), otherwise use file_id (Motor 3.x removed MD5)
+    etag = grid_out.md5 if grid_out.md5 else str(grid_out._id)
+    self.response.headers['Etag'] = '"{}"'.format(etag)
     self.response.headers['Cache-Control'] = 'max-age=2592000' # 30 days = 2592000 seconds
 
     # Handle If-Modified-Since & If-None-Match.
@@ -44,7 +46,7 @@ class FsGetHandler(base.Handler):
       not_modified = not_modified or (last_modified <= if_modified_since)
     if self.request.headers.get('If-None-Match', ''):
       not_modified = not_modified \
-        or ('"{0}"'.format(grid_out.md5) == self.request.headers.get('If-None-Match', ''))
+        or ('"{0}"'.format(etag) == self.request.headers.get('If-None-Match', ''))
 
     if not_modified:
       self.response.set_status(304, None) # Not Modified

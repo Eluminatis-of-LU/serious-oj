@@ -2,6 +2,7 @@ import asyncio
 import datetime
 from bson import objectid
 
+from vj4 import db
 from vj4 import error
 from vj4.model import builtin
 from vj4.model import document
@@ -93,9 +94,11 @@ def get_multi(domain_id: str, *, fields=None, **kwargs):
 @argmethod.wrap
 async def count(domain_id: str, **kwargs):
   """Count clarification questions."""
-  return await document.get_multi(domain_id=domain_id,
-                                 doc_type=document.TYPE_CLARIFICATION_QUESTION,
-                                 **kwargs).count()
+  # Use count_documents instead of cursor.count() which is deprecated
+  coll = db.coll('document')
+  return await coll.count_documents({'domain_id': domain_id,
+                                     'doc_type': document.TYPE_CLARIFICATION_QUESTION,
+                                     **kwargs})
 
 
 if __name__ == '__main__':

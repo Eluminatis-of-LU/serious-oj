@@ -4,6 +4,7 @@ import datetime
 from bson import objectid
 from pymongo import errors
 
+from vj4 import db
 from vj4 import error
 from vj4.model import builtin
 from vj4.model import document
@@ -172,8 +173,9 @@ async def inc_views(domain_id: str, did: document.convert_doc_id):
 
 @argmethod.wrap
 async def count(domain_id: str, **kwargs):
-  return await document.get_multi(domain_id=domain_id, doc_type=document.TYPE_DISCUSSION,
-                                  **kwargs).count()
+  # Motor 3.x removed cursor.count(). Use collection.count_documents() instead
+  coll = db.coll('document')
+  return await coll.count_documents({'domain_id': domain_id, 'doc_type': document.TYPE_DISCUSSION, **kwargs})
 
 
 @argmethod.wrap
