@@ -155,7 +155,7 @@ async def delete(domain_id: str, tid: objectid.ObjectId, temp_user_id: objectid.
     return result.deleted_count > 0
 
 
-def get_multi(domain_id: str, tid: objectid.ObjectId, skip: int = 0, limit: int = 50):
+def get_multi(domain_id: str, tid: objectid.ObjectId, skip: int = 0, limit: int = 250):
     """Get multiple temp users for a contest with pagination."""
     coll = db.coll('contest.temp_user')
     return coll.find({'domain_id': domain_id, 'tid': tid}).skip(skip).limit(limit)
