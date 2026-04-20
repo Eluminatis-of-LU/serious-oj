@@ -515,7 +515,7 @@ def multipart_argument(coro):
           except:
             await grid_in.abort()
             raise
-          file_id = await fs.link_by_md5(grid_in.md5, grid_in._id)
+          file_id = await fs.link_by_md5(getattr(grid_in, 'md5', None), grid_in._id)
           if file_id:
             await fs.unlink(grid_in._id)
           else:
