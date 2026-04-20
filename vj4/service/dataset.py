@@ -3,9 +3,11 @@ import copy
 import io
 import json
 import logging
+import hashlib
 from enum import Enum
 from zipfile import ZipFile
 
+from vj4 import db
 from vj4.service import bus
 from vj4.model.adaptor import problem
 from vj4.model import fs
