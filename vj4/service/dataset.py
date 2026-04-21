@@ -218,8 +218,12 @@ async def _on_problem_data_change(e):
     pid = value["pid"]
     pdoc = await problem.get(domain_id, pid)
     pdata = await problem.get_data(pdoc)
+    if not pdata:
+        return
     data = await fs.get(pdata["_id"])
     bytes = await data.read()
+    md5 = hashlib.md5(bytes).hexdigest()
+    await db.coll('fs.files').update_one({'_id': pdata["_id"]}, {'$set': {'md5': md5}})
     zip = ZipFile(io.BytesIO(bytes))
     try:
         await _validate_dataset(domain_id, pid, zip)
