@@ -152,6 +152,10 @@ def _oi_equ_func(a, b):
   return a.get('score', 0) == b.get('score', 0)
 
 
+def _cf_equ_func(a, b):
+  return a.get('score', 0) == b.get('score', 0)
+
+
 def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
@@ -383,6 +387,12 @@ RULES = {
                                   [('accept', -1), ('time', 1)],
                                   functools.partial(enumerate, start=1),
                                   _acm_scoreboard),
+  constant.contest.RULE_CF: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
+                                 lambda tdoc, now: now >= tdoc['begin_at'],
+                                 _cf_stat,
+                                 [('score', -1)],
+                                 functools.partial(rank.ranked, equ_func=_cf_equ_func),
+                                 _cf_scoreboard),
   constant.contest.RULE_ASSIGNMENT: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
                                          lambda tdoc, now: False,  # TODO: show scoreboard according to assignment preference
                                          _assignment_stat,
