@@ -352,5 +352,19 @@ class InnerTest(base.DatabaseTestCase):
     del tsdoc_old['rev']
     self.assertEqual(tsdoc, tsdoc_old)
 
+
+CFTDOC = {'pids': [777, 778, 779],
+          'cf_max_scores': [500, 1000, 1500],
+          'begin_at': NOW,
+          'end_at': NOW + datetime.timedelta(hours=2)}
+
+
+class CfRuleTest(unittest.TestCase):
+  def test_zero(self):
+    stats = contest._cf_stat(CFTDOC, [])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(stats['detail'], [])
+
+
 if __name__ == '__main__':
   unittest.main()

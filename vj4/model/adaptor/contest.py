@@ -45,6 +45,10 @@ def _oi_stat(tdoc, journal):
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
 
+def _cf_stat(tdoc, journal):
+  return {'score': 0, 'detail': []}
+
+
 def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
