@@ -518,12 +518,15 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         # find next quarter
         ts = ts - ts % (15 * 60) + 15 * 60
         dt = datetime.datetime.fromtimestamp(ts, self.timezone)
+        cf_default = ','.join(str(s) for s in contest._default_cf_max_scores([1000, 1001]))
         self.render(
             "contest_edit.html",
             rules=rules,
             date_text=dt.strftime("%Y-%m-%d"),
             time_text=dt.strftime("%H:%M"),
             pids=contest._format_pids([1000, 1001]),
+            cf_default=cf_default,
+            cf_max_scores='',
         )
 
     @base.require_priv(builtin.PRIV_USER_PROFILE)
@@ -545,7 +548,8 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
         freeze_before: int,
         hidden: bool = False,
         clarification_enabled: bool = False,
-        moderator_uids: str = ""
+        moderator_uids: str = "",
+        cf_max_scores: str = ""
     ):
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
             self.check_perm(builtin.PERM_EDIT_PROBLEM)
@@ -573,7 +577,14 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
                 mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
             except ValueError:
                 raise error.ValidationError("moderator_uids")
-        
+
+        extra = {}
+        if rule == constant.contest.RULE_CF and cf_max_scores.strip():
+            try:
+                extra['cf_max_scores'] = [int(s.strip()) for s in cf_max_scores.split(',') if s.strip()]
+            except ValueError:
+                raise error.ValidationError("cf_max_scores")
+
         tid = await contest.add(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -589,6 +600,7 @@ class ContestCreateHandler(contest.ContestMixin, base.Handler):
             hidden=hidden,
             clarification_enabled=clarification_enabled,
             moderator_uids=mod_uids,
+            **extra,
         )
         await self.hide_problems(pids)
         self.json_or_redirect(self.reverse_url("contest_detail", tid=tid))
@@ -628,6 +640,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
                 "contest_detail", tid=tdoc["doc_id"])),
             (self.translate("contest_edit"), None),
         )
+        cf_default = ','.join(str(s) for s in contest._default_cf_max_scores(tdoc.get("pids", [])))
+        cf_max_scores = ','.join(str(s) for s in tdoc.get("cf_max_scores", []))
         self.render(
             "contest_edit.html",
             rules=rules,
@@ -637,6 +651,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             duration=duration,
             pids=contest._format_pids(tdoc["pids"]),
             path_components=path_components,
+            cf_default=cf_default,
+            cf_max_scores=cf_max_scores,
         )
 
     @base.route_argument
@@ -659,7 +675,8 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
         freeze_before: int,
         hidden: bool = False,
         clarification_enabled: bool = False,
-        moderator_uids: str = ""
+        moderator_uids: str = "",
+        cf_max_scores: str = ""
     ):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
         if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
@@ -690,7 +707,14 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
                 mod_uids = [int(uid) for uid in (u.strip() for u in moderator_uids.split(',')) if uid]
             except ValueError:
                 raise error.ValidationError("moderator_uids")
-        
+
+        extra = {}
+        if rule == constant.contest.RULE_CF and cf_max_scores.strip():
+            try:
+                extra['cf_max_scores'] = [int(s.strip()) for s in cf_max_scores.split(',') if s.strip()]
+            except ValueError:
+                raise error.ValidationError("cf_max_scores")
+
         await contest.edit(
             self.domain_id,
             document.TYPE_CONTEST,
@@ -706,6 +730,7 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             hidden=hidden,
             clarification_enabled=clarification_enabled,
             moderator_uids=mod_uids,
+            **extra,
         )
         await self.hide_problems(pids)
         if (

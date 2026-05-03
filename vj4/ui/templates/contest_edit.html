@@ -26,6 +26,35 @@
             {{ form.form_checkbox(label='Enable Clarifications', name='clarification_enabled', value=tdoc.get('clarification_enabled', False) if tdoc is defined else False, row=False) }}
           </div>
           {{ form.form_text(columns=None, label='Problems', name='pids', value=pids) }}
+          <div id="cf-rule-fields" style="display: none;">
+            {{ form.form_text(columns=None, label='Codeforces Max Scores (comma-separated)', name='cf_max_scores', value=cf_max_scores|default('') if cf_max_scores|default('') else cf_default|default('500,1000,1500,2000,2500'), placeholder='500,1000,1500,2000,2500') }}
+            <div class="row"><div class="columns">
+              <blockquote class="note">
+                <h3>{{ _('Codeforces-style dynamic scoring') }}</h3>
+                <ul>
+                  <li>{{ _('Each problem has a maximum score that decreases over time and with each wrong attempt.') }}</li>
+                  <li>{{ _('Formula: max(0.3 &times; max_score, max_score &times; (1 &minus; elapsed/duration) &minus; 50 &times; wrong_count). Score never falls below 30%% of max.') }}</li>
+                  <li>{{ _('Wrong attempts that count: WA, TLE, MLE, RE, OLE. Compile errors do NOT count.') }}</li>
+                  <li>{{ _('Tiebreak: total score only (no penalty time).') }}</li>
+                  <li>{{ _('Ranklist freeze is supported via the "Freeze before" field.') }}</li>
+                  <li>{{ _('NOT included in this version: hacks, rooms, locked submissions, system testing.') }}</li>
+                  <li>{{ _('Enter one max score per problem in the order they appear above (between 100 and 10000). Default ladder is pre-filled.') }}</li>
+                </ul>
+              </blockquote>
+            </div></div>
+          </div>
+          <script>
+            (function(){
+              var sel = document.querySelector('select[name="rule"]');
+              var box = document.getElementById('cf-rule-fields');
+              function sync(){
+                if (!sel || !box) return;
+                box.style.display = (parseInt(sel.value, 10) === 4) ? '' : 'none';
+              }
+              if (sel) sel.addEventListener('change', sync);
+              sync();
+            })();
+          </script>
           {{ form.form_textarea(columns=None, label='Content', name='content', value=tdoc['content']|default(''), markdown=True) }}
           <div class="row"><div class="columns">
             <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
