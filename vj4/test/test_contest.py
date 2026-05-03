@@ -254,6 +254,27 @@ class AssignmentRuleTest(unittest.TestCase):
     self.assertEqual(stats['detail'], [])
 
 
+class CfMaxScoresValidationTest(unittest.TestCase):
+  def test_helper_accepts_matching_length(self):
+    contest._validate_cf_max_scores([777, 778], [500, 1000])  # no raise
+
+  def test_helper_rejects_length_mismatch(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777, 778, 779], [500, 1000])
+
+  def test_helper_rejects_below_min(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], [50])
+
+  def test_helper_rejects_above_max(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], [99999])
+
+  def test_helper_rejects_non_int(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], ['oops'])
+
+
 class OuterTest(base.DatabaseTestCase):
   @base.wrap_coro
   async def test_add_get(self):

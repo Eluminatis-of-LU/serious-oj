@@ -430,6 +430,11 @@ async def add(domain_id: str, doc_type: int,
       raise error.ValidationError('penalty_since', 'begin_at')
     if kwargs['penalty_since'] > end_at:
       raise error.ValidationError('penalty_since', 'end_at')
+
+  if rule == constant.contest.RULE_CF:
+    if kwargs.get('cf_max_scores') is None:
+      kwargs['cf_max_scores'] = _default_cf_max_scores(pids)
+    _validate_cf_max_scores(pids, kwargs['cf_max_scores'])
   # TODO(twd2): should we check problem existance here?
   return await document.add(domain_id, content, owner_uid, doc_type,
                             title=title, rule=rule,
@@ -475,6 +480,17 @@ async def edit(domain_id: str, doc_type: int, tid: objectid.ObjectId, **kwargs):
       raise error.ValidationError('penalty_since', 'begin_at')
     if 'end_at' in kwargs and kwargs['penalty_since'] > kwargs['end_at']:
       raise error.ValidationError('penalty_since', 'end_at')
+
+  if 'cf_max_scores' in kwargs or kwargs.get('rule') == constant.contest.RULE_CF:
+    tdoc = await get(domain_id, doc_type, tid)
+    effective_rule = kwargs.get('rule', tdoc.get('rule'))
+    if effective_rule == constant.contest.RULE_CF:
+      effective_pids = kwargs.get('pids', tdoc.get('pids', []))
+      effective_scores = kwargs.get('cf_max_scores', tdoc.get('cf_max_scores'))
+      if effective_scores is None:
+        effective_scores = _default_cf_max_scores(effective_pids)
+        kwargs['cf_max_scores'] = effective_scores
+      _validate_cf_max_scores(effective_pids, effective_scores)
   return await document.set(domain_id, doc_type, tid, **kwargs)
 
 
@@ -623,6 +639,26 @@ def _parse_pids(pids_str):
 
 def _format_pids(pids_list):
   return ','.join([str(pid) for pid in pids_list])
+
+
+CF_MAX_SCORE_MIN = 100
+CF_MAX_SCORE_MAX = 10000
+
+
+def _validate_cf_max_scores(pids, cf_max_scores):
+  if not isinstance(cf_max_scores, list):
+    raise error.ValidationError('cf_max_scores')
+  if len(cf_max_scores) != len(pids):
+    raise error.ValidationError('cf_max_scores')
+  for v in cf_max_scores:
+    if isinstance(v, bool) or not isinstance(v, int):
+      raise error.ValidationError('cf_max_scores')
+    if v < CF_MAX_SCORE_MIN or v > CF_MAX_SCORE_MAX:
+      raise error.ValidationError('cf_max_scores')
+
+
+def _default_cf_max_scores(pids):
+  return [min(CF_MAX_SCORE_MAX, 500 * (i + 1)) for i in range(len(pids))]
 
 class ContestStatusMixin(object):
   @property
