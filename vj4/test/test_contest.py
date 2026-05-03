@@ -65,6 +65,9 @@ CF_778_AC_T0 = {'rid': objectid.ObjectId.from_datetime(NOW),
 CF_OUT_OF_CONTEST_AC = {'rid': objectid.ObjectId.from_datetime(NOW),
                         'pid': 4242, 'accept': True, 'score': 0,
                         'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_AT_100M = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(minutes=100)),
+                     'pid': 777, 'accept': True, 'score': 0,
+                     'status': constant.record.STATUS_ACCEPTED}
 
 DOMAIN_ID_DUMMY = 'dummy'
 OWNER_UID = 22
@@ -381,6 +384,11 @@ CFTDOC = {'pids': [777, 778, 779],
           'cf_max_scores': [500, 1000, 1500],
           'begin_at': NOW,
           'end_at': NOW + datetime.timedelta(hours=2)}
+CFTDOC_FROZEN_LAST_30M = {'pids': [777, 778, 779],
+                          'cf_max_scores': [500, 1000, 1500],
+                          'begin_at': NOW,
+                          'end_at': NOW + datetime.timedelta(hours=2),
+                          'freeze_before': 30}
 
 
 class CfRuleTest(unittest.TestCase):
@@ -442,6 +450,21 @@ class CfRuleTest(unittest.TestCase):
     stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_777_WA_EARLY])
     self.assertEqual(stats['score'], 500)
     self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_post_freeze_submission_marked_unknown(self):
+    # Contest 2h, freeze_before=30m → freeze_at = NOW+1h30m.
+    # AC at t=100min is AFTER freeze → score=0, status_unknown=True.
+    stats = contest._cf_stat(CFTDOC_FROZEN_LAST_30M, [CF_777_AC_AT_100M])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertTrue(stats['detail'][0].get('status_unknown'))
+    self.assertFalse(stats['detail'][0]['accept'])
+
+  def test_pre_freeze_submission_scored_normally(self):
+    # AC at t=0 is well before freeze → full 500.
+    stats = contest._cf_stat(CFTDOC_FROZEN_LAST_30M, [CF_777_AC_T0])
+    self.assertEqual(stats['score'], 500)
+    self.assertNotIn('status_unknown', stats['detail'][0])
 
 
 if __name__ == '__main__':
