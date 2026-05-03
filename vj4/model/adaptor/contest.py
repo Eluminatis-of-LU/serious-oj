@@ -46,7 +46,49 @@ def _oi_stat(tdoc, journal):
 
 
 def _cf_stat(tdoc, journal):
-  return {'score': 0, 'detail': []}
+  duration_seconds = (tdoc['end_at'] - tdoc['begin_at']).total_seconds()
+  max_scores = dict(zip(tdoc['pids'], tdoc.get('cf_max_scores', [])))
+  freeze_at = _get_freeze_at(tdoc)
+
+  naccept = collections.defaultdict(int)
+  effective = {}
+
+  for j in journal:
+    pid = j['pid']
+    if pid not in tdoc['pids']:
+      continue
+    status = j.get('status', constant.record.STATUS_WAITING)
+    if status >= constant.record.STATUS_COMPILE_ERROR:
+      continue
+    if pid in effective:
+      continue
+    if not j.get('accept'):
+      naccept[pid] += 1
+      continue
+
+    entry = copy.deepcopy(j)
+    ac_time = j['rid'].generation_time.replace(tzinfo=None)
+    max_score = max_scores.get(pid, 0)
+    if ac_time >= freeze_at:
+      entry['accept'] = False
+      entry['score'] = 0
+      entry['status_unknown'] = True
+      entry['naccept'] = naccept[pid]
+      entry['time'] = 0
+    else:
+      elapsed = (ac_time - tdoc['begin_at']).total_seconds()
+      if duration_seconds <= 0:
+        cf_score = float(max_score)
+      else:
+        decayed = max_score * (1 - elapsed / duration_seconds) - 50 * naccept[pid]
+        cf_score = max(0.3 * max_score, decayed)
+      entry['score'] = round(cf_score, 2)
+      entry['naccept'] = naccept[pid]
+      entry['time'] = elapsed
+    effective[pid] = entry
+
+  detail = list(effective.values())
+  return {'score': round(sum(d['score'] for d in detail), 2), 'detail': detail}
 
 
 def _acm_stat(tdoc, journal):

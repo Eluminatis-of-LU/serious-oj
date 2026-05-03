@@ -42,6 +42,30 @@ SUBMIT_778_AC_LATE = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.time
 SUBMIT_780_AC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=5)),
                  'pid': 780, 'accept': True, 'score': 1000, 'status': constant.record.STATUS_ACCEPTED}
 
+# CF rule fixtures: pid 777 has cf_max_score=500, 778 has 1000, 779 has 1500.
+# CFTDOC contest is 2 hours = 7200s starting at NOW.
+CF_777_AC_T0 = {'rid': objectid.ObjectId.from_datetime(NOW),
+                'pid': 777, 'accept': True, 'score': 0,
+                'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_END = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=7199)),
+                 'pid': 777, 'accept': True, 'score': 0,
+                 'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_HALF = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(hours=1)),
+                  'pid': 777, 'accept': True, 'score': 0,
+                  'status': constant.record.STATUS_ACCEPTED}
+CF_777_WA_EARLY = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=10)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_WRONG_ANSWER}
+CF_777_CE_EARLY = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=5)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_COMPILE_ERROR}
+CF_778_AC_T0 = {'rid': objectid.ObjectId.from_datetime(NOW),
+                'pid': 778, 'accept': True, 'score': 0,
+                'status': constant.record.STATUS_ACCEPTED}
+CF_OUT_OF_CONTEST_AC = {'rid': objectid.ObjectId.from_datetime(NOW),
+                        'pid': 4242, 'accept': True, 'score': 0,
+                        'status': constant.record.STATUS_ACCEPTED}
+
 DOMAIN_ID_DUMMY = 'dummy'
 OWNER_UID = 22
 TITLE = 'dummy_title'
@@ -364,6 +388,60 @@ class CfRuleTest(unittest.TestCase):
     stats = contest._cf_stat(CFTDOC, [])
     self.assertEqual(stats['score'], 0)
     self.assertEqual(stats['detail'], [])
+
+  def test_ac_at_t0_no_wa(self):
+    # Full max_score: 500 * (1 - 0/duration) - 50*0 = 500.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0])
+    self.assertEqual(stats['score'], 500)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertEqual(stats['detail'][0]['pid'], 777)
+    self.assertEqual(stats['detail'][0]['score'], 500)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_ac_at_end_floors_at_30pct(self):
+    # decayed = 500 * (1-1) - 0 = 0; floor = 150. Result = 150.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_END])
+    self.assertEqual(stats['score'], 150)
+    self.assertEqual(stats['detail'][0]['score'], 150)
+
+  def test_ac_at_half_no_wa(self):
+    # 500 * (1 - 0.5) - 0 = 250.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 250)
+
+  def test_ac_with_wa_subtracts_50_per_wa(self):
+    # WA at t=10s, AC at t=1h: decayed = 500*0.5 - 50*1 = 200.
+    stats = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 200)
+    self.assertEqual(stats['detail'][0]['naccept'], 1)
+
+  def test_compile_error_does_not_count_as_wa(self):
+    # CE at t=5s, AC at t=1h: should NOT subtract 50.
+    stats = contest._cf_stat(CFTDOC, [CF_777_CE_EARLY, CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 250)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_pid_outside_contest_ignored(self):
+    stats = contest._cf_stat(CFTDOC, [CF_OUT_OF_CONTEST_AC])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(stats['detail'], [])
+
+  def test_first_ac_locks_score(self):
+    # Late AC after early AC must not overwrite (and must not be re-counted).
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_777_AC_END])
+    self.assertEqual(stats['score'], 500)
+
+  def test_multi_problem_sums(self):
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_778_AC_T0])
+    # 500 (pid 777) + 1000 (pid 778) = 1500.
+    self.assertEqual(stats['score'], 1500)
+    self.assertEqual(len(stats['detail']), 2)
+
+  def test_wa_after_ac_does_not_count(self):
+    # WA happens chronologically AFTER AC (t=10s vs t=0); AC is locked: ignored.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_777_WA_EARLY])
+    self.assertEqual(stats['score'], 500)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
 
 
 if __name__ == '__main__':
