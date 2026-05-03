@@ -466,6 +466,28 @@ class CfRuleTest(unittest.TestCase):
     self.assertEqual(stats['score'], 500)
     self.assertNotIn('status_unknown', stats['detail'][0])
 
+  def test_scoreboard_basic_shape(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_778_AC_T0])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    ranked = [(1, tsdoc)]
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, ranked, udict, dudict, pdict)
+    header = rows[0]
+    self.assertEqual(header[0]['type'], 'rank')
+    self.assertEqual(header[1]['type'], 'user')
+    self.assertEqual(header[2]['type'], 'total_score')
+    # 3 problems → 3 problem columns after the leading 3 fixed columns.
+    self.assertEqual(len(header), 6)
+    data_row = rows[1]
+    self.assertEqual(data_row[0]['value'], 1)         # rank
+    self.assertEqual(data_row[1]['value'], 'alice')   # user
+    self.assertEqual(data_row[2]['value'], 1500)      # total
+
 
 if __name__ == '__main__':
   unittest.main()

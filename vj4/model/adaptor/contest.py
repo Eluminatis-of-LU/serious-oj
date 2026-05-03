@@ -260,6 +260,59 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   return rows
 
 
+def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
+  columns = []
+  columns.append({'type': 'rank', 'value': _('Rank')})
+  columns.append({'type': 'user', 'value': _('User')})
+  columns.append({'type': 'total_score', 'value': _('Total Score')})
+  for index, pid in enumerate(tdoc['pids']):
+    if is_export:
+      columns.append({'type': 'problem_score',
+                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+    else:
+      columns.append({'type': 'problem_detail',
+                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+  rows = [columns]
+  pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
+  for rank_, tsdoc in ranked_tsdocs:
+    tsddict = {item['pid']: item for item in tsdoc.get('detail', [])}
+    row = []
+    row.append({'type': 'string', 'value': rank_})
+    row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}})
+    row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
+    for pid in tdoc['pids']:
+      cell = tsddict.get(pid)
+      if cell is None:
+        col_value = '-'
+        rdoc = None
+      elif cell.get('status_unknown'):
+        col_value = '?'
+        rdoc = cell.get('rid')
+        pstats[pid]['attempt'] += cell.get('naccept', 0)
+      elif cell.get('accept'):
+        col_value = cell['score']
+        rdoc = cell.get('rid')
+        pstats[pid]['accept'] += 1
+        pstats[pid]['attempt'] += cell.get('naccept', 0) + 1
+      else:
+        col_value = '-'
+        rdoc = cell.get('rid')
+        pstats[pid]['attempt'] += cell.get('naccept', 0)
+      if is_export:
+        row.append({'type': 'string', 'value': col_value})
+      else:
+        row.append({'type': 'record', 'value': col_value, 'raw': rdoc,
+                    'uid': tsdoc['uid'], 'pid': pid})
+    rows.append(row)
+  for column in rows[0]:
+    if column['type'] == 'problem_detail':
+      pid = column['raw']['doc_id']
+      column['stats'] = '{0}/{1}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
+  return rows
+
+
 def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
