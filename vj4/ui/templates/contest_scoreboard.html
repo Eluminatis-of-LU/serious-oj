@@ -66,7 +66,9 @@
               {% if column['type'] == 'user' %}
                 {{ user.render_inline(column['raw'], column['dudoc'], badge=false, avatar=false, country=true) }}
               {% elif column['type'] == 'record' %}
-                {% if '+' in column['value']|string %}
+                {% if column.get('accept') %}
+                  {% set record_color = 'pass' %}
+                {% elif '+' in column['value']|string %}
                   {% set record_color = 'pass' %}
                 {% elif '?' in column['value']|string %}
                   {% set record_color = 'progress' %}

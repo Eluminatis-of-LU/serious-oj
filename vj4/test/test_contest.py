@@ -42,6 +42,33 @@ SUBMIT_778_AC_LATE = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.time
 SUBMIT_780_AC = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=5)),
                  'pid': 780, 'accept': True, 'score': 1000, 'status': constant.record.STATUS_ACCEPTED}
 
+# CF rule fixtures: pid 777 has cf_max_score=500, 778 has 1000, 779 has 1500.
+# CFTDOC contest is 2 hours = 7200s starting at NOW.
+CF_777_AC_T0 = {'rid': objectid.ObjectId.from_datetime(NOW),
+                'pid': 777, 'accept': True, 'score': 0,
+                'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_END = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=7199)),
+                 'pid': 777, 'accept': True, 'score': 0,
+                 'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_HALF = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(hours=1)),
+                  'pid': 777, 'accept': True, 'score': 0,
+                  'status': constant.record.STATUS_ACCEPTED}
+CF_777_WA_EARLY = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=10)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_WRONG_ANSWER}
+CF_777_CE_EARLY = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=5)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_COMPILE_ERROR}
+CF_778_AC_T0 = {'rid': objectid.ObjectId.from_datetime(NOW),
+                'pid': 778, 'accept': True, 'score': 0,
+                'status': constant.record.STATUS_ACCEPTED}
+CF_OUT_OF_CONTEST_AC = {'rid': objectid.ObjectId.from_datetime(NOW),
+                        'pid': 4242, 'accept': True, 'score': 0,
+                        'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_AT_100M = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(minutes=100)),
+                     'pid': 777, 'accept': True, 'score': 0,
+                     'status': constant.record.STATUS_ACCEPTED}
+
 DOMAIN_ID_DUMMY = 'dummy'
 OWNER_UID = 22
 TITLE = 'dummy_title'
@@ -227,6 +254,45 @@ class AssignmentRuleTest(unittest.TestCase):
     self.assertEqual(stats['detail'], [])
 
 
+class CfMaxScoresValidationTest(unittest.TestCase):
+  def test_helper_accepts_matching_length(self):
+    contest._validate_cf_max_scores([777, 778], [500, 1000])  # no raise
+
+  def test_helper_rejects_length_mismatch(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777, 778, 779], [500, 1000])
+
+  def test_helper_rejects_below_min(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], [50])
+
+  def test_helper_rejects_above_max(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], [99999])
+
+  def test_helper_rejects_non_int(self):
+    with self.assertRaises(error.ValidationError):
+      contest._validate_cf_max_scores([777], ['oops'])
+
+  def test_fit_keeps_exact_length(self):
+    self.assertEqual(contest._fit_cf_max_scores([777, 778], [500, 1000]),
+                     [500, 1000])
+
+  def test_fit_truncates_when_too_long(self):
+    self.assertEqual(contest._fit_cf_max_scores([777], [500, 1000, 1500]),
+                     [500])
+
+  def test_fit_pads_with_defaults_when_too_short(self):
+    # defaults for 3 pids are [500, 1000, 1500]; index 0 kept, 1-2 padded.
+    fitted = contest._fit_cf_max_scores([777, 778, 779], [500])
+    self.assertEqual(fitted, [500, 1000, 1500])
+    contest._validate_cf_max_scores([777, 778, 779], fitted)  # fitted output validates
+
+  def test_fit_pads_fully_when_empty(self):
+    self.assertEqual(contest._fit_cf_max_scores([777, 778], []),
+                     [500, 1000])
+
+
 class OuterTest(base.DatabaseTestCase):
   @base.wrap_coro
   async def test_add_get(self):
@@ -351,6 +417,230 @@ class InnerTest(base.DatabaseTestCase):
     del tsdoc['rev']
     del tsdoc_old['rev']
     self.assertEqual(tsdoc, tsdoc_old)
+
+
+CFTDOC = {'pids': [777, 778, 779],
+          'cf_max_scores': [500, 1000, 1500],
+          'begin_at': NOW,
+          'end_at': NOW + datetime.timedelta(hours=2)}
+CFTDOC_FROZEN_LAST_30M = {'pids': [777, 778, 779],
+                          'cf_max_scores': [500, 1000, 1500],
+                          'begin_at': NOW,
+                          'end_at': NOW + datetime.timedelta(hours=2),
+                          'freeze_before': 30}
+CFTDOC_4H = {'pids': [777, 778, 779],
+             'cf_max_scores': [500, 1000, 1500],
+             'begin_at': NOW,
+             'end_at': NOW + datetime.timedelta(hours=4)}
+CF_777_AC_90S = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=90)),
+                 'pid': 777, 'accept': True, 'score': 0,
+                 'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_119S = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=119)),
+                  'pid': 777, 'accept': True, 'score': 0,
+                  'status': constant.record.STATUS_ACCEPTED}
+CF_777_WA_LATE2 = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=20)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_WRONG_ANSWER}
+
+
+class CfRuleTest(unittest.TestCase):
+  def test_zero(self):
+    stats = contest._cf_stat(CFTDOC, [])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(stats['detail'], [])
+
+  def test_ac_at_t0_no_wa(self):
+    # Full max_score: 500 * (1 - 0/duration) - 50*0 = 500.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0])
+    self.assertEqual(stats['score'], 500)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertEqual(stats['detail'][0]['pid'], 777)
+    self.assertEqual(stats['detail'][0]['score'], 500)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_ac_at_end_no_wa(self):
+    # t=119min (7199s floors to 119). deduction = floor(500*119/250) = 238.
+    # 500 - 238 - 0 = 262 (well above the 150 floor).
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_END])
+    self.assertEqual(stats['score'], 262)
+    self.assertEqual(stats['detail'][0]['score'], 262)
+
+  def test_ac_at_half_no_wa(self):
+    # t=60min. deduction = floor(500*60/250) = 120. 500 - 120 = 380.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 380)
+
+  def test_ac_with_wa_subtracts_50_per_wa(self):
+    # WA at t=10s, AC at t=60min: 500 - 120 - 50*1 = 330.
+    stats = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 330)
+    self.assertEqual(stats['detail'][0]['naccept'], 1)
+
+  def test_compile_error_does_not_count_as_wa(self):
+    # CE at t=5s, AC at t=60min: CE ignored, 500 - 120 - 0 = 380.
+    stats = contest._cf_stat(CFTDOC, [CF_777_CE_EARLY, CF_777_AC_HALF])
+    self.assertEqual(stats['score'], 380)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_pid_outside_contest_ignored(self):
+    stats = contest._cf_stat(CFTDOC, [CF_OUT_OF_CONTEST_AC])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(stats['detail'], [])
+
+  def test_first_ac_locks_score(self):
+    # Late AC after early AC must not overwrite (and must not be re-counted).
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_777_AC_END])
+    self.assertEqual(stats['score'], 500)
+
+  def test_multi_problem_sums(self):
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_778_AC_T0])
+    # 500 (pid 777) + 1000 (pid 778) = 1500.
+    self.assertEqual(stats['score'], 1500)
+    self.assertEqual(len(stats['detail']), 2)
+
+  def test_wa_after_ac_does_not_count(self):
+    # WA happens chronologically AFTER AC (t=10s vs t=0); AC is locked: ignored.
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_777_WA_EARLY])
+    self.assertEqual(stats['score'], 500)
+    self.assertEqual(stats['detail'][0]['naccept'], 0)
+
+  def test_post_freeze_submission_marked_unknown(self):
+    # Contest 2h, freeze_before=30m → freeze_at = NOW+1h30m.
+    # AC at t=100min is AFTER freeze → score=0, status_unknown=True.
+    stats = contest._cf_stat(CFTDOC_FROZEN_LAST_30M, [CF_777_AC_AT_100M])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertTrue(stats['detail'][0].get('status_unknown'))
+    self.assertFalse(stats['detail'][0]['accept'])
+
+  def test_pre_freeze_submission_scored_normally(self):
+    # AC at t=0 is well before freeze → full 500.
+    stats = contest._cf_stat(CFTDOC_FROZEN_LAST_30M, [CF_777_AC_T0])
+    self.assertEqual(stats['score'], 500)
+    self.assertNotIn('status_unknown', stats['detail'][0])
+
+  def test_scoreboard_basic_shape(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_AC_T0, CF_778_AC_T0])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    ranked = [(1, tsdoc)]
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, ranked, udict, dudict, pdict)
+    header = rows[0]
+    self.assertEqual(header[0]['type'], 'rank')
+    self.assertEqual(header[1]['type'], 'user')
+    self.assertEqual(header[2]['type'], 'total_score')
+    # 3 problems → 3 problem columns after the leading 3 fixed columns.
+    self.assertEqual(len(header), 6)
+    data_row = rows[1]
+    self.assertEqual(data_row[0]['value'], 1)         # rank
+    self.assertEqual(data_row[1]['value'], 'alice')   # user
+    self.assertEqual(data_row[2]['value'], 1500)      # total
+
+  def test_score_is_integer(self):
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])
+    self.assertIsInstance(stats['score'], int)
+    self.assertIsInstance(stats['detail'][0]['score'], int)
+
+  def test_floor_reached_via_wrong_submissions(self):
+    # 8 wrong submissions then an AC near t=0: 500 - 0 - 50*8 = 100,
+    # clamped up to the 30% floor = 150.
+    wa = [{'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=i + 1)),
+           'pid': 777, 'accept': False, 'score': 0,
+           'status': constant.record.STATUS_WRONG_ANSWER} for i in range(8)]
+    ac = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=9)),
+          'pid': 777, 'accept': True, 'score': 0,
+          'status': constant.record.STATUS_ACCEPTED}
+    stats = contest._cf_stat(CFTDOC, wa + [ac])
+    self.assertEqual(stats['score'], 150)
+    self.assertEqual(stats['detail'][0]['naccept'], 8)
+
+  def test_decay_is_duration_aware(self):
+    # Same problem solved 60min in. A 2h contest deducts more per minute
+    # than a 4h contest, so the 4h score is higher.
+    score_2h = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])['score']
+    score_4h = contest._cf_stat(CFTDOC_4H, [CF_777_AC_HALF])['score']
+    self.assertEqual(score_2h, 380)   # floor(120*500*60/(250*120)) = 120
+    self.assertEqual(score_4h, 440)   # floor(120*500*60/(250*240)) = 60
+
+  def test_decay_steps_per_whole_minute(self):
+    # AC at 90s and at 119s both fall inside minute 1: identical score.
+    score_90 = contest._cf_stat(CFTDOC, [CF_777_AC_90S])['score']
+    score_119 = contest._cf_stat(CFTDOC, [CF_777_AC_119S])['score']
+    self.assertEqual(score_90, score_119)
+    self.assertEqual(score_90, 498)   # floor(500*1/250) = 2
+
+  def test_unsolved_problem_recorded_in_detail(self):
+    # Two WAs, no AC: the problem still appears in detail as unsolved.
+    stats = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_WA_LATE2])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertEqual(stats['detail'][0]['pid'], 777)
+    self.assertFalse(stats['detail'][0]['accept'])
+    self.assertEqual(stats['detail'][0]['naccept'], 2)
+    self.assertEqual(stats['detail'][0]['score'], 0)
+
+  def test_scoreboard_marks_accepted_cell(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_AC_T0])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, [(1, tsdoc)],
+                                  udict, dudict, pdict)
+    # columns are rank, user, total, P1, P2, P3 -> P1 cell is index 3.
+    p1_cell = rows[1][3]
+    self.assertTrue(p1_cell['accept'])
+    self.assertEqual(p1_cell['value'], 500)
+    self.assertFalse(rows[1][4]['accept'])  # P2 untouched
+
+  def test_scoreboard_shows_unsolved_attempt_count(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_WA_LATE2])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, [(1, tsdoc)],
+                                  udict, dudict, pdict)
+    p1_cell = rows[1][3]
+    self.assertEqual(p1_cell['value'], '-2')
+    self.assertFalse(p1_cell['accept'])
+    # P1 header column carries accept/attempt stats: 0 solved / 2 attempts.
+    self.assertEqual(rows[0][3]['stats'], '0/2')
+
+
+class CfContestEditTest(base.DatabaseTestCase):
+  @base.wrap_coro
+  async def test_edit_pids_refits_cf_max_scores(self):
+    begin_at = datetime.datetime.utcnow()
+    end_at = begin_at + datetime.timedelta(hours=2)
+    tid = await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, TITLE, CONTENT,
+                            OWNER_UID, constant.contest.RULE_CF, begin_at, end_at,
+                            [777, 778, 779], cf_max_scores=[500, 1000, 1500])
+    # Remove a problem; the editor still submits the old 3-value score list.
+    # It should be truncated to match, not rejected.
+    await contest.edit(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid,
+                       rule=constant.contest.RULE_CF, pids=[777, 778],
+                       cf_max_scores=[500, 1000, 1500])
+    tdoc = await contest.get(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid)
+    self.assertEqual(tdoc['cf_max_scores'], [500, 1000])
+    # Add a problem back with a too-short score list; the new slot is padded.
+    await contest.edit(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid,
+                       rule=constant.contest.RULE_CF, pids=[777, 778, 779],
+                       cf_max_scores=[500, 1000])
+    tdoc = await contest.get(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid)
+    self.assertEqual(tdoc['cf_max_scores'], [500, 1000, 1500])
+
 
 if __name__ == '__main__':
   unittest.main()

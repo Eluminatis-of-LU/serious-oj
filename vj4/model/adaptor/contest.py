@@ -45,6 +45,59 @@ def _oi_stat(tdoc, journal):
   return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
 
+def _cf_stat(tdoc, journal):
+  duration_minutes = (tdoc['end_at'] - tdoc['begin_at']).total_seconds() / 60
+  max_scores = dict(zip(tdoc['pids'], tdoc.get('cf_max_scores', [])))
+  freeze_at = _get_freeze_at(tdoc)
+
+  naccept = collections.defaultdict(int)
+  last_wrong = {}
+  effective = {}
+
+  for j in journal:
+    pid = j['pid']
+    if pid not in tdoc['pids']:
+      continue
+    status = j.get('status', constant.record.STATUS_WAITING)
+    if status >= constant.record.STATUS_COMPILE_ERROR:
+      continue
+    if pid in effective:
+      continue
+    if not j.get('accept'):
+      naccept[pid] += 1
+      last_wrong[pid] = j
+      continue
+
+    entry = copy.deepcopy(j)
+    ac_time = j['rid'].generation_time.replace(tzinfo=None)
+    max_score = max_scores.get(pid, 0)
+    if ac_time >= freeze_at:
+      entry['accept'] = False
+      entry['score'] = 0
+      entry['status_unknown'] = True
+      entry['naccept'] = naccept[pid]
+    else:
+      elapsed_minutes = max(0, int((ac_time - tdoc['begin_at']).total_seconds() // 60))
+      if duration_minutes <= 0:
+        cf_score = max_score
+      else:
+        deduction = int(120 * max_score * elapsed_minutes / (250 * duration_minutes))
+        cf_score = max(round(0.3 * max_score), max_score - deduction - 50 * naccept[pid])
+      entry['score'] = cf_score
+      entry['naccept'] = naccept[pid]
+    effective[pid] = entry
+
+  # Record attempted-but-unsolved problems so the scoreboard can show "-N".
+  for pid in tdoc['pids']:
+    if pid not in effective and naccept[pid] > 0:
+      j = last_wrong[pid]
+      effective[pid] = {'rid': j['rid'], 'pid': pid, 'accept': False,
+                        'score': 0, 'naccept': naccept[pid]}
+
+  detail = list(effective.values())
+  return {'score': sum(d['score'] for d in detail), 'detail': detail}
+
+
 def _acm_stat(tdoc, journal):
   naccept = collections.defaultdict(int)
   effective = {}
@@ -103,6 +156,10 @@ def _assignment_stat(tdoc, journal):
 
 
 def _oi_equ_func(a, b):
+  return a.get('score', 0) == b.get('score', 0)
+
+
+def _cf_equ_func(a, b):
   return a.get('score', 0) == b.get('score', 0)
 
 
@@ -214,6 +271,61 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   return rows
 
 
+def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
+  columns = []
+  columns.append({'type': 'rank', 'value': _('Rank')})
+  columns.append({'type': 'user', 'value': _('User')})
+  columns.append({'type': 'total_score', 'value': _('Total Score')})
+  for index, pid in enumerate(tdoc['pids']):
+    if is_export:
+      columns.append({'type': 'problem_score',
+                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+    else:
+      columns.append({'type': 'problem_detail',
+                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+  rows = [columns]
+  pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
+  for rank_, tsdoc in ranked_tsdocs:
+    tsddict = {item['pid']: item for item in tsdoc.get('detail', [])}
+    row = []
+    row.append({'type': 'string', 'value': rank_})
+    row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
+                'raw': udict[tsdoc['uid']],
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}})
+    row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
+    for pid in tdoc['pids']:
+      cell = tsddict.get(pid)
+      accepted = False
+      if cell is None:
+        col_value = '-'
+        rdoc = None
+      elif cell.get('status_unknown'):
+        col_value = '?'
+        rdoc = cell.get('rid')
+        pstats[pid]['attempt'] += cell.get('naccept', 0)
+      elif cell.get('accept'):
+        col_value = cell['score']
+        rdoc = cell.get('rid')
+        accepted = True
+        pstats[pid]['accept'] += 1
+        pstats[pid]['attempt'] += cell.get('naccept', 0) + 1
+      else:
+        col_value = '-{0}'.format(cell.get('naccept', 0))
+        rdoc = cell.get('rid')
+        pstats[pid]['attempt'] += cell.get('naccept', 0)
+      if is_export:
+        row.append({'type': 'string', 'value': col_value})
+      else:
+        row.append({'type': 'record', 'value': col_value, 'raw': rdoc,
+                    'uid': tsdoc['uid'], 'pid': pid, 'accept': accepted})
+    rows.append(row)
+  for column in rows[0]:
+    if column['type'] == 'problem_detail':
+      pid = column['raw']['doc_id']
+      column['stats'] = '{0}/{1}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
+  return rows
+
+
 def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns = []
   columns.append({'type': 'rank', 'value': _('Rank')})
@@ -284,6 +396,12 @@ RULES = {
                                   [('accept', -1), ('time', 1)],
                                   functools.partial(enumerate, start=1),
                                   _acm_scoreboard),
+  constant.contest.RULE_CF: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
+                                 lambda tdoc, now: now >= tdoc['begin_at'],
+                                 _cf_stat,
+                                 [('score', -1)],
+                                 functools.partial(rank.ranked, equ_func=_cf_equ_func),
+                                 _cf_scoreboard),
   constant.contest.RULE_ASSIGNMENT: Rule(lambda tdoc, now: now >= tdoc['begin_at'],
                                          lambda tdoc, now: False,  # TODO: show scoreboard according to assignment preference
                                          _assignment_stat,
@@ -321,6 +439,15 @@ async def add(domain_id: str, doc_type: int,
       raise error.ValidationError('penalty_since', 'begin_at')
     if kwargs['penalty_since'] > end_at:
       raise error.ValidationError('penalty_since', 'end_at')
+
+  if rule == constant.contest.RULE_CF:
+    if kwargs.get('cf_max_scores') is None:
+      kwargs['cf_max_scores'] = _default_cf_max_scores(pids)
+    else:
+      # Intentionally fit (pad/truncate) on create too, mirroring edit, so the
+      # list always matches pids; the default ladder fills any missing slots.
+      kwargs['cf_max_scores'] = _fit_cf_max_scores(pids, kwargs['cf_max_scores'])
+    _validate_cf_max_scores(pids, kwargs['cf_max_scores'])
   # TODO(twd2): should we check problem existance here?
   return await document.add(domain_id, content, owner_uid, doc_type,
                             title=title, rule=rule,
@@ -366,6 +493,19 @@ async def edit(domain_id: str, doc_type: int, tid: objectid.ObjectId, **kwargs):
       raise error.ValidationError('penalty_since', 'begin_at')
     if 'end_at' in kwargs and kwargs['penalty_since'] > kwargs['end_at']:
       raise error.ValidationError('penalty_since', 'end_at')
+
+  if 'cf_max_scores' in kwargs or kwargs.get('rule') == constant.contest.RULE_CF:
+    tdoc = await get(domain_id, doc_type, tid)
+    effective_rule = kwargs.get('rule', tdoc.get('rule'))
+    if effective_rule == constant.contest.RULE_CF:
+      effective_pids = kwargs.get('pids', tdoc.get('pids', []))
+      effective_scores = kwargs.get('cf_max_scores', tdoc.get('cf_max_scores'))
+      if effective_scores is None:
+        effective_scores = _default_cf_max_scores(effective_pids)
+      else:
+        effective_scores = _fit_cf_max_scores(effective_pids, effective_scores)
+      kwargs['cf_max_scores'] = effective_scores
+      _validate_cf_max_scores(effective_pids, effective_scores)
   return await document.set(domain_id, doc_type, tid, **kwargs)
 
 
@@ -514,6 +654,35 @@ def _parse_pids(pids_str):
 
 def _format_pids(pids_list):
   return ','.join([str(pid) for pid in pids_list])
+
+
+CF_MAX_SCORE_MIN = 100
+CF_MAX_SCORE_MAX = 10000
+
+
+def _validate_cf_max_scores(pids, cf_max_scores):
+  if not isinstance(cf_max_scores, list):
+    raise error.ValidationError('cf_max_scores')
+  if len(cf_max_scores) != len(pids):
+    raise error.ValidationError('cf_max_scores')
+  for v in cf_max_scores:
+    if isinstance(v, bool) or not isinstance(v, int):
+      raise error.ValidationError('cf_max_scores')
+    if v < CF_MAX_SCORE_MIN or v > CF_MAX_SCORE_MAX:
+      raise error.ValidationError('cf_max_scores')
+
+
+def _default_cf_max_scores(pids):
+  return [min(CF_MAX_SCORE_MAX, 500 * (i + 1)) for i in range(len(pids))]
+
+
+def _fit_cf_max_scores(pids, cf_max_scores):
+  """Pad (with the default ladder) or truncate cf_max_scores to len(pids)."""
+  defaults = _default_cf_max_scores(pids)
+  fitted = list(cf_max_scores)[:len(pids)]
+  fitted += defaults[len(fitted):]
+  return fitted
+
 
 class ContestStatusMixin(object):
   @property
