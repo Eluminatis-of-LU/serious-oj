@@ -443,6 +443,10 @@ async def add(domain_id: str, doc_type: int,
   if rule == constant.contest.RULE_CF:
     if kwargs.get('cf_max_scores') is None:
       kwargs['cf_max_scores'] = _default_cf_max_scores(pids)
+    else:
+      # Intentionally fit (pad/truncate) on create too, mirroring edit, so the
+      # list always matches pids; the default ladder fills any missing slots.
+      kwargs['cf_max_scores'] = _fit_cf_max_scores(pids, kwargs['cf_max_scores'])
     _validate_cf_max_scores(pids, kwargs['cf_max_scores'])
   # TODO(twd2): should we check problem existance here?
   return await document.add(domain_id, content, owner_uid, doc_type,
@@ -498,7 +502,9 @@ async def edit(domain_id: str, doc_type: int, tid: objectid.ObjectId, **kwargs):
       effective_scores = kwargs.get('cf_max_scores', tdoc.get('cf_max_scores'))
       if effective_scores is None:
         effective_scores = _default_cf_max_scores(effective_pids)
-        kwargs['cf_max_scores'] = effective_scores
+      else:
+        effective_scores = _fit_cf_max_scores(effective_pids, effective_scores)
+      kwargs['cf_max_scores'] = effective_scores
       _validate_cf_max_scores(effective_pids, effective_scores)
   return await document.set(domain_id, doc_type, tid, **kwargs)
 
@@ -668,6 +674,15 @@ def _validate_cf_max_scores(pids, cf_max_scores):
 
 def _default_cf_max_scores(pids):
   return [min(CF_MAX_SCORE_MAX, 500 * (i + 1)) for i in range(len(pids))]
+
+
+def _fit_cf_max_scores(pids, cf_max_scores):
+  """Pad (with the default ladder) or truncate cf_max_scores to len(pids)."""
+  defaults = _default_cf_max_scores(pids)
+  fitted = list(cf_max_scores)[:len(pids)]
+  fitted += defaults[len(fitted):]
+  return fitted
+
 
 class ContestStatusMixin(object):
   @property

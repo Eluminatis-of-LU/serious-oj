@@ -274,6 +274,24 @@ class CfMaxScoresValidationTest(unittest.TestCase):
     with self.assertRaises(error.ValidationError):
       contest._validate_cf_max_scores([777], ['oops'])
 
+  def test_fit_keeps_exact_length(self):
+    self.assertEqual(contest._fit_cf_max_scores([777, 778], [500, 1000]),
+                     [500, 1000])
+
+  def test_fit_truncates_when_too_long(self):
+    self.assertEqual(contest._fit_cf_max_scores([777], [500, 1000, 1500]),
+                     [500])
+
+  def test_fit_pads_with_defaults_when_too_short(self):
+    # defaults for 3 pids are [500, 1000, 1500]; index 0 kept, 1-2 padded.
+    fitted = contest._fit_cf_max_scores([777, 778, 779], [500])
+    self.assertEqual(fitted, [500, 1000, 1500])
+    contest._validate_cf_max_scores([777, 778, 779], fitted)  # fitted output validates
+
+  def test_fit_pads_fully_when_empty(self):
+    self.assertEqual(contest._fit_cf_max_scores([777, 778], []),
+                     [500, 1000])
+
 
 class OuterTest(base.DatabaseTestCase):
   @base.wrap_coro
@@ -599,6 +617,29 @@ class CfRuleTest(unittest.TestCase):
     self.assertFalse(p1_cell['accept'])
     # P1 header column carries accept/attempt stats: 0 solved / 2 attempts.
     self.assertEqual(rows[0][3]['stats'], '0/2')
+
+
+class CfContestEditTest(base.DatabaseTestCase):
+  @base.wrap_coro
+  async def test_edit_pids_refits_cf_max_scores(self):
+    begin_at = datetime.datetime.utcnow()
+    end_at = begin_at + datetime.timedelta(hours=2)
+    tid = await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, TITLE, CONTENT,
+                            OWNER_UID, constant.contest.RULE_CF, begin_at, end_at,
+                            [777, 778, 779], cf_max_scores=[500, 1000, 1500])
+    # Remove a problem; the editor still submits the old 3-value score list.
+    # It should be truncated to match, not rejected.
+    await contest.edit(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid,
+                       rule=constant.contest.RULE_CF, pids=[777, 778],
+                       cf_max_scores=[500, 1000, 1500])
+    tdoc = await contest.get(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid)
+    self.assertEqual(tdoc['cf_max_scores'], [500, 1000])
+    # Add a problem back with a too-short score list; the new slot is padded.
+    await contest.edit(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid,
+                       rule=constant.contest.RULE_CF, pids=[777, 778, 779],
+                       cf_max_scores=[500, 1000])
+    tdoc = await contest.get(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, tid)
+    self.assertEqual(tdoc['cf_max_scores'], [500, 1000, 1500])
 
 
 if __name__ == '__main__':
