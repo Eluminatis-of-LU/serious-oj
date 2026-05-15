@@ -410,6 +410,19 @@ CFTDOC_FROZEN_LAST_30M = {'pids': [777, 778, 779],
                           'begin_at': NOW,
                           'end_at': NOW + datetime.timedelta(hours=2),
                           'freeze_before': 30}
+CFTDOC_4H = {'pids': [777, 778, 779],
+             'cf_max_scores': [500, 1000, 1500],
+             'begin_at': NOW,
+             'end_at': NOW + datetime.timedelta(hours=4)}
+CF_777_AC_90S = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=90)),
+                 'pid': 777, 'accept': True, 'score': 0,
+                 'status': constant.record.STATUS_ACCEPTED}
+CF_777_AC_119S = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=119)),
+                  'pid': 777, 'accept': True, 'score': 0,
+                  'status': constant.record.STATUS_ACCEPTED}
+CF_777_WA_LATE2 = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=20)),
+                   'pid': 777, 'accept': False, 'score': 0,
+                   'status': constant.record.STATUS_WRONG_ANSWER}
 
 
 class CfRuleTest(unittest.TestCase):
@@ -427,27 +440,28 @@ class CfRuleTest(unittest.TestCase):
     self.assertEqual(stats['detail'][0]['score'], 500)
     self.assertEqual(stats['detail'][0]['naccept'], 0)
 
-  def test_ac_at_end_floors_at_30pct(self):
-    # decayed = 500 * (1-1) - 0 = 0; floor = 150. Result = 150.
+  def test_ac_at_end_no_wa(self):
+    # t=119min (7199s floors to 119). deduction = floor(500*119/250) = 238.
+    # 500 - 238 - 0 = 262 (well above the 150 floor).
     stats = contest._cf_stat(CFTDOC, [CF_777_AC_END])
-    self.assertEqual(stats['score'], 150)
-    self.assertEqual(stats['detail'][0]['score'], 150)
+    self.assertEqual(stats['score'], 262)
+    self.assertEqual(stats['detail'][0]['score'], 262)
 
   def test_ac_at_half_no_wa(self):
-    # 500 * (1 - 0.5) - 0 = 250.
+    # t=60min. deduction = floor(500*60/250) = 120. 500 - 120 = 380.
     stats = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])
-    self.assertEqual(stats['score'], 250)
+    self.assertEqual(stats['score'], 380)
 
   def test_ac_with_wa_subtracts_50_per_wa(self):
-    # WA at t=10s, AC at t=1h: decayed = 500*0.5 - 50*1 = 200.
+    # WA at t=10s, AC at t=60min: 500 - 120 - 50*1 = 330.
     stats = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_AC_HALF])
-    self.assertEqual(stats['score'], 200)
+    self.assertEqual(stats['score'], 330)
     self.assertEqual(stats['detail'][0]['naccept'], 1)
 
   def test_compile_error_does_not_count_as_wa(self):
-    # CE at t=5s, AC at t=1h: should NOT subtract 50.
+    # CE at t=5s, AC at t=60min: CE ignored, 500 - 120 - 0 = 380.
     stats = contest._cf_stat(CFTDOC, [CF_777_CE_EARLY, CF_777_AC_HALF])
-    self.assertEqual(stats['score'], 250)
+    self.assertEqual(stats['score'], 380)
     self.assertEqual(stats['detail'][0]['naccept'], 0)
 
   def test_pid_outside_contest_ignored(self):
@@ -508,6 +522,49 @@ class CfRuleTest(unittest.TestCase):
     self.assertEqual(data_row[0]['value'], 1)         # rank
     self.assertEqual(data_row[1]['value'], 'alice')   # user
     self.assertEqual(data_row[2]['value'], 1500)      # total
+
+  def test_score_is_integer(self):
+    stats = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])
+    self.assertIsInstance(stats['score'], int)
+    self.assertIsInstance(stats['detail'][0]['score'], int)
+
+  def test_floor_reached_via_wrong_submissions(self):
+    # 8 wrong submissions then an AC near t=0: 500 - 0 - 50*8 = 100,
+    # clamped up to the 30% floor = 150.
+    wa = [{'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=i + 1)),
+           'pid': 777, 'accept': False, 'score': 0,
+           'status': constant.record.STATUS_WRONG_ANSWER} for i in range(8)]
+    ac = {'rid': objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=9)),
+          'pid': 777, 'accept': True, 'score': 0,
+          'status': constant.record.STATUS_ACCEPTED}
+    stats = contest._cf_stat(CFTDOC, wa + [ac])
+    self.assertEqual(stats['score'], 150)
+    self.assertEqual(stats['detail'][0]['naccept'], 8)
+
+  def test_decay_is_duration_aware(self):
+    # Same problem solved 60min in. A 2h contest deducts more per minute
+    # than a 4h contest, so the 4h score is higher.
+    score_2h = contest._cf_stat(CFTDOC, [CF_777_AC_HALF])['score']
+    score_4h = contest._cf_stat(CFTDOC_4H, [CF_777_AC_HALF])['score']
+    self.assertEqual(score_2h, 380)   # floor(120*500*60/(250*120)) = 120
+    self.assertEqual(score_4h, 440)   # floor(120*500*60/(250*240)) = 60
+
+  def test_decay_steps_per_whole_minute(self):
+    # AC at 90s and at 119s both fall inside minute 1: identical score.
+    score_90 = contest._cf_stat(CFTDOC, [CF_777_AC_90S])['score']
+    score_119 = contest._cf_stat(CFTDOC, [CF_777_AC_119S])['score']
+    self.assertEqual(score_90, score_119)
+    self.assertEqual(score_90, 498)   # floor(500*1/250) = 2
+
+  def test_unsolved_problem_recorded_in_detail(self):
+    # Two WAs, no AC: the problem still appears in detail as unsolved.
+    stats = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_WA_LATE2])
+    self.assertEqual(stats['score'], 0)
+    self.assertEqual(len(stats['detail']), 1)
+    self.assertEqual(stats['detail'][0]['pid'], 777)
+    self.assertFalse(stats['detail'][0]['accept'])
+    self.assertEqual(stats['detail'][0]['naccept'], 2)
+    self.assertEqual(stats['detail'][0]['score'], 0)
 
 
 if __name__ == '__main__':

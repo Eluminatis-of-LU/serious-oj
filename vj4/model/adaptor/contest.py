@@ -46,11 +46,12 @@ def _oi_stat(tdoc, journal):
 
 
 def _cf_stat(tdoc, journal):
-  duration_seconds = (tdoc['end_at'] - tdoc['begin_at']).total_seconds()
+  duration_minutes = (tdoc['end_at'] - tdoc['begin_at']).total_seconds() / 60
   max_scores = dict(zip(tdoc['pids'], tdoc.get('cf_max_scores', [])))
   freeze_at = _get_freeze_at(tdoc)
 
   naccept = collections.defaultdict(int)
+  last_wrong = {}
   effective = {}
 
   for j in journal:
@@ -64,6 +65,7 @@ def _cf_stat(tdoc, journal):
       continue
     if not j.get('accept'):
       naccept[pid] += 1
+      last_wrong[pid] = j
       continue
 
     entry = copy.deepcopy(j)
@@ -74,21 +76,26 @@ def _cf_stat(tdoc, journal):
       entry['score'] = 0
       entry['status_unknown'] = True
       entry['naccept'] = naccept[pid]
-      entry['time'] = 0
     else:
-      elapsed = (ac_time - tdoc['begin_at']).total_seconds()
-      if duration_seconds <= 0:
-        cf_score = float(max_score)
+      elapsed_minutes = max(0, int((ac_time - tdoc['begin_at']).total_seconds() // 60))
+      if duration_minutes <= 0:
+        cf_score = max_score
       else:
-        decayed = max_score * (1 - elapsed / duration_seconds) - 50 * naccept[pid]
-        cf_score = max(0.3 * max_score, decayed)
-      entry['score'] = round(cf_score, 2)
+        deduction = int(120 * max_score * elapsed_minutes / (250 * duration_minutes))
+        cf_score = max(round(0.3 * max_score), max_score - deduction - 50 * naccept[pid])
+      entry['score'] = cf_score
       entry['naccept'] = naccept[pid]
-      entry['time'] = elapsed
     effective[pid] = entry
 
+  # Record attempted-but-unsolved problems so the scoreboard can show "-N".
+  for pid in tdoc['pids']:
+    if pid not in effective and naccept[pid] > 0:
+      j = last_wrong[pid]
+      effective[pid] = {'rid': j['rid'], 'pid': pid, 'accept': False,
+                        'score': 0, 'naccept': naccept[pid]}
+
   detail = list(effective.values())
-  return {'score': round(sum(d['score'] for d in detail), 2), 'detail': detail}
+  return {'score': sum(d['score'] for d in detail), 'detail': detail}
 
 
 def _acm_stat(tdoc, journal):
