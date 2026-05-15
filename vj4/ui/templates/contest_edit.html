@@ -33,7 +33,8 @@
                 <h3>{{ _('Codeforces-style dynamic scoring') }}</h3>
                 <ul>
                   <li>{{ _('Each problem has a maximum score that decreases over time and with each wrong attempt.') }}</li>
-                  <li>{{ _('Formula: max(0.3 &times; max_score, max_score &times; (1 &minus; elapsed/duration) &minus; 50 &times; wrong_count). Score never falls below 30%% of max.') }}</li>
+                  <li>{{ _('Formula: score = max(0.3 &times; max_score, max_score &minus; floor(120 &times; max_score &times; minutes / (250 &times; duration_minutes)) &minus; 50 &times; wrong_count).') }}</li>
+                  <li>{{ _('A problem solved at the very end is still worth about 52%% of its max; the 30%% floor is reached only through wrong attempts.') }}</li>
                   <li>{{ _('Wrong attempts that count: WA, TLE, MLE, RE, OLE. Compile errors do NOT count.') }}</li>
                   <li>{{ _('Tiebreak: total score only (no penalty time).') }}</li>
                   <li>{{ _('Ranklist freeze is supported via the "Freeze before" field.') }}</li>
@@ -49,7 +50,7 @@
               var box = document.getElementById('cf-rule-fields');
               function sync(){
                 if (!sel || !box) return;
-                box.style.display = (parseInt(sel.value, 10) === 4) ? '' : 'none';
+                box.style.display = (parseInt(sel.value, 10) === {{ vj4.constant.contest.RULE_CF }}) ? '' : 'none';
               }
               if (sel) sel.addEventListener('change', sync);
               sync();
