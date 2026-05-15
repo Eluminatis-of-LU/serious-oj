@@ -295,6 +295,7 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
       cell = tsddict.get(pid)
+      accepted = False
       if cell is None:
         col_value = '-'
         rdoc = None
@@ -305,17 +306,18 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
       elif cell.get('accept'):
         col_value = cell['score']
         rdoc = cell.get('rid')
+        accepted = True
         pstats[pid]['accept'] += 1
         pstats[pid]['attempt'] += cell.get('naccept', 0) + 1
       else:
-        col_value = '-'
+        col_value = '-{0}'.format(cell.get('naccept', 0))
         rdoc = cell.get('rid')
         pstats[pid]['attempt'] += cell.get('naccept', 0)
       if is_export:
         row.append({'type': 'string', 'value': col_value})
       else:
         row.append({'type': 'record', 'value': col_value, 'raw': rdoc,
-                    'uid': tsdoc['uid'], 'pid': pid})
+                    'uid': tsdoc['uid'], 'pid': pid, 'accept': accepted})
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':

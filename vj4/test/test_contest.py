@@ -566,6 +566,40 @@ class CfRuleTest(unittest.TestCase):
     self.assertEqual(stats['detail'][0]['naccept'], 2)
     self.assertEqual(stats['detail'][0]['score'], 0)
 
+  def test_scoreboard_marks_accepted_cell(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_AC_T0])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, [(1, tsdoc)],
+                                  udict, dudict, pdict)
+    # columns are rank, user, total, P1, P2, P3 -> P1 cell is index 3.
+    p1_cell = rows[1][3]
+    self.assertTrue(p1_cell['accept'])
+    self.assertEqual(p1_cell['value'], 500)
+    self.assertFalse(rows[1][4]['accept'])  # P2 untouched
+
+  def test_scoreboard_shows_unsolved_attempt_count(self):
+    tdoc = {**CFTDOC, 'doc_id': 1}
+    stat = contest._cf_stat(CFTDOC, [CF_777_WA_EARLY, CF_777_WA_LATE2])
+    tsdoc = {'uid': 99, 'attend': 1, **stat}
+    udict = {99: {'uname': 'alice', '_id': 99}}
+    dudict = {99: {'display_name': 'Alice'}}
+    pdict = {777: {'doc_id': 777, 'title': 'P1'},
+             778: {'doc_id': 778, 'title': 'P2'},
+             779: {'doc_id': 779, 'title': 'P3'}}
+    rows = contest._cf_scoreboard(False, lambda s: s, tdoc, [(1, tsdoc)],
+                                  udict, dudict, pdict)
+    p1_cell = rows[1][3]
+    self.assertEqual(p1_cell['value'], '-2')
+    self.assertFalse(p1_cell['accept'])
+    # P1 header column carries accept/attempt stats: 0 solved / 2 attempts.
+    self.assertEqual(rows[0][3]['stats'], '0/2')
+
 
 if __name__ == '__main__':
   unittest.main()
