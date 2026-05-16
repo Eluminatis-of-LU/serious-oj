@@ -21,3 +21,8 @@ for key, _ in $badge-bg-color
   .badge--{key}
     background-color: $badge-bg-color[key] !important
     color: $badge-text-color[key] !important
+
+for slug, _ in $rating-color
+  .user-rated--{slug}
+    color: $rating-color[slug] !important
+    font-weight: bold !important

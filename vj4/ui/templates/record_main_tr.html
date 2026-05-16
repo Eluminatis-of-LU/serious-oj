@@ -22,7 +22,8 @@
   {% endif %}
   </td>
   <td class="col--submit-by">
-    <a href="{{ reverse_url('user_detail', uid=rdoc['uid']) }}">
+    {% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating') if dudoc else none) %}
+    <a{% if _rank %} class="user-rated--{{ _rank['slug'] }}"{% endif %} href="{{ reverse_url('user_detail', uid=rdoc['uid']) }}">
       {% if dudoc['display_name'] %}
         {{ dudoc['display_name'] }} ({{ udoc['uname'] }})
       {% else %}
