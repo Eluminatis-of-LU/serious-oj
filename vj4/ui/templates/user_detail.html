@@ -11,13 +11,16 @@
               <img src="{{ udoc['gravatar']|gravatar_url }}" width="120" height="120" class="large user-profile-avatar">
             </div>
             <div class="media__body profile-header__main">
+              {% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating')) %}
               <h1>
+                <span{% if _rank %} class="user-rated--{{ _rank['slug'] }}"{% endif %}>
                 {% if dudoc['display_name'] %}
                   {{ dudoc['display_name'] }}
                   <small>{{ udoc['uname'] }}</small>
                 {% else %}
                   {{ udoc['uname'] }}
                 {% endif %}
+                </span>
                 <small>({{ _('UID') }}: {{ udoc['_id'] }})</small>
               </h1>
               <p>
@@ -30,7 +33,11 @@
               {% endif %}
               </p>
               {% if not udoc.get('temp_user', false) %}
-                <p>{{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}</p>
+                <p>
+                  <span{% if _rank %} class="user-rated--{{ _rank['slug'] }}"{% endif %}>{{ _(_rank['name']) if _rank else _('Unrated') }}</span>
+                  &middot;
+                  {{ _('Solved {0} problems, (No. {1}), Rating: {2}').format(dudoc['num_accept']|default(0), dudoc['rank']|default('?'), dudoc['rating']|default('-')) }}
+                </p>
               {% endif %}
               <p>
                 {% set has_country = udoc.get('country', '_') != '_'  %}
