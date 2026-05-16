@@ -41,7 +41,8 @@
       <li class="nav__list-item"><a href="{{ reverse_url('user_register') }}" class="nav__item--round">{{ _('sign_up') }}</a></li>
     {% else %}
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-user" data-dropdown-trigger-desktop-only>
-        <a href="{{ reverse_url('user_detail', uid=handler.user['_id']) }}" class="nav__item">{{ handler.domain_user['display_name']|default(handler.user['uname'], true) }} <span class="icon icon-expand_more nojs--hide"></span></a>
+        {% set _nav_rank = vj4.model.builtin.get_rating_rank(handler.domain_user.get('rating')) %}
+        <a href="{{ reverse_url('user_detail', uid=handler.user['_id']) }}" class="nav__item"><span{% if _nav_rank %} class="user-rated--{{ _nav_rank['slug'] }}"{% endif %}>{{ handler.domain_user['display_name']|default(handler.user['uname'], true) }}</span> <span class="icon icon-expand_more nojs--hide"></span></a>
         <ol class="dropdown-target menu" id="menu-nav-user">
           <li class="menu__item">
             <a href="{{ reverse_url('user_detail', uid=handler.user['_id']) }}" class="menu__link">
