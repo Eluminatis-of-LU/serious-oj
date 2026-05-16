@@ -1,3 +1,4 @@
+import os
 import motor.motor_asyncio
 import functools
 import yarl
@@ -5,6 +6,8 @@ from pymongo.operations import UpdateOne, UpdateMany, InsertOne, DeleteOne, Dele
 
 from vj4.util import options
 
+# Defining the new db_uri configuration option alongside your legacy settings
+options.define('db_uri', default='', help='Full MongoDB connection URI (e.g. mongodb+srv://...)')
 options.define('db_host', default='localhost', help='Database hostname or IP address.')
 options.define('db_port', default=27017, help='Database port.')
 options.define('db_name', default='test', help='Database name.')
@@ -107,17 +110,23 @@ class MotorCollectionWrapper:
 async def init():
   global _client, _db
 
-  query = dict()
-  if options.db_auth_source:
-    query['authSource'] = options.db_auth_source
-  url = yarl.URL.build(scheme='mongodb',
-                       host=options.db_host,
-                       path='/' + options.db_name,
-                       port=options.db_port,
-                       user=options.db_username if options.db_username else None,
-                       password=options.db_password if options.db_password else None,
-                       query=query)
-  _client = motor.motor_asyncio.AsyncIOMotorClient(str(url))
+  # If the defined db_uri option has a value, use it directly
+  if options.db_uri:
+    _client = motor.motor_asyncio.AsyncIOMotorClient(options.db_uri)
+  else:
+    # Fall back to building the connection string dynamically from discrete elements
+    query = dict()
+    if options.db_auth_source:
+      query['authSource'] = options.db_auth_source
+    url = yarl.URL.build(scheme='mongodb',
+                         host=options.db_host,
+                         path='/' + options.db_name,
+                         port=options.db_port,
+                         user=options.db_username if options.db_username else None,
+                         password=options.db_password if options.db_password else None,
+                         query=query)
+    _client = motor.motor_asyncio.AsyncIOMotorClient(str(url))
+
   _db = _client.get_default_database()
   
   # Verify connection by pinging the database

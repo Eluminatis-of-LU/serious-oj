@@ -23,10 +23,6 @@ on:
         description: 'Docker image tag'
         required: false
         default: 'latest'
-      db_name:
-        description: 'Database name (VJ_DB_NAME)'
-        required: false
-        default: 'serious-oj-buddy'
 
 jobs:
   deploy:
@@ -38,6 +34,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
 
       - name: Setup SSH
         run: |
@@ -57,10 +54,8 @@ jobs:
         run: |
           scp -P ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no serious-oj-buddy.tar ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }}:/tmp/serious-oj-buddy.tar
 
-      - name: Deploy via Podman on Server
+      - name: Deploy via Podman Compose on Server
         run: |
-          DB_NAME="${{ github.event.inputs.db_name || 'serious-oj-buddy' }}"
-
           ssh -p ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }} <<EOF
             # Load the newly built image into the local registry
             podman load -i /tmp/serious-oj-buddy.tar
@@ -70,28 +65,14 @@ jobs:
             export XDG_RUNTIME_DIR=/run/user/\$(id -u)
             export DBUS_SESSION_BUS_ADDRESS=unix:path=\$XDG_RUNTIME_DIR/bus
 
-            # 1. Force drop the old app container using raw podman (ignores python errors)
-            # Podman-compose names the containers with a prefix, e.g., db-mq_serious-oj-buddy_1
-            podman rm -f db-mq_serious-oj-buddy_1 || true
-            podman rm -f serious-oj-buddy || true
+            # Navigate to your compose project folder where your compose definitions sit
+            cd ~/db-mq
 
-            # 2. Spin up the fresh container with the newly loaded image.
-            # We connect it straight into the bridge network managed by your compose setup!
-            podman run -d \
-              --name db-mq_serious-oj-buddy_1 \
-              --label io.podman.compose.project=db-mq \
-              --label com.docker.compose.service=serious-oj-buddy \
-              --restart unless-stopped \
-              -p 8888:8888 \
-              -v /home/${{ github.event.inputs.server_user }}/buddydata/run:/var/run/vj4:Z \
-              --net db-mq_serious-oj-buddy-network \
-              --network-alias serious-oj-buddy \
-              -e VJ_DB_HOST=mongodb-buddy \
-              -e VJ_DB_PORT=27017 \
-              -e VJ_DB_NAME="\$DB_NAME" \
-              -e VJ_MQ_HOST=rabbitmq-buddy \
-              localhost/serious-oj-buddy:latest \
-              vj4.server
+            # Tear down old local instances cleanly to ensure clean resource allocation
+            podman-compose down || true
+
+            # Boot your engine with options.db_uri configuration parameters active
+            podman-compose up -d
 
             # Clean up dangling images to save disk space on the staging machine
             podman image prune -f
