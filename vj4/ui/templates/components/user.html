@@ -6,7 +6,7 @@
   modbadge=true,
   country=false
 ) %}
-{% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating')) %}
+{% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating') if dudoc else none) %}
 <span class="user-profile-link">
 {% if avatar %}
   <img class="small user-profile-avatar v-center" src="{{ udoc['gravatar']|default('')|gravatar_url }}" width="20" height="20">

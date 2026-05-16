@@ -11,7 +11,7 @@
               <img src="{{ udoc['gravatar']|gravatar_url }}" width="120" height="120" class="large user-profile-avatar">
             </div>
             <div class="media__body profile-header__main">
-              {% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating')) %}
+              {% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating') if dudoc else none) %}
               <h1>
                 <span{% if _rank %} class="user-rated--{{ _rank['slug'] }}"{% endif %}>
                 {% if dudoc['display_name'] %}
