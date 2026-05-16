@@ -1,0 +1,85 @@
+name: Deploy to VM
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'master'
+      server_user:
+        description: 'Server SSH user'
+        required: true
+        default: 'deploy-user'
+      server_port:
+        description: 'Server SSH port'
+        required: false
+        default: '22'
+      docker_image:
+        description: 'Docker image name'
+        required: false
+        default: 'serious-oj-buddy'
+      docker_tag:
+        description: 'Docker image tag'
+        required: false
+        default: 'latest'
+      db_name:
+        description: 'Database name (VJ_DB_NAME)'
+        required: false
+        default: 'serious-oj-buddy'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Uses the secret SERVER_IP here
+          ssh-keyscan -p ${{ github.event.inputs.server_port }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Build container image
+        run: podman build -t ${{ github.event.inputs.docker_image }}:${{ github.event.inputs.docker_tag }} .
+
+      - name: Save container image
+        run: podman save ${{ github.event.inputs.docker_image }}:${{ github.event.inputs.docker_tag }} -o serious-oj-buddy.tar
+
+      - name: Transfer image to server
+        run: |
+          # Uses the secret SERVER_IP here
+          scp -P ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no serious-oj-buddy.tar ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }}:/tmp/serious-oj-buddy.tar
+
+      - name: Deploy via Podman Compose on Server
+        run: |
+          DB_NAME="${{ github.event.inputs.db_name || 'serious-oj-buddy' }}"
+
+          # Uses the secret SERVER_IP here
+          ssh -p ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }} <<EOF
+            # Load the newly built image into the local registry
+            podman load -i /tmp/serious-oj-buddy.tar
+            rm -f /tmp/serious-oj-buddy.tar
+
+            # Fix systemd dbus session environment variables for rootless systemd manager
+            export XDG_RUNTIME_DIR=/run/user/\$(id -u)
+            export DBUS_SESSION_BUS_ADDRESS=unix:path=\$XDG_RUNTIME_DIR/bus
+
+            # Navigate to your compose project folder where your compose definitions sit
+            cd ~/db-mq
+
+            # Bring down the old service instance and cleanly boot up with the newly pulled image layers
+            podman-compose down serious-oj-buddy || true
+            podman-compose up -d serious-oj-buddy
+
+            # Clean up dangling images to save disk space on the staging machine
+            podman image prune -f
+          EOF
