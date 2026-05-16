@@ -82,6 +82,18 @@ async def get_user_rating(domain_id: str, uid: int):
 
 
 @argmethod.wrap
+async def get_user_max_rating(domain_id: str, uid: int):
+    """Return the user's highest ever rating, or None if they have no rating history."""
+    coll = db.coll("rating_changes")
+    doc = await coll.find_one(
+        {"domain_id": domain_id, "uid": uid},
+        {"new_rating": 1},
+        sort=[("new_rating", -1)],
+    )
+    return doc["new_rating"] if doc else None
+
+
+@argmethod.wrap
 async def list(**kwargs):
     coll = db.coll("rating")
     return await coll.find({**kwargs}).to_list()

@@ -14,6 +14,7 @@ from vj4.model import document
 from vj4.model import domain
 from vj4.model import fs
 from vj4.model import opcount
+from vj4.model import rating
 from vj4.model import system
 from vj4.model import user
 from vj4.test import base
@@ -394,6 +395,21 @@ class OpcountTest(base.DatabaseTestCase):
     time.time = lambda: 1
     await opcount.inc(OP1, IDENT, 1, 1)
     await opcount.inc(OP2, IDENT, 1, 2)
+
+
+class RatingTest(base.DatabaseTestCase):
+  @base.wrap_coro
+  async def test_get_user_max_rating(self):
+    await db.coll('rating_changes').insert_many([
+        {'domain_id': DOMAIN_ID, 'uid': UID, 'rating_id': objectid.ObjectId(), 'new_rating': 1500},
+        {'domain_id': DOMAIN_ID, 'uid': UID, 'rating_id': objectid.ObjectId(), 'new_rating': 1720},
+        {'domain_id': DOMAIN_ID, 'uid': UID, 'rating_id': objectid.ObjectId(), 'new_rating': 1610},
+    ])
+    self.assertEqual(await rating.get_user_max_rating(DOMAIN_ID, UID), 1720)
+
+  @base.wrap_coro
+  async def test_get_user_max_rating_no_history(self):
+    self.assertIsNone(await rating.get_user_max_rating(DOMAIN_ID, UID))
 
 
 if __name__ == '__main__':
