@@ -68,10 +68,10 @@ jobs:
             # Navigate to your compose project folder where your compose definitions sit
             cd ~/db-mq
 
-            # Bring down the entire stack using global file context to avoid the python bug
+            # Tear down old local instances cleanly to ensure clean resource allocation
             podman-compose down || true
 
-            # Boot the stack back up. Podman-compose cleanly maps the internal shared bridge network
+            # Boot your engine with options.db_uri configuration parameters active
             podman-compose up -d
 
             # Clean up dangling images to save disk space on the staging machine
