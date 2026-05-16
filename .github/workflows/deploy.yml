@@ -44,6 +44,11 @@ jobs:
           ssh-keyscan -p ${{ github.event.inputs.server_port }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: Patch Version Script Runtime Fallback
+        run: |
+          # Swap out 'unknown' for the actual input branch name before building the image
+          sed -i "s/return 'unknown'/return '${{ github.event.inputs.branch }}'/g" vj4/util/version.py
+
       - name: Build container image
         run: podman build -t ${{ github.event.inputs.docker_image }}:${{ github.event.inputs.docker_tag }} .
 
@@ -56,24 +61,24 @@ jobs:
 
       - name: Deploy via Podman Compose on Server
         run: |
-          ssh -p ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }} <<EOF
+          ssh -p ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }} << 'EOF'
             # Load the newly built image into the local registry
             podman load -i /tmp/serious-oj-buddy.tar
             rm -f /tmp/serious-oj-buddy.tar
 
             # Fix systemd dbus session environment variables for rootless systemd manager
-            export XDG_RUNTIME_DIR=/run/user/\$(id -u)
-            export DBUS_SESSION_BUS_ADDRESS=unix:path=\$XDG_RUNTIME_DIR/bus
+            export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+            export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
 
-            # Navigate to your compose project folder where your compose definitions sit
+            # Navigate to your compose project folder
             cd ~/db-mq
 
-            # Tear down old local instances cleanly to ensure clean resource allocation
+            # Tear down old local instances cleanly
             podman-compose down || true
 
-            # Boot your engine with options.db_uri configuration parameters active
+            # Boot your engine
             podman-compose up -d
 
-            # Clean up dangling images to save disk space on the staging machine
+            # Clean up dangling images to save disk space
             podman image prune -f
           EOF
