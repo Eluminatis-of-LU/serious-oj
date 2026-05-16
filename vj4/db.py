@@ -26,6 +26,11 @@ class BulkOperationBuilder:
     self._filter = None
     self._upsert = False
 
+  def insert(self, document):
+    """Add an insert_one operation."""
+    self.operations.append(InsertOne(document))
+    return self
+
   def find(self, filter_spec):
     """Set the filter for the next operation."""
     self._filter = filter_spec

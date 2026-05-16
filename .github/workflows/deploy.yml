@@ -46,8 +46,8 @@ jobs:
 
       - name: Patch Version Script Runtime Fallback
         run: |
-          # Swap out 'unknown' for the actual input branch name before building the image
-          sed -i "s/return 'unknown'/return '${{ github.event.inputs.branch }}'/g" vj4/util/version.py
+          # Uses '|' as a delimiter to safely handle branch names containing forward slashes '/'
+          sed -i "s|return 'unknown'|return '${{ github.event.inputs.branch }}'|g" vj4/util/version.py
 
       - name: Build container image
         run: podman build -t ${{ github.event.inputs.docker_image }}:${{ github.event.inputs.docker_tag }} .
@@ -62,6 +62,9 @@ jobs:
       - name: Deploy via Podman Compose on Server
         run: |
           ssh -p ${{ github.event.inputs.server_port }} -o StrictHostKeyChecking=no ${{ github.event.inputs.server_user }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Fail the script if any remote command errors out
+            set -e
+
             # Load the newly built image into the local registry
             podman load -i /tmp/serious-oj-buddy.tar
             rm -f /tmp/serious-oj-buddy.tar
