@@ -70,13 +70,14 @@ jobs:
             export XDG_RUNTIME_DIR=/run/user/\$(id -u)
             export DBUS_SESSION_BUS_ADDRESS=unix:path=\$XDG_RUNTIME_DIR/bus
 
-            # 1. Force drop the old app container using raw podman (ignores python errors)
-            # Podman-compose names the containers with a prefix, e.g., db-mq_serious-oj-buddy_1
+            # Ensure host system volume directories exist before running podman
+            mkdir -p /home/${{ github.event.inputs.server_user }}/buddydata/run
+
+            # Force drop the old app container instances
             podman rm -f db-mq_serious-oj-buddy_1 || true
             podman rm -f serious-oj-buddy || true
 
-            # 2. Spin up the fresh container with the newly loaded image.
-            # We connect it straight into the bridge network managed by your compose setup!
+            # Spin up the fresh container with the newly loaded image.
             podman run -d \
               --name db-mq_serious-oj-buddy_1 \
               --label io.podman.compose.project=db-mq \
