@@ -20,6 +20,7 @@ from vj4.model.adaptor import contest
 from vj4.model.adaptor import problem
 from vj4.model.adaptor import clarification
 from vj4.handler import base
+from vj4.util import misc
 from vj4.util import pagination
 
 
@@ -241,10 +242,12 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
         if pid not in tdoc["pids"]:
             raise error.ProblemNotFoundError(
                 self.domain_id, pid, tdoc["doc_id"])
+        problem_letter = misc.problem_label(tdoc["pids"].index(pid))
+        problem_label_title = "{0}. {1}".format(problem_letter, pdoc["title"])
         path_components = self.build_path(
             (self.translate("contest_main"), self.reverse_url("contest_main")),
             (tdoc["title"], self.reverse_url("contest_detail", tid=tid)),
-            (pdoc["title"], None),
+            (problem_label_title, None),
         )
         self.render(
             "problem_detail.html",
@@ -254,7 +257,7 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
             udoc=udoc,
             attended=attended,
             dudoc=dudoc,
-            page_title=pdoc["title"],
+            page_title=problem_label_title,
             path_components=path_components,
         )
 
