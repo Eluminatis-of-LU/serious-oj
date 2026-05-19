@@ -642,5 +642,22 @@ class CfContestEditTest(base.DatabaseTestCase):
     self.assertEqual(tdoc['cf_max_scores'], [500, 1000, 1500])
 
 
+class ContestElapsedStrTest(unittest.TestCase):
+  def test_zero_when_at_start(self):
+    rid = objectid.ObjectId.from_datetime(NOW)
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '00:00:00')
+
+  def test_formats_elapsed(self):
+    rid = objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=3725))
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '01:02:05')
+
+  def test_empty_when_rid_missing(self):
+    self.assertEqual(contest._contest_elapsed_str(None, NOW), '')
+
+  def test_clamps_negative_to_zero(self):
+    rid = objectid.ObjectId.from_datetime(NOW - datetime.timedelta(seconds=10))
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '00:00:00')
+
+
 if __name__ == '__main__':
   unittest.main()

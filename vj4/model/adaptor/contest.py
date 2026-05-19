@@ -23,6 +23,18 @@ from vj4.util import validator
 
 journal_key_func = lambda j: j['rid']
 
+
+def _contest_elapsed_str(rid, begin_at):
+  """Formatted solve time (HH:MM:SS) relative to contest start.
+
+  Returns '' when rid is missing. Negative elapsed is clamped to zero.
+  """
+  if rid is None:
+    return ''
+  elapsed = (rid.generation_time.replace(tzinfo=None) - begin_at).total_seconds()
+  return misc.format_seconds(max(0, elapsed))
+
+
 Rule = collections.namedtuple('Rule', ['show_record_func',
                                        'show_scoreboard_func',
                                        'stat_func',
