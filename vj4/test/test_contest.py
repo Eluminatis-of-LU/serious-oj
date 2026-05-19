@@ -696,5 +696,38 @@ class CfScoreboardTest(unittest.TestCase):
     self.assertEqual(cell['state'], 'none')
 
 
+class AcmScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': None}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._acm_stat(TDOC, journal)}
+    return contest._acm_scoreboard(False, lambda s: s, TDOC,
+                                   [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters(self):
+    headers = [c for c in self._rows([SUBMIT_777_AC])[0]
+               if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+
+  def test_accepted_cell_shows_raw_solve_time(self):
+    # row layout: rank, user, solved_problems, total_time_str, A, B, C
+    cell = self._rows([SUBMIT_777_AC])[1][4]  # cell A
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '00:00:02')  # SUBMIT_777_AC rid is +2s
+    self.assertEqual(cell['naccept'], 0)
+
+  def test_failed_cell_shows_minus(self):
+    cell = self._rows([SUBMIT_777_NAC])[1][4]
+    self.assertEqual(cell['state'], 'fail')
+    self.assertEqual(cell['primary'], '-1')
+
+  def test_user_cell_carries_rating_key(self):
+    self.assertIn('rating', self._rows([SUBMIT_777_AC])[1][1]['dudoc'])
+
+
 if __name__ == '__main__':
   unittest.main()

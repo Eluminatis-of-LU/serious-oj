@@ -223,14 +223,17 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_flag',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
       columns.append({'type': 'problem_time',
-                      'value': '#{0} {1}'.format(index + 1, _('Time (Seconds)'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 _('Time (Seconds)'))})
       columns.append({'type': 'problem_time_str',
-                      'value': '#{0} {1}'.format(index + 1, _('Time'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 _('Time'))})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
   for rank, tsdoc in ranked_tsdocs:
@@ -242,10 +245,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}, 
-                })
-    row.append({'type': 'string',
-                'value': tsdoc.get('accept', 0)})
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
+    row.append({'type': 'string', 'value': tsdoc.get('accept', 0)})
     if is_export:
       row.append({'type': 'string', 'value': tsdoc.get('time', 0.0)})
     row.append({'type': 'string', 'value': misc.format_seconds(tsdoc.get('time', 0.0))})
@@ -259,12 +261,24 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         col_time_str = misc.format_seconds(col_time)
         pstats[pid]['accept'] += 1
         pstats[pid]['attempt'] += tsddict[pid]['naccept'] + 1
+        sb_cell = {'state': 'accept',
+                   'primary': _contest_elapsed_str(rdoc, tdoc['begin_at']),
+                   'secondary': '', 'naccept': tsddict[pid]['naccept']}
       else:
         rdoc = None
         col_accepted = ''
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
         if pid in tsddict:
-          col_accepted = ('?' if tsddict[pid].get('status_unknown', False) else '-') + str(tsddict[pid]['naccept'])
+          unknown = tsddict[pid].get('status_unknown', False)
+          col_accepted = ('?' if unknown else '-') + str(tsddict[pid]['naccept'])
           pstats[pid]['attempt'] += tsddict[pid]['naccept']
+          if unknown:
+            sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '',
+                       'naccept': tsddict[pid]['naccept']}
+          else:
+            sb_cell = {'state': 'fail',
+                       'primary': '-{0}'.format(tsddict[pid]['naccept']),
+                       'secondary': '', 'naccept': 0}
         col_time = ''
         col_time_str = ''
       if is_export:
@@ -273,13 +287,13 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         row.append({'type': 'string', 'value': col_time_str})
       else:
         row.append({'type': 'record',
-                    'value': '{0}\n{1}'.format(col_accepted, col_time_str), 'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid})
+                    'value': '{0}\n{1}'.format(col_accepted, col_time_str),
+                    'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid, **sb_cell})
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':
       pid = column['raw']['doc_id']
       column['stats'] = '{0}/{1}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
-      
   return rows
 
 
