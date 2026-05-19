@@ -392,16 +392,16 @@ def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdi
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), pdict[pid]['title'])})
       columns.append({'type': 'problem_original_score',
-                      'value': '#{0} {1}'.format(index + 1, _('Original Score'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Original Score'))})
       columns.append({'type': 'problem_time',
-                      'value': '#{0} {1}'.format(index + 1, _('Time (Seconds)'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Time (Seconds)'))})
       columns.append({'type': 'problem_time_str',
-                      'value': '#{0} {1}'.format(index + 1, _('Time'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Time'))})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   for rank, tsdoc in ranked_tsdocs:
     if 'detail' in tsdoc:
