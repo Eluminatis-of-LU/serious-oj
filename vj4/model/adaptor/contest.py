@@ -183,10 +183,11 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   for rank, tsdoc in ranked_tsdocs:
     if 'detail' in tsdoc:
@@ -197,17 +198,30 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')},
-              })
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
-      if tsddict.get(pid, {}).get('status_unknown', False):
+      cell = tsddict.get(pid)
+      if cell is None:
+        col_score = '-'
+        rdoc = None
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
+      elif cell.get('status_unknown', False):
         col_score = '?'
+        rdoc = cell.get('rid')
+        sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '', 'naccept': 0}
       else:
-        col_score = tsddict.get(pid, {}).get('score', '-')
-      row.append({'type': 'record',
-                  'value': col_score,
-                  'raw': tsddict.get(pid, {}).get('rid', None)})
+        col_score = cell.get('score', '-')
+        rdoc = cell.get('rid')
+        sb_cell = {'state': 'accept', 'primary': str(cell.get('score', 0)),
+                   'secondary': _contest_elapsed_str(cell.get('rid'), tdoc['begin_at']),
+                   'naccept': 0}
+      if is_export:
+        row.append({'type': 'string', 'value': col_score})
+      else:
+        row.append({'type': 'record', 'value': col_score, 'raw': rdoc,
+                    'uid': tsdoc['uid'], 'pid': pid, **sb_cell})
     rows.append(row)
   return rows
 

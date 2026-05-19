@@ -729,5 +729,37 @@ class AcmScoreboardTest(unittest.TestCase):
     self.assertIn('rating', self._rows([SUBMIT_777_AC])[1][1]['dudoc'])
 
 
+class OiScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': 2400}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._oi_stat(TDOC, journal)}
+    return contest._oi_scoreboard(False, lambda s: s, TDOC,
+                                  [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters_without_score(self):
+    headers = [c for c in self._rows([SUBMIT_777_AC])[0]
+               if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+    self.assertNotIn('score', headers[0])  # OI has no stored per-problem max
+
+  def test_scored_cell_is_structured(self):
+    # row layout: rank, user, total_score, A, B, C  -> cell A is index 3
+    cell = self._rows([SUBMIT_777_AC])[1][3]
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '22')  # SUBMIT_777_AC score is 22
+    self.assertEqual(cell['secondary'], '00:00:02')
+
+  def test_untried_cell_is_none(self):
+    self.assertEqual(self._rows([SUBMIT_777_AC])[1][4]['state'], 'none')
+
+  def test_user_cell_carries_rating(self):
+    self.assertEqual(self._rows([SUBMIT_777_AC])[1][1]['dudoc']['rating'], 2400)
+
+
 if __name__ == '__main__':
   unittest.main()
