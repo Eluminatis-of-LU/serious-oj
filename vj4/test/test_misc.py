@@ -12,5 +12,22 @@ class Test(unittest.TestCase):
     self.assertListEqual(misc.dedupe([0]),[0])
 
 
+class ProblemLabelTest(unittest.TestCase):
+  def test_first_letters(self):
+    self.assertEqual(misc.problem_label(0), 'A')
+    self.assertEqual(misc.problem_label(1), 'B')
+    self.assertEqual(misc.problem_label(25), 'Z')
+
+  def test_double_letters(self):
+    self.assertEqual(misc.problem_label(26), 'AA')
+    self.assertEqual(misc.problem_label(27), 'AB')
+    self.assertEqual(misc.problem_label(51), 'AZ')
+    self.assertEqual(misc.problem_label(52), 'BA')
+
+  def test_rejects_negative(self):
+    with self.assertRaises(ValueError):
+      misc.problem_label(-1)
+
+
 if __name__ == '__main__':
   unittest.main()

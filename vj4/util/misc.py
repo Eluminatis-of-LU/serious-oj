@@ -101,5 +101,21 @@ def format_memory_limit(str):
 def format_time_limit(str):
   time_limit_ms = int(str)
   time_limit_s = round(time_limit_ms / 1000, 2)
-  return '{0} s'.format(time_limit_s) 
-  
+  return '{0} s'.format(time_limit_s)
+
+
+def problem_label(index):
+  """Convert a 0-based problem index to a spreadsheet-style letter label.
+
+  0 -> 'A', 25 -> 'Z', 26 -> 'AA', 27 -> 'AB', ...
+  """
+  index = int(index)
+  if index < 0:
+    raise ValueError('problem index must be non-negative')
+  label = ''
+  index += 1
+  while index > 0:
+    index, remainder = divmod(index - 1, 26)
+    label = chr(ord('A') + remainder) + label
+  return label
+

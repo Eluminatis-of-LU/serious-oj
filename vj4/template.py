@@ -44,3 +44,4 @@ class Environment(jinja2.Environment):
     self.filters['base64_encode'] = misc.base64_encode
     self.filters['format_memory_limit'] = misc.format_memory_limit
     self.filters['format_time_limit'] = misc.format_time_limit
+    self.filters['problem_label'] = misc.problem_label
