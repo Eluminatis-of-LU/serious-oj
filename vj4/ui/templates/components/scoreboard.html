@@ -1,0 +1,15 @@
+{% macro render_cell(cell, tid) %}
+{%- if cell['state'] == 'none' -%}
+  <span class="sb-cell sb-cell--none">&middot;</span>
+{%- else -%}
+  <a class="sb-cell sb-cell--{{ cell['state'] }}"
+     href="{{ reverse_url('record_main') }}?uid_or_name={{ cell['uid'] }}&pid={{ cell['pid'] }}&tid={{ tid }}">
+    <span class="sb-cell__primary">{{ cell['primary'] }}</span>
+    {%- if cell['secondary'] or cell['naccept'] -%}
+    <span class="sb-cell__secondary">{{- cell['secondary'] -}}
+      {%- if cell['naccept'] %} <span class="sb-cell__chip">+{{ cell['naccept'] }}</span>{% endif -%}
+    </span>
+    {%- endif -%}
+  </a>
+{%- endif -%}
+{% endmacro %}

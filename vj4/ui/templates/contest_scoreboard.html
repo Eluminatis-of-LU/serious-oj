@@ -1,5 +1,6 @@
 {% extends "layout/basic.html" %}
 {% block content %}
+{% import "components/scoreboard.html" as scoreboard with context %}
 <div class="row"><div class="medium-12 columns">
   <div class="section visible">
     <div class="section__header">
@@ -65,6 +66,8 @@
               <td class="col--{{ rows[0][loop.index0]['type'] }}">
               {% if column['type'] == 'user' %}
                 {{ user.render_inline(column['raw'], column['dudoc'], badge=false, avatar=false, country=true) }}
+              {% elif column['type'] == 'record' and column.get('state') %}
+                {{ scoreboard.render_cell(column, tdoc['doc_id']) }}
               {% elif column['type'] == 'record' %}
                 {% if column.get('accept') %}
                   {% set record_color = 'pass' %}
