@@ -288,13 +288,18 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns.append({'type': 'rank', 'value': _('Rank')})
   columns.append({'type': 'user', 'value': _('User')})
   columns.append({'type': 'total_score', 'value': _('Total Score')})
+  cf_max_scores = tdoc.get('cf_max_scores', [])
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
     else:
-      columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+      column = {'type': 'problem_detail',
+                'value': misc.problem_label(index), 'raw': pdict[pid]}
+      if index < len(cf_max_scores):
+        column['score'] = cf_max_scores[index]
+      columns.append(column)
   rows = [columns]
   pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
   for rank_, tsdoc in ranked_tsdocs:
@@ -303,33 +308,42 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank_})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}})
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
       cell = tsddict.get(pid)
-      accepted = False
       if cell is None:
         col_value = '-'
         rdoc = None
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
       elif cell.get('status_unknown'):
         col_value = '?'
         rdoc = cell.get('rid')
         pstats[pid]['attempt'] += cell.get('naccept', 0)
+        sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '',
+                   'naccept': cell.get('naccept', 0)}
       elif cell.get('accept'):
         col_value = cell['score']
         rdoc = cell.get('rid')
-        accepted = True
         pstats[pid]['accept'] += 1
         pstats[pid]['attempt'] += cell.get('naccept', 0) + 1
+        sb_cell = {'state': 'accept', 'primary': str(cell['score']),
+                   'secondary': _contest_elapsed_str(cell.get('rid'), tdoc['begin_at']),
+                   'naccept': cell.get('naccept', 0)}
       else:
         col_value = '-{0}'.format(cell.get('naccept', 0))
         rdoc = cell.get('rid')
         pstats[pid]['attempt'] += cell.get('naccept', 0)
+        sb_cell = {'state': 'fail', 'primary': '-{0}'.format(cell.get('naccept', 0)),
+                   'secondary': '', 'naccept': 0}
       if is_export:
         row.append({'type': 'string', 'value': col_value})
       else:
         row.append({'type': 'record', 'value': col_value, 'raw': rdoc,
-                    'uid': tsdoc['uid'], 'pid': pid, 'accept': accepted})
+                    'uid': tsdoc['uid'], 'pid': pid,
+                    'accept': cell is not None and bool(cell.get('accept')),
+                    **sb_cell})
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':

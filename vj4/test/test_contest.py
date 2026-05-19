@@ -659,5 +659,42 @@ class ContestElapsedStrTest(unittest.TestCase):
     self.assertEqual(contest._contest_elapsed_str(rid, NOW), '00:00:00')
 
 
+class CfScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': 1850}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._cf_stat(CFTDOC, journal)}
+    return contest._cf_scoreboard(False, lambda s: s, CFTDOC,
+                                  [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters_and_scores(self):
+    rows = self._rows([CF_777_AC_T0])
+    headers = [c for c in rows[0] if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+    self.assertEqual([h['score'] for h in headers], [500, 1000, 1500])
+
+  def test_user_cell_carries_rating(self):
+    rows = self._rows([CF_777_AC_T0])
+    self.assertEqual(rows[1][1]['dudoc']['rating'], 1850)
+
+  def test_accepted_cell_is_structured(self):
+    # row layout: rank, user, total_score, A, B, C  -> cell A is index 3
+    cell = self._rows([CF_777_AC_T0])[1][3]
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '500')
+    self.assertEqual(cell['secondary'], '00:00:00')
+    self.assertEqual(cell['naccept'], 0)
+    self.assertEqual(cell['uid'], 44)
+    self.assertEqual(cell['pid'], 777)
+
+  def test_untried_cell_is_none(self):
+    cell = self._rows([CF_777_AC_T0])[1][4]  # pid 778, never submitted
+    self.assertEqual(cell['state'], 'none')
+
+
 if __name__ == '__main__':
   unittest.main()
