@@ -503,12 +503,12 @@ LEVELS = collections.OrderedDict([(10, 1),
 # minimum rating for a tier. See get_rating_rank().
 RATING_RANKS = [
     {'slug': 'novice',     'name': 'Novice',     'threshold': 0},
-    {'slug': 'apprentice', 'name': 'Apprentice', 'threshold': 1100},
-    {'slug': 'specialist', 'name': 'Specialist', 'threshold': 1400},
-    {'slug': 'expert',     'name': 'Expert',     'threshold': 1700},
-    {'slug': 'master',     'name': 'Master',     'threshold': 2000},
-    {'slug': 'elite',      'name': 'Elite',      'threshold': 2300},
-    {'slug': 'legend',     'name': 'Legend',     'threshold': 2600},
+    {'slug': 'apprentice', 'name': 'Apprentice', 'threshold': 200},
+    {'slug': 'specialist', 'name': 'Specialist', 'threshold': 400},
+    {'slug': 'expert',     'name': 'Expert',     'threshold': 600},
+    {'slug': 'master',     'name': 'Master',     'threshold': 800},
+    {'slug': 'elite',      'name': 'Elite',      'threshold': 1000},
+    {'slug': 'legend',     'name': 'Legend',     'threshold': 1200},
 ]
 
 

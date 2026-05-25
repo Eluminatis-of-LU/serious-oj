@@ -17,18 +17,18 @@ class GetRatingRankTest(unittest.TestCase):
 
   def test_tier_boundaries(self):
     cases = [
-        (1099, 'novice'),
-        (1100, 'apprentice'),
-        (1399, 'apprentice'),
-        (1400, 'specialist'),
-        (1699, 'specialist'),
-        (1700, 'expert'),
-        (1999, 'expert'),
-        (2000, 'master'),
-        (2299, 'master'),
-        (2300, 'elite'),
-        (2599, 'elite'),
-        (2600, 'legend'),
+        (199,  'novice'),
+        (200,  'apprentice'),
+        (399,  'apprentice'),
+        (400,  'specialist'),
+        (599,  'specialist'),
+        (600,  'expert'),
+        (799,  'expert'),
+        (800,  'master'),
+        (999,  'master'),
+        (1000, 'elite'),
+        (1199, 'elite'),
+        (1200, 'legend'),
     ]
     for rating, expected in cases:
       self.assertEqual(self._slug(rating), expected, msg='rating=%d' % rating)
@@ -37,7 +37,7 @@ class GetRatingRankTest(unittest.TestCase):
     self.assertEqual(self._slug(9999), 'legend')
 
   def test_returns_name_and_slug(self):
-    rank = builtin.get_rating_rank(1750)
+    rank = builtin.get_rating_rank(650)
     self.assertEqual(rank['slug'], 'expert')
     self.assertEqual(rank['name'], 'Expert')
 
