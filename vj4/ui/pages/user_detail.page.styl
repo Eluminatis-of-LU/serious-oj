@@ -64,9 +64,14 @@
       color: rgba(#000, 0.8) !important
 
   .profile-header__main
+    background: rgba(15, 20, 30, 0.55)
+    padding: rem(14px 20px)
+    border-radius: rem(4px)
+
     h1
       line-height: 40px
       color: #FFF
+      margin: 0
 
     p
       line-height: 30px
@@ -74,6 +79,17 @@
 
     small
       color: rgba(#FFF, 0.8)
+
+    .profile-header__rank
+      font-size: rem(12px)
+      font-weight: bold
+      letter-spacing: rem(0.5px)
+      text-transform: uppercase
+      line-height: 1.8
+
+    for slug, _ in $rating-color
+      .user-rated--{slug}
+        color: lighten($rating-color[slug], 25%) !important
 
   .profile-content
     position: relative

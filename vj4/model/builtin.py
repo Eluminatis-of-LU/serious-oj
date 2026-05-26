@@ -503,6 +503,33 @@ LEVELS = collections.OrderedDict([(10, 1),
                                   (2, 95),
                                   (1, 100)])
 
+# Rating rank tiers, ordered low to high. `threshold` is the inclusive
+# minimum rating for a tier. See get_rating_rank().
+RATING_RANKS = [
+    {'slug': 'novice',     'name': 'Novice',     'threshold': 0},
+    {'slug': 'apprentice', 'name': 'Apprentice', 'threshold': 200},
+    {'slug': 'specialist', 'name': 'Specialist', 'threshold': 400},
+    {'slug': 'expert',     'name': 'Expert',     'threshold': 600},
+    {'slug': 'master',     'name': 'Master',     'threshold': 800},
+    {'slug': 'elite',      'name': 'Elite',      'threshold': 1000},
+    {'slug': 'legend',     'name': 'Legend',     'threshold': 1200},
+]
+
+
+def get_rating_rank(rating):
+  """Map an absolute rating to its rank tier.
+
+  Returns the matching RATING_RANKS entry, or None when the user has no
+  rating yet (Unrated). Any non-None rating yields at least 'novice'.
+  """
+  if rating is None:
+    return None
+  result = RATING_RANKS[0]
+  for info in RATING_RANKS:
+    if rating >= info['threshold']:
+      result = info
+  return result
+
 # Footer extra HTMLs. TODO(iceboy): remove.
 FOOTER_EXTRA_HTMLS = ['© <a href="https://github.com/Eluminatis-of-LU/serious-oj">SeriousOJ</a> Forked from © 2005 - 2023 <a href="https://vijos.org/">Vijos.org</a>',
                       '<a href=https://github.com/Eluminatis-of-LU/serious-oj/commit/' + version.get()[:7] + '/>' + version.get()[:7] + '</a>']
