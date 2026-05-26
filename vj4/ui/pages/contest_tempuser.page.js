@@ -1,25 +1,6 @@
 import { NamedPage } from 'vj/misc/PageLoader';
 
 const page = new NamedPage('contest_tempuser', () => {
-  // Copy password to clipboard
-  window.copyPassword = function (button) {
-    const password = button.getAttribute('data-password');
-    const feedback = button.nextElementSibling;
-
-    // Try using modern Clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(password).then(() => {
-        showCopyFeedback(feedback);
-      }).catch(err => {
-        // Fallback if Clipboard API fails
-        fallbackCopyToClipboard(password, feedback);
-      });
-    } else {
-      // Fallback for older browsers
-      fallbackCopyToClipboard(password, feedback);
-    }
-  };
-
   function showCopyFeedback(feedback) {
     feedback.classList.add('show');
     setTimeout(() => {
@@ -42,6 +23,25 @@ const page = new NamedPage('contest_tempuser', () => {
     }
     document.body.removeChild(textArea);
   }
+
+  // Copy password to clipboard
+  window.copyPassword = function (button) {
+    const password = button.getAttribute('data-password');
+    const feedback = button.nextElementSibling;
+
+    // Try using modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(password).then(() => {
+        showCopyFeedback(feedback);
+      }).catch(err => {
+        // Fallback if Clipboard API fails
+        fallbackCopyToClipboard(password, feedback);
+      });
+    } else {
+      // Fallback for older browsers
+      fallbackCopyToClipboard(password, feedback);
+    }
+  };
 
   // Attach click handlers to copy buttons
   document.querySelectorAll('.copy-password-btn').forEach(btn => {
