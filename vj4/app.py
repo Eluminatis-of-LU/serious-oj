@@ -107,6 +107,7 @@ class Application(web.Application):
     from vj4.handler import clarification
     from vj4.handler.api import announcement
     from vj4.handler.api import contest
+    from vj4.handler.api import user
     if options.static:
       self.router.add_static('/', static_path, name='static')
 

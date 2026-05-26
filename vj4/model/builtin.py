@@ -98,6 +98,9 @@ PERM_EDIT_CLARIFICATION_SELF = 1 << 66
 PERM_DELETE_CLARIFICATION = 1 << 67
 PERM_DELETE_CLARIFICATION_SELF = 1 << 68
 
+# User management.
+PERM_EDIT_USER = 1 << 69
+
 PERM_ALL = -1
 
 Permission = collections.namedtuple('Permission',
@@ -210,6 +213,7 @@ PERMS = [
                'Delete clarification questions'),
     Permission('perm_clarification', PERM_DELETE_CLARIFICATION_SELF,
                'Delete own clarification questions'),
+    Permission('perm_general', PERM_EDIT_USER, 'Edit users'),
 ]
 
 PERMS_BY_FAMILY = collections.OrderedDict(
