@@ -60,7 +60,7 @@ async def _user(uid, bset, uset, dset):
   udoc = await user.get_by_uid(uid)
   if not udoc:
     return
-  _logger.info('user %s', udoc['_id'])
+  _logger.info('processing user')
   await _address(udoc['loginip'], bset, uset, dset)
   async for ddoc in db.coll('document').find({
       'doc_type': document.TYPE_DISCUSSION,
