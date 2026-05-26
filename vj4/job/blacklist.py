@@ -31,7 +31,7 @@ async def _address(ip, bset, uset, dset):
   if ip in bset:
     return
   bset.add(ip)
-  _logger.info("ip %s", ip)
+  _logger.info("processing ip")
   async for udoc in db.coll('user').find({'loginip': ip}, {'_id': 1}):
     await _user(udoc['_id'], bset, uset, dset)
   if not options.dryrun:
@@ -45,7 +45,7 @@ async def _discussion(domain_id, did, bset, uset, dset):
   ddoc = await discussion.get(domain_id, did)
   if not ddoc:
     return
-  _logger.info("discussion %s", ddoc['title'])
+  _logger.info("discussion %s", ddoc['doc_id'])
   await _user(ddoc['owner_uid'], bset, uset, dset)
   if 'ip' in ddoc:
     await _address(ddoc['ip'], bset, uset, dset)
@@ -60,7 +60,7 @@ async def _user(uid, bset, uset, dset):
   udoc = await user.get_by_uid(uid)
   if not udoc:
     return
-  _logger.info('user %s %s', udoc['_id'], udoc['uname'])
+  _logger.info('user %s', udoc['_id'])
   await _address(udoc['loginip'], bset, uset, dset)
   async for ddoc in db.coll('document').find({
       'doc_type': document.TYPE_DISCUSSION,
