@@ -180,3 +180,32 @@ def connection_route(prefix, name, global_route=False):
     return conn
 
   return decorate
+
+
+def _patch_sockjs_for_aiohttp_313():
+  """Suppress ClientConnectionResetError in old sockjs with aiohttp >= 3.13."""
+  try:
+    from aiohttp.client_exceptions import ClientConnectionResetError
+
+    import sockjs.transports.websocket as _ws_transport
+    _orig_ws_server = _ws_transport.WebSocketTransport.server
+    async def _patched_ws_server(self):
+      try:
+        return await _orig_ws_server(self)
+      except ClientConnectionResetError:
+        pass
+    _ws_transport.WebSocketTransport.server = _patched_ws_server
+
+    import sockjs.transports.base as _base_transport
+    _orig_send = _base_transport.Transport.send
+    async def _patched_send(self, text):
+      try:
+        return await _orig_send(self, text)
+      except ClientConnectionResetError:
+        pass
+    _base_transport.Transport.send = _patched_send
+  except Exception:
+    pass
+
+
+_patch_sockjs_for_aiohttp_313()
