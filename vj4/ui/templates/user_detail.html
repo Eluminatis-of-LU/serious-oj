@@ -29,7 +29,7 @@
               {% if _rank %}
                 <p class="profile-header__rating">
                   {{ _('Rating') }}: {{ dudoc['rating'] }}
-                  {% if max_rating %}
+                  {% if max_rating is not none %}
                     {% set _max_rank = vj4.model.builtin.get_rating_rank(max_rating) %}
                     ({{ _('max') }}: <span class="user-rated--{{ _max_rank['slug'] }}">{{ _(_max_rank['name']) }}</span>, {{ max_rating }})
                   {% endif %}
