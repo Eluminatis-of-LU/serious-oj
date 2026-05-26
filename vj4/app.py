@@ -74,19 +74,31 @@ class Application(web.Application):
       middlewares=middlewares
     )
     globals()[self.__class__.__name__] = lambda: self  # singleton
+    self._pending_sockjs_endpoints = []
 
     static_path = path.join(path.dirname(__file__), '.uibuild')
 
     # Initialize components.
     staticmanifest.init(static_path)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(db.init())
-    loop.run_until_complete(system.setup())
-    loop.run_until_complete(system.ensure_db_version())
-    loop.run_until_complete(asyncio.gather(tools.ensure_all_indexes(), bus.init()))
     smallcache.init()
     dataset.init()
     worker.init()
+
+    async def _init_app(app):
+      await db.init()
+      await system.setup()
+      await system.ensure_db_version()
+      await asyncio.gather(tools.ensure_all_indexes(), bus.init())
+
+      loop = asyncio.get_event_loop()
+      for handler, name, prefix, Manager in app._pending_sockjs_endpoints:
+        sockjs.add_endpoint(app, handler, name=name, prefix=prefix,
+                            manager=Manager(name, app, handler, loop))
+        sockjs.add_endpoint(
+            app, handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
+            manager=Manager(name + '_with_domain_id', app, handler, loop))
+
+    self.on_startup.append(_init_app)
 
     # Load views.
     from vj4.handler import contest
@@ -163,12 +175,8 @@ def connection_route(prefix, name, global_route=False):
         self.factory = conn
         self.timeout = datetime.timedelta(seconds=60)
 
-    loop = asyncio.get_event_loop()
-    sockjs.add_endpoint(Application(), handler, name=name, prefix=prefix,
-                        manager=Manager(name, Application(), handler, loop))
-    sockjs.add_endpoint(
-        Application(), handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
-        manager=Manager(name + '_with_domain_id', Application(), handler, loop))
+    Application()._pending_sockjs_endpoints.append(
+        (handler, name, prefix, Manager))
     return conn
 
   return decorate
