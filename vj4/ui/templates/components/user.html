@@ -6,6 +6,7 @@
   modbadge=true,
   country=false
 ) %}
+{% set _rank = vj4.model.builtin.get_rating_rank(dudoc.get('rating') if dudoc else none) %}
 <span class="user-profile-link">
 {% if avatar %}
   <img class="small user-profile-avatar v-center" src="{{ udoc['gravatar']|default('')|gravatar_url }}" width="20" height="20">
@@ -13,12 +14,12 @@
 {% set has_country = udoc.get('country', '_') != '_'  %}
 {% if country and has_country %}
   <img class="v-center"
-    src="https://flagcdn.com/w20/{{ udoc['country']|lower }}.png" 
+    src="https://flagcdn.com/w20/{{ udoc['country']|lower }}.png"
     srcset="https://flagcdn.com/w40/{{ udoc['country']|lower }}.png 2x"
     alt="{{ vj4.constant.country.COUNTRIES[udoc['country']] }}"
     width="20">
 {% endif %}
-  <a class="user-profile-name" href="{{ reverse_url('user_detail', uid=udoc['_id']|default(0)) }}">
+  <a class="user-profile-name{% if _rank %} user-rated--{{ _rank['slug'] }}{% endif %}" href="{{ reverse_url('user_detail', uid=udoc['_id']|default(0)) }}">
     {% if dudoc['display_name'] %}
       {{ dudoc['display_name'] }} ({{ udoc['uname'] }})
     {% else %}
@@ -26,7 +27,6 @@
     {% endif %}
   </a>
 {% if badge %}
-  <a class="user-profile-badge v-center badge--lv{{ dudoc['level']|default(0) }}" href="{{ reverse_url('user_detail', uid=udoc['_id']|default(0)) }}" title="LV {{ dudoc['level']|default(0) }}: Top {{ vj4.model.builtin.LEVELS[dudoc['level']|default(0)]|default('N/A') }}%">LV {{ dudoc['level']|default(0) }}</a>
 {% if modbadge and handler.dudoc_has_perm(udoc, dudoc, vj4.model.builtin.PERM_MOD_BADGE) %}
   <span class="user-profile-badge v-center badge--mod" title="Moderator">MOD</span>
 {% endif %}
