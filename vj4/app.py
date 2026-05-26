@@ -187,23 +187,41 @@ def _patch_sockjs_for_aiohttp_313():
   try:
     from aiohttp.client_exceptions import ClientConnectionResetError
 
+    def _wrap_server(cls, method_name):
+      _orig = getattr(cls, method_name)
+      async def _patched(self, *args, **kwargs):
+        try:
+          return await _orig(self, *args, **kwargs)
+        except ClientConnectionResetError:
+          pass
+      setattr(cls, method_name, _patched)
+
+    def _wrap_send(cls, method_name):
+      _orig = getattr(cls, method_name)
+      async def _patched(self, *args, **kwargs):
+        try:
+          return await _orig(self, *args, **kwargs)
+        except ClientConnectionResetError:
+          return True  # signal handle_session to stop
+      setattr(cls, method_name, _patched)
+
     import sockjs.transports.websocket as _ws_transport
-    _orig_ws_server = _ws_transport.WebSocketTransport.server
-    async def _patched_ws_server(self):
-      try:
-        return await _orig_ws_server(self)
-      except ClientConnectionResetError:
-        pass
-    _ws_transport.WebSocketTransport.server = _patched_ws_server
+    _wrap_server(_ws_transport.WebSocketTransport, 'server')
+
+    import sockjs.transports.rawwebsocket as _raw_ws_transport
+    _wrap_server(_raw_ws_transport.RawWebSocketTransport, 'server')
 
     import sockjs.transports.base as _base_transport
-    _orig_send = _base_transport.Transport.send
-    async def _patched_send(self, text):
-      try:
-        return await _orig_send(self, text)
-      except ClientConnectionResetError:
-        pass
-    _base_transport.Transport.send = _patched_send
+    _wrap_send(_base_transport.StreamingTransport, 'send')
+
+    import sockjs.transports.eventsource as _es_transport
+    _wrap_send(_es_transport.EventsourceTransport, 'send')
+
+    import sockjs.transports.htmlfile as _hf_transport
+    _wrap_send(_hf_transport.HTMLFileTransport, 'send')
+
+    import sockjs.transports.jsonp as _jsonp_transport
+    _wrap_send(_jsonp_transport.JSONPolling, 'send')
   except Exception:
     pass
 
