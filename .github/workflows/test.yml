@@ -1,5 +1,8 @@
 name: Tests
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ master ]
@@ -21,6 +24,9 @@ jobs:
           paths: vj4/ui yarn.lock
 
   build-constant:
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -45,6 +51,9 @@ jobs:
   test-fe:
     needs: check
     if: ${{ needs.check.outputs.fe-changed == 'true' }}
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -70,6 +79,9 @@ jobs:
   
   test-python:
     needs: build-constant
+    permissions:
+      actions: read
+      contents: read
     runs-on: ubuntu-latest
     strategy:
       matrix:

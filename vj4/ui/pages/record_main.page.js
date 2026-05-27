@@ -18,7 +18,7 @@ const page = new NamedPage('record_main', async () => {
 
   sock.onmessage = message => {
     const msg = JSON.parse(message.data);
-    const $newTr = $(msg.html);
+    const $newTr = $($.parseHTML(msg.html, document, false));
     const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
     if ($oldTr.length) {
       $oldTr.trigger('vjContentRemove');

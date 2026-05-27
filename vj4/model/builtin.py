@@ -98,6 +98,9 @@ PERM_EDIT_CLARIFICATION_SELF = 1 << 66
 PERM_DELETE_CLARIFICATION = 1 << 67
 PERM_DELETE_CLARIFICATION_SELF = 1 << 68
 
+# User management.
+PERM_EDIT_USER = 1 << 69
+
 PERM_ALL = -1
 
 Permission = collections.namedtuple('Permission',
@@ -210,6 +213,7 @@ PERMS = [
                'Delete clarification questions'),
     Permission('perm_clarification', PERM_DELETE_CLARIFICATION_SELF,
                'Delete own clarification questions'),
+    Permission('perm_general', PERM_EDIT_USER, 'Edit users'),
 ]
 
 PERMS_BY_FAMILY = collections.OrderedDict(
@@ -503,12 +507,12 @@ LEVELS = collections.OrderedDict([(10, 1),
 # minimum rating for a tier. See get_rating_rank().
 RATING_RANKS = [
     {'slug': 'novice',     'name': 'Novice',     'threshold': 0},
-    {'slug': 'apprentice', 'name': 'Apprentice', 'threshold': 1100},
-    {'slug': 'specialist', 'name': 'Specialist', 'threshold': 1400},
-    {'slug': 'expert',     'name': 'Expert',     'threshold': 1700},
-    {'slug': 'master',     'name': 'Master',     'threshold': 2000},
-    {'slug': 'elite',      'name': 'Elite',      'threshold': 2300},
-    {'slug': 'legend',     'name': 'Legend',     'threshold': 2600},
+    {'slug': 'apprentice', 'name': 'Apprentice', 'threshold': 200},
+    {'slug': 'specialist', 'name': 'Specialist', 'threshold': 400},
+    {'slug': 'expert',     'name': 'Expert',     'threshold': 600},
+    {'slug': 'master',     'name': 'Master',     'threshold': 800},
+    {'slug': 'elite',      'name': 'Elite',      'threshold': 1000},
+    {'slug': 'legend',     'name': 'Legend',     'threshold': 1200},
 ]
 
 

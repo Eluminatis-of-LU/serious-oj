@@ -17,10 +17,10 @@ const page = new NamedPage('record_detail', async () => {
 
   sock.onmessage = message => {
     const msg = JSON.parse(message.data);
-    const newStatus = $(msg.status_html);
+    const newStatus = $($.parseHTML(msg.status_html, document, false));
     const oldStatus = $('#status');
     dd.apply(oldStatus[0], dd.diff(oldStatus[0], newStatus[0]));
-    const newSummary = $(msg.summary_html);
+    const newSummary = $($.parseHTML(msg.summary_html, document, false));
     const oldSummary = $('#summary');
     dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
   };
