@@ -74,19 +74,31 @@ class Application(web.Application):
       middlewares=middlewares
     )
     globals()[self.__class__.__name__] = lambda: self  # singleton
+    self._pending_sockjs_endpoints = []
 
     static_path = path.join(path.dirname(__file__), '.uibuild')
 
     # Initialize components.
     staticmanifest.init(static_path)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(db.init())
-    loop.run_until_complete(system.setup())
-    loop.run_until_complete(system.ensure_db_version())
-    loop.run_until_complete(asyncio.gather(tools.ensure_all_indexes(), bus.init()))
     smallcache.init()
     dataset.init()
     worker.init()
+
+    async def _init_app(app):
+      await db.init()
+      await system.setup()
+      await system.ensure_db_version()
+      await asyncio.gather(tools.ensure_all_indexes(), bus.init())
+
+      loop = asyncio.get_event_loop()
+      for handler, name, prefix, Manager in app._pending_sockjs_endpoints:
+        sockjs.add_endpoint(app, handler, name=name, prefix=prefix,
+                            manager=Manager(name, app, handler, loop))
+        sockjs.add_endpoint(
+            app, handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
+            manager=Manager(name + '_with_domain_id', app, handler, loop))
+
+    self.on_startup.append(_init_app)
 
     # Load views.
     from vj4.handler import contest
@@ -163,12 +175,55 @@ def connection_route(prefix, name, global_route=False):
         self.factory = conn
         self.timeout = datetime.timedelta(seconds=60)
 
-    loop = asyncio.get_event_loop()
-    sockjs.add_endpoint(Application(), handler, name=name, prefix=prefix,
-                        manager=Manager(name, Application(), handler, loop))
-    sockjs.add_endpoint(
-        Application(), handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
-        manager=Manager(name + '_with_domain_id', Application(), handler, loop))
+    Application()._pending_sockjs_endpoints.append(
+        (handler, name, prefix, Manager))
     return conn
 
   return decorate
+
+
+def _patch_sockjs_for_aiohttp_313():
+  """Suppress ClientConnectionResetError in old sockjs with aiohttp >= 3.13."""
+  try:
+    from aiohttp.client_exceptions import ClientConnectionResetError
+
+    def _wrap_server(cls, method_name):
+      _orig = getattr(cls, method_name)
+      async def _patched(self, *args, **kwargs):
+        try:
+          return await _orig(self, *args, **kwargs)
+        except ClientConnectionResetError:
+          pass
+      setattr(cls, method_name, _patched)
+
+    def _wrap_send(cls, method_name):
+      _orig = getattr(cls, method_name)
+      async def _patched(self, *args, **kwargs):
+        try:
+          return await _orig(self, *args, **kwargs)
+        except ClientConnectionResetError:
+          return True  # signal handle_session to stop
+      setattr(cls, method_name, _patched)
+
+    import sockjs.transports.websocket as _ws_transport
+    _wrap_server(_ws_transport.WebSocketTransport, 'server')
+
+    import sockjs.transports.rawwebsocket as _raw_ws_transport
+    _wrap_server(_raw_ws_transport.RawWebSocketTransport, 'server')
+
+    import sockjs.transports.base as _base_transport
+    _wrap_send(_base_transport.StreamingTransport, 'send')
+
+    import sockjs.transports.eventsource as _es_transport
+    _wrap_send(_es_transport.EventsourceTransport, 'send')
+
+    import sockjs.transports.htmlfile as _hf_transport
+    _wrap_send(_hf_transport.HTMLFileTransport, 'send')
+
+    import sockjs.transports.jsonp as _jsonp_transport
+    _wrap_send(_jsonp_transport.JSONPolling, 'send')
+  except Exception:
+    pass
+
+
+_patch_sockjs_for_aiohttp_313()
