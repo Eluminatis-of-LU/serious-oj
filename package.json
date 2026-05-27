@@ -110,6 +110,9 @@
     "build:watch": "node scripts/build --watch",
     "lint": "eslint --fix ./vj4/ui/"
   },
+  "resolutions": {
+    "xmldom": "npm:@xmldom/xmldom@^0.9.0"
+  },
   "babel": {
     "plugins": [
       "@babel/plugin-transform-runtime",
