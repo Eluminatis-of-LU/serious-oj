@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 from os import path
 
@@ -90,13 +89,12 @@ class Application(web.Application):
       await system.ensure_db_version()
       await asyncio.gather(tools.ensure_all_indexes(), bus.init())
 
-      loop = asyncio.get_event_loop()
       for handler, name, prefix, Manager in app._pending_sockjs_endpoints:
         sockjs.add_endpoint(app, handler, name=name, prefix=prefix,
-                            manager=Manager(name, app, handler, loop))
+                            manager=Manager(name, app, handler))
         sockjs.add_endpoint(
             app, handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
-            manager=Manager(name + '_with_domain_id', app, handler, loop))
+            manager=Manager(name + '_with_domain_id', app, handler))
 
     self.on_startup.append(_init_app)
 
@@ -152,28 +150,27 @@ def route(url, name, global_route=False):
 def connection_route(prefix, name, global_route=False):
   def decorate(conn):
     conn.GLOBAL = global_route
-    async def handler(msg, session):
+    async def handler(manager, session, msg):
       try:
-        if msg.tp == sockjs.MSG_OPEN:
+        if msg.tp == sockjs.MsgType.OPEN:
           await session.prepare()
           await session.on_open()
-        elif msg.tp == sockjs.MSG_MESSAGE:
+        elif msg.tp == sockjs.MsgType.MESSAGE:
           message = json.decode(msg.data)
           if message == WS_MSG_HEARTBEAT:
             pass
           else:
             await session.on_message(**message)
-        elif msg.tp == sockjs.MSG_CLOSED:
+        elif msg.tp == sockjs.MsgType.CLOSED:
           await session.on_close()
       except error.UserFacingError as e:
         _logger.warning("Websocket user facing error: %s", repr(e))
         session.close(4000, {'error': e.to_dict()})
 
     class Manager(sockjs.SessionManager):
-      def __init__(self, *args):
-        super(Manager, self).__init__(*args)
+      def __init__(self, name, app, handler):
+        super(Manager, self).__init__(name, app, handler)
         self.factory = conn
-        self.timeout = datetime.timedelta(seconds=60)
 
     Application()._pending_sockjs_endpoints.append(
         (handler, name, prefix, Manager))
@@ -181,49 +178,3 @@ def connection_route(prefix, name, global_route=False):
 
   return decorate
 
-
-def _patch_sockjs_for_aiohttp_313():
-  """Suppress ClientConnectionResetError in old sockjs with aiohttp >= 3.13."""
-  try:
-    from aiohttp.client_exceptions import ClientConnectionResetError
-
-    def _wrap_server(cls, method_name):
-      _orig = getattr(cls, method_name)
-      async def _patched(self, *args, **kwargs):
-        try:
-          return await _orig(self, *args, **kwargs)
-        except ClientConnectionResetError:
-          pass
-      setattr(cls, method_name, _patched)
-
-    def _wrap_send(cls, method_name):
-      _orig = getattr(cls, method_name)
-      async def _patched(self, *args, **kwargs):
-        try:
-          return await _orig(self, *args, **kwargs)
-        except ClientConnectionResetError:
-          return True  # signal handle_session to stop
-      setattr(cls, method_name, _patched)
-
-    import sockjs.transports.websocket as _ws_transport
-    _wrap_server(_ws_transport.WebSocketTransport, 'server')
-
-    import sockjs.transports.rawwebsocket as _raw_ws_transport
-    _wrap_server(_raw_ws_transport.RawWebSocketTransport, 'server')
-
-    import sockjs.transports.base as _base_transport
-    _wrap_send(_base_transport.StreamingTransport, 'send')
-
-    import sockjs.transports.eventsource as _es_transport
-    _wrap_send(_es_transport.EventsourceTransport, 'send')
-
-    import sockjs.transports.htmlfile as _hf_transport
-    _wrap_send(_hf_transport.HTMLFileTransport, 'send')
-
-    import sockjs.transports.jsonp as _jsonp_transport
-    _wrap_send(_jsonp_transport.JSONPolling, 'send')
-  except Exception:
-    pass
-
-
-_patch_sockjs_for_aiohttp_313()
