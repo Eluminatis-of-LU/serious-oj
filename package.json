@@ -204,5 +204,8 @@
       ],
       "@babel/preset-react"
     ]
+  },
+  "resolutions": {
+    "form-data": "^2.5.4"
   }
 }
