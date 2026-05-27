@@ -6,7 +6,7 @@ RUN yarn \
     && yarn build:production
 
 # main
-FROM ghcr.io/astral-sh/uv:python3.9-bookworm-slim
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim
 COPY --from=stage-node /app/src/vj4 /app/vj4
 COPY --from=stage-node /app/src/LICENSE /app/src/README.md /app/src/requirements.txt /app/src/setup.py /app/
 COPY ./scripts/restore.sh /restore.sh
