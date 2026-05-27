@@ -41,12 +41,12 @@
     "fs-extra": "^9.0.1",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.2.0",
-    "gulp-iconfont": "^10.0.2",
+    "gulp-iconfont": "^10.0.3",
     "gulp-if": "^3.0.0",
     "gulp-nunjucks": "^5.0.1",
     "gulp-plumber": "^1.2.1",
     "gulp-rename": "^2.1.0",
-    "gulp-svgmin": "^3.0.0",
+    "gulp-svgmin": "^4.1.0",
     "js-yaml": "^3.13.1",
     "mini-css-extract-plugin": "^0.9.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
@@ -75,7 +75,7 @@
     "jquery-scroll-lock": "^3.1.3",
     "jquery.easing": "^1.4.1",
     "jquery.transit": "^0.9.12",
-    "katex": "^0.12.0",
+    "katex": "^0.16.21",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "normalize.css": "^8.0.1",
@@ -101,7 +101,7 @@
     "tether-drop": "^1.4.2",
     "timeago-react": "^3.0.0",
     "timeago.js": "^4.0.2",
-    "uuid": "^8.2.0",
+    "uuid": "^8.3.2",
     "vj-simplemde": "0.0.8"
   },
   "scripts": {
@@ -111,6 +111,11 @@
     "lint": "eslint --fix ./vj4/ui/"
   },
   "resolutions": {
+    "braces": "^3.0.3",
+    "form-data": "^2.5.4",
+    "micromatch": "^4.0.8",
+    "nth-check": "^2.0.1",
+    "serialize-javascript": "^7.0.5",
     "xmldom": "npm:@xmldom/xmldom@^0.9.0"
   },
   "babel": {
@@ -207,8 +212,5 @@
       ],
       "@babel/preset-react"
     ]
-  },
-  "resolutions": {
-    "form-data": "^2.5.4"
   }
 }

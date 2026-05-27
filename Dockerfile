@@ -1,4 +1,4 @@
-FROM node:16-buster AS stage-node
+FROM node:20-bookworm AS stage-node
 COPY . /app/src
 WORKDIR /app/src
 
