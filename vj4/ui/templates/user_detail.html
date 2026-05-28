@@ -209,6 +209,48 @@
                 <canvas id="rating-chart" data-uid="{{ udoc['_id'] }}" style="width: 100%; height: 400px;"></canvas>
               </div>
             </li>
+            <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ _('Contests') }} ({{ rating_changes_desc|length }})</h1>
+              <div class="section__tab-main">
+                {% if rating_changes_desc %}
+                <table class="data-table contest-history">
+                  <colgroup>
+                    <col class="col--index">
+                    <col class="col--contest">
+                    <col class="col--rank">
+                    <col class="col--delta">
+                    <col class="col--new-rating">
+                    <col class="col--date">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th class="col--index">#</th>
+                      <th class="col--contest">{{ _('Contest') }}</th>
+                      <th class="col--rank num">{{ _('Rank') }}</th>
+                      <th class="col--delta num">{{ _('Rating Change') }}</th>
+                      <th class="col--new-rating num">{{ _('New Rating') }}</th>
+                      <th class="col--date">{{ _('Date') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for c in rating_changes_desc %}
+                    {% set _new_rank = vj4.model.builtin.get_rating_rank(c['new_rating']) %}
+                    <tr>
+                      <td class="col--index">{{ loop.index }}</td>
+                      <td class="col--contest"><a href="{{ reverse_url('contest_detail', tid=c['rating_id']) }}">{{ c['contest_title'] }}</a></td>
+                      <td class="col--rank num">{{ c['rank'] }}</td>
+                      <td class="col--delta num delta {% if c['delta'] > 0 %}delta--up{% elif c['delta'] < 0 %}delta--down{% endif %}">{% if c['delta'] > 0 %}+{% endif %}{{ c['delta'] }}</td>
+                      <td class="col--new-rating num{% if _new_rank %} user-rated--{{ _new_rank['slug'] }}{% endif %}">{{ c['new_rating'] }}</td>
+                      <td class="col--date">{{ datetime_span(c['attend_at']) }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% else %}
+                <p class="contest-history__empty">{{ _('No rated contests yet.') }}</p>
+                {% endif %}
+              </div>
+            </li>
           </ul>
         </div>
       </div>
