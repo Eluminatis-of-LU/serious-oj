@@ -65,8 +65,10 @@ const page = new NamedPage('user_detail', async () => {
       const { colors } = opts;
       for (let i = 0; i < TIER_LADDER.length; i += 1) {
         const lo = TIER_LADDER[i].threshold;
-        const hi = i + 1 < TIER_LADDER.length ? TIER_LADDER[i + 1].threshold : Infinity;
-        const yTop = y.getPixelForValue(Math.min(hi, y.max));
+        const isTopTier = i + 1 === TIER_LADDER.length;
+        const yTop = isTopTier
+          ? chartArea.top
+          : y.getPixelForValue(Math.min(TIER_LADDER[i + 1].threshold, y.max));
         const yBottom = y.getPixelForValue(Math.max(lo, y.min));
         if (yBottom <= chartArea.top || yTop >= chartArea.bottom) continue;
         const top = Math.max(yTop, chartArea.top);
