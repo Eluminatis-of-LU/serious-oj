@@ -1,6 +1,6 @@
-aiohttp>=3.6.0,<3.8.0
+aiohttp>=3.13.4
 jinja2>=2.9.0
-sockjs>=0.7.0,<0.10.0
+sockjs>=0.13.0
 mistune
 accept
 aioamqp

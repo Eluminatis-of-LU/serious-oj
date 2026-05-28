@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 from os import path
 
@@ -74,19 +73,30 @@ class Application(web.Application):
       middlewares=middlewares
     )
     globals()[self.__class__.__name__] = lambda: self  # singleton
+    self._pending_sockjs_endpoints = []
 
     static_path = path.join(path.dirname(__file__), '.uibuild')
 
     # Initialize components.
     staticmanifest.init(static_path)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(db.init())
-    loop.run_until_complete(system.setup())
-    loop.run_until_complete(system.ensure_db_version())
-    loop.run_until_complete(asyncio.gather(tools.ensure_all_indexes(), bus.init()))
     smallcache.init()
     dataset.init()
     worker.init()
+
+    async def _init_app(app):
+      await db.init()
+      await system.setup()
+      await system.ensure_db_version()
+      await asyncio.gather(tools.ensure_all_indexes(), bus.init())
+
+      for handler, name, prefix, Manager in app._pending_sockjs_endpoints:
+        sockjs.add_endpoint(app, handler, name=name, prefix=prefix,
+                            manager=Manager(name, app, handler))
+        sockjs.add_endpoint(
+            app, handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
+            manager=Manager(name + '_with_domain_id', app, handler))
+
+    self.on_startup.append(_init_app)
 
     # Load views.
     from vj4.handler import contest
@@ -140,35 +150,31 @@ def route(url, name, global_route=False):
 def connection_route(prefix, name, global_route=False):
   def decorate(conn):
     conn.GLOBAL = global_route
-    async def handler(msg, session):
+    async def handler(manager, session, msg):
       try:
-        if msg.tp == sockjs.MSG_OPEN:
+        if msg.tp == sockjs.MsgType.OPEN:
           await session.prepare()
           await session.on_open()
-        elif msg.tp == sockjs.MSG_MESSAGE:
+        elif msg.tp == sockjs.MsgType.MESSAGE:
           message = json.decode(msg.data)
           if message == WS_MSG_HEARTBEAT:
             pass
           else:
             await session.on_message(**message)
-        elif msg.tp == sockjs.MSG_CLOSED:
+        elif msg.tp == sockjs.MsgType.CLOSED:
           await session.on_close()
       except error.UserFacingError as e:
         _logger.warning("Websocket user facing error: %s", repr(e))
         session.close(4000, {'error': e.to_dict()})
 
     class Manager(sockjs.SessionManager):
-      def __init__(self, *args):
-        super(Manager, self).__init__(*args)
+      def __init__(self, name, app, handler):
+        super(Manager, self).__init__(name, app, handler)
         self.factory = conn
-        self.timeout = datetime.timedelta(seconds=60)
 
-    loop = asyncio.get_event_loop()
-    sockjs.add_endpoint(Application(), handler, name=name, prefix=prefix,
-                        manager=Manager(name, Application(), handler, loop))
-    sockjs.add_endpoint(
-        Application(), handler, name=name + '_with_domain_id', prefix='/d/{domain_id}' + prefix,
-        manager=Manager(name + '_with_domain_id', Application(), handler, loop))
+    Application()._pending_sockjs_endpoints.append(
+        (handler, name, prefix, Manager))
     return conn
 
   return decorate
+

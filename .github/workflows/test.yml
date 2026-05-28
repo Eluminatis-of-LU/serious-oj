@@ -34,7 +34,7 @@ jobs:
       - name: Setup environment
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 20
 
       - name: Install dependencies
         run: yarn install
@@ -61,7 +61,7 @@ jobs:
       - name: Setup environment
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 20
 
       - name: Install dependencies
         run: yarn install
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9']
+        python-version: ['3.10']
     services:
       rabbitmq:
         image: rabbitmq

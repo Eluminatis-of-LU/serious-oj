@@ -27,8 +27,9 @@ async def ensure_all_indexes():
 def get_remote_ip(request):
   if options.ip_header:
     return request.headers.get(options.ip_header)
-  else:
+  if request.transport:
     return request.transport.get_extra_info('peername')[0]
+  return getattr(request, 'remote', None)
 
 
 if __name__ == '__main__':

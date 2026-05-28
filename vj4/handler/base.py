@@ -7,7 +7,7 @@ import logging
 import markupsafe
 import pytz
 import sockjs
-from aiohttp import web
+from aiohttp import web, hdrs
 from email import utils
 
 from vj4 import app
@@ -261,6 +261,17 @@ class HandlerBase(setting.SettingMixin):
 
 
 class Handler(web.View, HandlerBase):
+  async def _iter(self):
+    if self.request.method not in hdrs.METH_ALL:
+      allowed_methods = {m for m in hdrs.METH_ALL if hasattr(self, m.lower())}
+      raise web.HTTPMethodNotAllowed(self.request.method, allowed_methods)
+    method = getattr(self, self.request.method.lower(), None)
+    if method is None:
+      allowed_methods = {m for m in hdrs.METH_ALL if hasattr(self, m.lower())}
+      raise web.HTTPMethodNotAllowed(self.request.method, allowed_methods)
+    await method()
+    return self.response
+
   def __await__(self):
     try:
       self.response = web.Response()

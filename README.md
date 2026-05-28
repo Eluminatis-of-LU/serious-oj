@@ -38,7 +38,7 @@
 
 #### Prerequisites
 
-* [Python 3.9](https://www.python.org/downloads/)
+* [Python 3.10](https://www.python.org/downloads/)
 * [MongoDB 8.0](https://www.mongodb.com/docs/manual/installation/)
 * [Node.js 14.0+](https://nodejs.org/en/download/package-manager/)
 * [RabbitMQ](http://www.rabbitmq.com/)
