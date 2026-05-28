@@ -412,5 +412,37 @@ class RatingTest(base.DatabaseTestCase):
     self.assertIsNone(await rating.get_user_max_rating(DOMAIN_ID, UID))
 
 
+class RatingChartDictTest(unittest.TestCase):
+  def _record(self, **overrides):
+    rec = {'rating_id': objectid.ObjectId('5f000000000000000000000a'),
+           'uid': 44,
+           'previous_rating': 1500,
+           'new_rating': 1528,
+           'delta': 28,
+           'rank': 4,
+           'contest_title': 'Spring Round 12',
+           'attend_at': datetime.datetime(2026, 5, 25, 9, 30, 0)}
+    rec.update(overrides)
+    return rec
+
+  def test_shapes_all_keys(self):
+    d = rating.to_chart_dict(self._record())
+    self.assertEqual(d['rating'], 1528)
+    self.assertEqual(d['contest'], 'Spring Round 12')
+    self.assertEqual(d['rank'], 4)
+    self.assertEqual(d['delta'], 28)
+    self.assertEqual(d['previous_rating'], 1500)
+    self.assertEqual(d['contest_id'], '5f000000000000000000000a')
+
+  def test_date_is_iso8601(self):
+    d = rating.to_chart_dict(self._record())
+    self.assertEqual(d['date'], '2026-05-25T09:30:00')
+
+  def test_negative_delta_preserved(self):
+    d = rating.to_chart_dict(self._record(delta=-15, new_rating=1485))
+    self.assertEqual(d['delta'], -15)
+    self.assertEqual(d['rating'], 1485)
+
+
 if __name__ == '__main__':
   unittest.main()
