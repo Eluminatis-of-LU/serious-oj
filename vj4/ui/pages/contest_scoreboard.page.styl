@@ -14,6 +14,100 @@
     border-left: 1px solid $table-border-color
     text-align: center
 
+  // Plain rows — remove the data-table zebra striping on the scoreboard.
+  .data-table tbody tr:nth-child(even)
+    background: transparent
+
+  // Problem column header: letter, score, and accept/attempt stats.
+  .sb-phead__letter
+    font-size: rem(17px)
+    font-weight: bold
+
+  .sb-phead__score
+    display: block
+    font-size: rem(11px)
+    font-weight: 600
+    color: #888888
+
+  .sb-phead__stats
+    display: block
+    font-size: rem(11px)
+
+  td.col--problem_detail
+    padding: rem(4px)
+
+  // Problem cell pills.
+  .sb-cell
+    display: inline-flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    width: rem(74px)
+    min-height: rem(44px)
+    padding: rem(4px) rem(6px)
+    border-radius: rem(8px)
+    line-height: 1.2
+    text-decoration: none
+
+  .sb-cell__primary
+    font-weight: bold
+    font-size: rem(14px)
+
+  .sb-cell__secondary
+    font-size: rem(11px)
+    opacity: 0.85
+
+  .sb-cell__chip
+    font-size: rem(9px)
+    font-weight: bold
+    padding: 0 rem(4px)
+    border-radius: rem(5px)
+    background: rgba(192, 57, 43, 0.13)
+    color: #b91c1c
+
+  .sb-cell--accept
+    background: #e8f6ec
+    border: 1px solid #c4e6cd
+    color: #15803d
+
+  .sb-cell--fail
+    background: #fdeaea
+    border: 1px solid #f2c4c4
+    color: #b91c1c
+
+  .sb-cell--pending
+    background: #fdebc8
+    border: 1px solid #f3d199
+    color: #b9770e
+
+  .sb-cell--none
+    display: inline-block
+    color: #cccccc
+    font-size: rem(18px)
+
+  // Contest status badge.
+  .sb-badge
+    display: inline-block
+    padding: rem(4px) rem(12px)
+    border-radius: rem(20px)
+    font-size: rem(13px)
+    font-weight: bold
+    background: #e8f6ec
+    color: #15803d
+    border: 1px solid #c4e6cd
+
+  // "YOU" row marker.
+  .sb-you
+    display: inline-block
+    margin-left: rem(5px)
+    padding: 0 rem(4px)
+    font-size: rem(9px)
+    font-weight: bold
+    color: #2563eb
+    border: 1px solid #b9d0f6
+    border-radius: rem(4px)
+    vertical-align: middle
+
   +mobile()
     .col--user
       width: auto

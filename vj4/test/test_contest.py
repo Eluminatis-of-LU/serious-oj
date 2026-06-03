@@ -642,5 +642,124 @@ class CfContestEditTest(base.DatabaseTestCase):
     self.assertEqual(tdoc['cf_max_scores'], [500, 1000, 1500])
 
 
+class ContestElapsedStrTest(unittest.TestCase):
+  def test_zero_when_at_start(self):
+    rid = objectid.ObjectId.from_datetime(NOW)
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '00:00:00')
+
+  def test_formats_elapsed(self):
+    rid = objectid.ObjectId.from_datetime(NOW + datetime.timedelta(seconds=3725))
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '01:02:05')
+
+  def test_empty_when_rid_missing(self):
+    self.assertEqual(contest._contest_elapsed_str(None, NOW), '')
+
+  def test_clamps_negative_to_zero(self):
+    rid = objectid.ObjectId.from_datetime(NOW - datetime.timedelta(seconds=10))
+    self.assertEqual(contest._contest_elapsed_str(rid, NOW), '00:00:00')
+
+
+class CfScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': 1850}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._cf_stat(CFTDOC, journal)}
+    return contest._cf_scoreboard(False, lambda s: s, CFTDOC,
+                                  [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters_and_scores(self):
+    rows = self._rows([CF_777_AC_T0])
+    headers = [c for c in rows[0] if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+    self.assertEqual([h['score'] for h in headers], [500, 1000, 1500])
+
+  def test_user_cell_carries_rating(self):
+    rows = self._rows([CF_777_AC_T0])
+    self.assertEqual(rows[1][1]['dudoc']['rating'], 1850)
+
+  def test_accepted_cell_is_structured(self):
+    # row layout: rank, user, total_score, A, B, C  -> cell A is index 3
+    cell = self._rows([CF_777_AC_T0])[1][3]
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '500')
+    self.assertEqual(cell['secondary'], '00:00:00')
+    self.assertEqual(cell['naccept'], 0)
+    self.assertEqual(cell['uid'], 44)
+    self.assertEqual(cell['pid'], 777)
+
+  def test_untried_cell_is_none(self):
+    cell = self._rows([CF_777_AC_T0])[1][4]  # pid 778, never submitted
+    self.assertEqual(cell['state'], 'none')
+
+
+class AcmScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': None}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._acm_stat(TDOC, journal)}
+    return contest._acm_scoreboard(False, lambda s: s, TDOC,
+                                   [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters(self):
+    headers = [c for c in self._rows([SUBMIT_777_AC])[0]
+               if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+
+  def test_accepted_cell_shows_raw_solve_time(self):
+    # row layout: rank, user, solved_problems, total_time_str, A, B, C
+    cell = self._rows([SUBMIT_777_AC])[1][4]  # cell A
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '00:00:02')  # SUBMIT_777_AC rid is +2s
+    self.assertEqual(cell['naccept'], 0)
+
+  def test_failed_cell_shows_minus(self):
+    cell = self._rows([SUBMIT_777_NAC])[1][4]
+    self.assertEqual(cell['state'], 'fail')
+    self.assertEqual(cell['primary'], '-1')
+
+  def test_user_cell_carries_rating_key(self):
+    self.assertIn('rating', self._rows([SUBMIT_777_AC])[1][1]['dudoc'])
+
+
+class OiScoreboardTest(unittest.TestCase):
+  udict = {44: {'_id': 44, 'uname': 'alice'}}
+  dudict = {44: {'display_name': '', 'rating': 2400}}
+  pdict = {777: {'doc_id': 777, 'title': 'Alpha'},
+           778: {'doc_id': 778, 'title': 'Bravo'},
+           779: {'doc_id': 779, 'title': 'Charlie'}}
+
+  def _rows(self, journal):
+    tsdoc = {'uid': 44, **contest._oi_stat(TDOC, journal)}
+    return contest._oi_scoreboard(False, lambda s: s, TDOC,
+                                  [(1, tsdoc)], self.udict, self.dudict, self.pdict)
+
+  def test_headers_use_letters_without_score(self):
+    headers = [c for c in self._rows([SUBMIT_777_AC])[0]
+               if c['type'] == 'problem_detail']
+    self.assertEqual([h['value'] for h in headers], ['A', 'B', 'C'])
+    self.assertNotIn('score', headers[0])  # OI has no stored per-problem max
+
+  def test_scored_cell_is_structured(self):
+    # row layout: rank, user, total_score, A, B, C  -> cell A is index 3
+    cell = self._rows([SUBMIT_777_AC])[1][3]
+    self.assertEqual(cell['state'], 'accept')
+    self.assertEqual(cell['primary'], '22')  # SUBMIT_777_AC score is 22
+    self.assertEqual(cell['secondary'], '00:00:02')
+
+  def test_untried_cell_is_none(self):
+    self.assertEqual(self._rows([SUBMIT_777_AC])[1][4]['state'], 'none')
+
+  def test_user_cell_carries_rating(self):
+    self.assertEqual(self._rows([SUBMIT_777_AC])[1][1]['dudoc']['rating'], 2400)
+
+
 if __name__ == '__main__':
   unittest.main()

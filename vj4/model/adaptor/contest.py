@@ -23,6 +23,18 @@ from vj4.util import validator
 
 journal_key_func = lambda j: j['rid']
 
+
+def _contest_elapsed_str(rid, begin_at):
+  """Formatted solve time (HH:MM:SS) relative to contest start.
+
+  Returns '' when rid is missing. Negative elapsed is clamped to zero.
+  """
+  if rid is None:
+    return ''
+  elapsed = (rid.generation_time.replace(tzinfo=None) - begin_at).total_seconds()
+  return misc.format_seconds(max(0, elapsed))
+
+
 Rule = collections.namedtuple('Rule', ['show_record_func',
                                        'show_scoreboard_func',
                                        'stat_func',
@@ -171,10 +183,11 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   for rank, tsdoc in ranked_tsdocs:
     if 'detail' in tsdoc:
@@ -185,17 +198,30 @@ def _oi_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')},
-              })
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
-      if tsddict.get(pid, {}).get('status_unknown', False):
+      cell = tsddict.get(pid)
+      if cell is None:
+        col_score = '-'
+        rdoc = None
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
+      elif cell.get('status_unknown', False):
         col_score = '?'
+        rdoc = cell.get('rid')
+        sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '', 'naccept': 0}
       else:
-        col_score = tsddict.get(pid, {}).get('score', '-')
-      row.append({'type': 'record',
-                  'value': col_score,
-                  'raw': tsddict.get(pid, {}).get('rid', None)})
+        col_score = cell.get('score', '-')
+        rdoc = cell.get('rid')
+        sb_cell = {'state': 'accept', 'primary': str(cell.get('score', 0)),
+                   'secondary': _contest_elapsed_str(cell.get('rid'), tdoc['begin_at']),
+                   'naccept': 0}
+      if is_export:
+        row.append({'type': 'string', 'value': col_score})
+      else:
+        row.append({'type': 'record', 'value': col_score, 'raw': rdoc,
+                    'uid': tsdoc['uid'], 'pid': pid, **sb_cell})
     rows.append(row)
   return rows
 
@@ -211,14 +237,17 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_flag',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
       columns.append({'type': 'problem_time',
-                      'value': '#{0} {1}'.format(index + 1, _('Time (Seconds)'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 _('Time (Seconds)'))})
       columns.append({'type': 'problem_time_str',
-                      'value': '#{0} {1}'.format(index + 1, _('Time'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 _('Time'))})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
   for rank, tsdoc in ranked_tsdocs:
@@ -230,10 +259,9 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}, 
-                })
-    row.append({'type': 'string',
-                'value': tsdoc.get('accept', 0)})
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
+    row.append({'type': 'string', 'value': tsdoc.get('accept', 0)})
     if is_export:
       row.append({'type': 'string', 'value': tsdoc.get('time', 0.0)})
     row.append({'type': 'string', 'value': misc.format_seconds(tsdoc.get('time', 0.0))})
@@ -247,12 +275,24 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         col_time_str = misc.format_seconds(col_time)
         pstats[pid]['accept'] += 1
         pstats[pid]['attempt'] += tsddict[pid]['naccept'] + 1
+        sb_cell = {'state': 'accept',
+                   'primary': _contest_elapsed_str(rdoc, tdoc['begin_at']),
+                   'secondary': '', 'naccept': tsddict[pid]['naccept']}
       else:
         rdoc = None
         col_accepted = ''
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
         if pid in tsddict:
-          col_accepted = ('?' if tsddict[pid].get('status_unknown', False) else '-') + str(tsddict[pid]['naccept'])
+          unknown = tsddict[pid].get('status_unknown', False)
+          col_accepted = ('?' if unknown else '-') + str(tsddict[pid]['naccept'])
           pstats[pid]['attempt'] += tsddict[pid]['naccept']
+          if unknown:
+            sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '',
+                       'naccept': tsddict[pid]['naccept']}
+          else:
+            sb_cell = {'state': 'fail',
+                       'primary': '-{0}'.format(tsddict[pid]['naccept']),
+                       'secondary': '', 'naccept': 0}
         col_time = ''
         col_time_str = ''
       if is_export:
@@ -261,13 +301,13 @@ def _acm_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
         row.append({'type': 'string', 'value': col_time_str})
       else:
         row.append({'type': 'record',
-                    'value': '{0}\n{1}'.format(col_accepted, col_time_str), 'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid})
+                    'value': '{0}\n{1}'.format(col_accepted, col_time_str),
+                    'raw': rdoc, 'uid': tsdoc['uid'], 'pid': pid, **sb_cell})
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':
       pid = column['raw']['doc_id']
       column['stats'] = '{0}/{1}'.format(pstats[pid]['accept'], pstats[pid]['attempt'])
-      
   return rows
 
 
@@ -276,13 +316,18 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
   columns.append({'type': 'rank', 'value': _('Rank')})
   columns.append({'type': 'user', 'value': _('User')})
   columns.append({'type': 'total_score', 'value': _('Total Score')})
+  cf_max_scores = tdoc.get('cf_max_scores', [])
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index),
+                                                 pdict[pid]['title'])})
     else:
-      columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+      column = {'type': 'problem_detail',
+                'value': misc.problem_label(index), 'raw': pdict[pid]}
+      if index < len(cf_max_scores):
+        column['score'] = cf_max_scores[index]
+      columns.append(column)
   rows = [columns]
   pstats = {pid: {'accept': 0, 'attempt': 0} for pid in tdoc['pids']}
   for rank_, tsdoc in ranked_tsdocs:
@@ -291,33 +336,42 @@ def _cf_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdict):
     row.append({'type': 'string', 'value': rank_})
     row.append({'type': 'user', 'value': udict[tsdoc['uid']]['uname'],
                 'raw': udict[tsdoc['uid']],
-                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', '')}})
+                'dudoc': {'display_name': dudict.get(tsdoc['uid'], {}).get('display_name', ''),
+                          'rating': dudict.get(tsdoc['uid'], {}).get('rating')}})
     row.append({'type': 'string', 'value': tsdoc.get('score', 0)})
     for pid in tdoc['pids']:
       cell = tsddict.get(pid)
-      accepted = False
       if cell is None:
         col_value = '-'
         rdoc = None
+        sb_cell = {'state': 'none', 'primary': '', 'secondary': '', 'naccept': 0}
       elif cell.get('status_unknown'):
         col_value = '?'
         rdoc = cell.get('rid')
         pstats[pid]['attempt'] += cell.get('naccept', 0)
+        sb_cell = {'state': 'pending', 'primary': '?', 'secondary': '',
+                   'naccept': cell.get('naccept', 0)}
       elif cell.get('accept'):
         col_value = cell['score']
         rdoc = cell.get('rid')
-        accepted = True
         pstats[pid]['accept'] += 1
         pstats[pid]['attempt'] += cell.get('naccept', 0) + 1
+        sb_cell = {'state': 'accept', 'primary': str(cell['score']),
+                   'secondary': _contest_elapsed_str(cell.get('rid'), tdoc['begin_at']),
+                   'naccept': cell.get('naccept', 0)}
       else:
         col_value = '-{0}'.format(cell.get('naccept', 0))
         rdoc = cell.get('rid')
         pstats[pid]['attempt'] += cell.get('naccept', 0)
+        sb_cell = {'state': 'fail', 'primary': '-{0}'.format(cell.get('naccept', 0)),
+                   'secondary': '', 'naccept': 0}
       if is_export:
         row.append({'type': 'string', 'value': col_value})
       else:
         row.append({'type': 'record', 'value': col_value, 'raw': rdoc,
-                    'uid': tsdoc['uid'], 'pid': pid, 'accept': accepted})
+                    'uid': tsdoc['uid'], 'pid': pid,
+                    'accept': cell is not None and bool(cell.get('accept')),
+                    **sb_cell})
     rows.append(row)
   for column in rows[0]:
     if column['type'] == 'problem_detail':
@@ -338,16 +392,16 @@ def _assignment_scoreboard(is_export, _, tdoc, ranked_tsdocs, udict, dudict, pdi
   for index, pid in enumerate(tdoc['pids']):
     if is_export:
       columns.append({'type': 'problem_score',
-                      'value': '#{0} {1}'.format(index + 1, pdict[pid]['title'])})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), pdict[pid]['title'])})
       columns.append({'type': 'problem_original_score',
-                      'value': '#{0} {1}'.format(index + 1, _('Original Score'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Original Score'))})
       columns.append({'type': 'problem_time',
-                      'value': '#{0} {1}'.format(index + 1, _('Time (Seconds)'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Time (Seconds)'))})
       columns.append({'type': 'problem_time_str',
-                      'value': '#{0} {1}'.format(index + 1, _('Time'))})
+                      'value': '{0}. {1}'.format(misc.problem_label(index), _('Time'))})
     else:
       columns.append({'type': 'problem_detail',
-                      'value': '#{0}'.format(index + 1), 'raw': pdict[pid]})
+                      'value': misc.problem_label(index), 'raw': pdict[pid]})
   rows = [columns]
   for rank, tsdoc in ranked_tsdocs:
     if 'detail' in tsdoc:

@@ -65,7 +65,7 @@
               {% endif %}
             {% endif %}
               <td class="col--problem col--problem-name">
-                #{{ loop.index }}:
+                {{ loop.index0 | problem_label }}.
                 {% if pdict[pid]['hidden'] and not (attended or handler.can_edit_contest(tdoc)) %}
                   <span class="text-orange">{{ _('Problem not published') }}</span>
                 {% else %}

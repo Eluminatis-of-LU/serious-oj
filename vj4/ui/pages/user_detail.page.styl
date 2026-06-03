@@ -104,3 +104,37 @@
 
       +mobile()
         padding-top: rem($tab-item-height-mobile)
+
+  .contest-history
+    width: 100%
+
+    // Zebra-free, matching the scoreboard convention.
+    tbody tr:nth-child(even)
+      background: transparent
+
+    th, td
+      padding: rem(6px) rem(10px)
+
+    .num
+      text-align: right
+
+    .col--index
+      width: rem(48px)
+      color: #888888
+
+    .col--date
+      white-space: nowrap
+
+    .delta
+      font-weight: bold
+
+    .delta--up
+      color: #2f9e44
+
+    .delta--down
+      color: #e03131
+
+  .contest-history__empty
+    padding: rem(30px) 0
+    text-align: center
+    color: #888888

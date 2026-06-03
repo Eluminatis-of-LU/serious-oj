@@ -124,5 +124,22 @@ async def ensure_indexes():
     await coll.create_index([("domain_id", 1), ("uid", 1), ("rating", 1)])
 
 
+def to_chart_dict(rating_change):
+    """Shape one rating_changes record for the rating chart and contest table.
+
+    Returns a JSON-serialisable dict. `contest_id` is the stringified contest
+    ObjectId (rating_id), used to link a row to its contest page.
+    """
+    return {
+        "date": rating_change["attend_at"].isoformat(),
+        "rating": rating_change["new_rating"],
+        "contest": rating_change["contest_title"],
+        "contest_id": str(rating_change["rating_id"]),
+        "rank": rating_change["rank"],
+        "delta": rating_change["delta"],
+        "previous_rating": rating_change["previous_rating"],
+    }
+
+
 if __name__ == "__main__":
     argmethod.invoke_by_args()
