@@ -67,6 +67,16 @@
     {% endif %}
       </li>
     {% endif %}
+    {% if handler.is_done(tdoc) and handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) and not tdoc.get('is_virtual') %}
+      <li class="menu__item">
+        <form action="{{ reverse_url('contest_virtual_start', tid=tdoc['doc_id']) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ handler.csrf_token }}">
+          <button class="menu__link" type="submit">
+            <span class="icon icon-play"></span> {{ _('Start Virtual Contest') }}
+          </button>
+        </form>
+      </li>
+    {% endif %}
     {% if handler.can_show_scoreboard(tdoc, False) %}
       <li class="menu__item"><a class="menu__link" href="{{ reverse_url('contest_scoreboard', tid=tdoc['doc_id']) }}">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}

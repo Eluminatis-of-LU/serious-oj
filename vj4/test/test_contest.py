@@ -312,6 +312,74 @@ class OuterTest(base.DatabaseTestCase):
     self.assertFalse('content' in tdocs[0])
 
 
+class VirtualContestTest(base.DatabaseTestCase):
+  @base.wrap_coro
+  async def test_clone_for_virtual(self):
+    begin_at = datetime.datetime.utcnow() - datetime.timedelta(hours=5)
+    end_at = begin_at + datetime.timedelta(hours=2)
+    tid = await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, TITLE, CONTENT, OWNER_UID,
+                            constant.contest.RULE_ACM, begin_at, end_at,
+                            [777, 778], freeze_before=10, hidden=False)
+    vtid = await contest.clone_for_virtual(DOMAIN_ID_DUMMY, tid, ATTEND_UID)
+    vdoc = await contest.get(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, vtid)
+    self.assertTrue(vdoc['is_virtual'])
+    self.assertTrue(vdoc['hidden'])
+    self.assertEqual(vdoc['owner_uid'], ATTEND_UID)
+    self.assertEqual(vdoc['rule'], constant.contest.RULE_ACM)
+    self.assertEqual(vdoc['pids'], [777, 778])
+    self.assertEqual(vdoc['freeze_before'], 10)
+    self.assertEqual(vdoc['parent_doc_id'], tid)
+    self.assertEqual(vdoc['password'], '')
+    self.assertTrue(vdoc['begin_at'] >= begin_at)
+    self.assertTrue(vdoc['end_at'] >= end_at)
+    # Duration should match original
+    orig_duration = end_at - begin_at
+    virtual_duration = vdoc['end_at'] - vdoc['begin_at']
+    self.assertEqual(virtual_duration, orig_duration)
+
+  @base.wrap_coro
+  async def test_clone_for_virtual_rejects_virtual_source(self):
+    begin_at = datetime.datetime.utcnow() - datetime.timedelta(hours=5)
+    end_at = begin_at + datetime.timedelta(hours=2)
+    tid = await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, TITLE, CONTENT, OWNER_UID,
+                            constant.contest.RULE_ACM, begin_at, end_at,
+                            [777], is_virtual=True, hidden=True)
+    with self.assertRaises(error.VirtualContestNotAllowedError):
+      await contest.clone_for_virtual(DOMAIN_ID_DUMMY, tid, ATTEND_UID)
+
+  @base.wrap_coro
+  async def test_get_multi_virtual(self):
+    begin_at = datetime.datetime.utcnow() - datetime.timedelta(hours=5)
+    end_at = begin_at + datetime.timedelta(hours=2)
+    # Regular contest
+    await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, TITLE, CONTENT, OWNER_UID,
+                      constant.contest.RULE_ACM, begin_at, end_at, [777])
+    # Virtual contest for ATTEND_UID
+    vtid = await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, 'Virtual', '', ATTEND_UID,
+                             constant.contest.RULE_ACM, begin_at, end_at, [777],
+                             is_virtual=True, hidden=True)
+    # Virtual contest for another user
+    await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, 'Other Virtual', '', 99,
+                      constant.contest.RULE_ACM, begin_at, end_at, [777],
+                      is_virtual=True, hidden=True)
+    tdocs = await contest.get_multi_virtual(DOMAIN_ID_DUMMY, ATTEND_UID).to_list()
+    self.assertEqual(len(tdocs), 1)
+    self.assertEqual(tdocs[0]['doc_id'], vtid)
+    self.assertEqual(tdocs[0]['owner_uid'], ATTEND_UID)
+
+  @base.wrap_coro
+  async def test_virtual_contest_not_in_main_list(self):
+    begin_at = datetime.datetime.utcnow() - datetime.timedelta(hours=5)
+    end_at = begin_at + datetime.timedelta(hours=2)
+    await contest.add(DOMAIN_ID_DUMMY, document.TYPE_CONTEST, 'Virtual', '', ATTEND_UID,
+                      constant.contest.RULE_ACM, begin_at, end_at, [777],
+                      is_virtual=True, hidden=True)
+    tdocs = await contest.get_multi(DOMAIN_ID_DUMMY, document.TYPE_CONTEST,
+                                    is_virtual={'$ne': True}).to_list()
+    for tdoc in tdocs:
+      self.assertNotEqual(tdoc.get('is_virtual'), True)
+
+
 class InnerTest(base.DatabaseTestCase):
   def setUp(self):
     super(InnerTest, self).setUp()

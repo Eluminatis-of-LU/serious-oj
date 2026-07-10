@@ -1,5 +1,7 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% import "components/nothing.html" as nothing with context %}
 {% macro render_important_contest(view, title, tdoc) %}
 <div class="section immersive--content section--contest {{ view }}">
   <div class="media">
@@ -54,14 +56,12 @@
   <div class="medium-9 columns">
   {% for tdoc in tdocs %}
   {% if handler.is_ongoing(tdoc) %}
-    {{ render_important_contest('live', 'Live...', tdoc) }}
-  {% elif handler.is_upcoming(tdoc) %}
-    {{ render_important_contest('ready', 'Ready (☆▽☆)', tdoc) }}
+    {{ render_important_contest('live', 'Running', tdoc) }}
   {% endif %}
   {% endfor %}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{% if not rule %}{{ _('All Contests') }}{% else %}{{ _('All {0} Contests').format(_(vj4.constant.contest.RULE_TEXTS[rule])) }}{% endif %}</h1>
+        <h1 class="section__title">{% if not rule %}{{ _('My Virtual Contests') }}{% else %}{{ _('My {0} Virtual Contests').format(_(vj4.constant.contest.RULE_TEXTS[rule])) }}{% endif %}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
@@ -79,7 +79,7 @@
       </div>
       <div class="section__body no-padding">
       {% if not tdocs %}
-        {{ nothing.render('There are no contests...') }}
+        {{ nothing.render('There are no virtual contests...') }}
       {% else %}
         <ol class="section__list contest__list">
         {% for tdoc in tdocs %}
@@ -127,30 +127,16 @@
     </div>
   </div>
   <div class="medium-3 columns">
-  {% if handler.has_perm(vj4.model.builtin.PERM_CREATE_CONTEST) %}
     <div class="section side">
       <div class="section__header">
         <h1 class="section__title">
-          {{ _('create_contest') }}
+          {{ _('Create Virtual Contest') }}
         </h1>
       </div>
       <div class="section__body">
-        <p><a href="{{ reverse_url('contest_create') }}" class="expanded primary button">{{ _('Create a contest') }}</a></p>
+        <p><a href="{{ reverse_url('virtual_contest_create') }}" class="expanded primary button">{{ _('New Virtual Contest') }}</a></p>
       </div>
     </div>
-  {% endif %}
-  {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
-    <div class="section side">
-      <div class="section__header">
-        <h1 class="section__title">
-          {{ _('My Virtual Contests') }}
-        </h1>
-      </div>
-      <div class="section__body">
-        <p><a href="{{ reverse_url('virtual_contest_main') }}" class="expanded button">{{ _('View My Virtual Contests') }}</a></p>
-      </div>
-    </div>
-  {% endif %}
   </div>
 </div>
 {% endblock %}
