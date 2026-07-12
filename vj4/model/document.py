@@ -466,6 +466,12 @@ async def ensure_indexes():
   await coll.create_index([('domain_id', 1),
                           ('doc_type', 1),
                           ('begin_at', -1)], sparse=True)
+  # for virtual contests
+  await coll.create_index([('domain_id', 1),
+                           ('doc_type', 1),
+                           ('is_virtual', 1),
+                           ('owner_uid', 1),
+                           ('doc_id', -1)], sparse=True)
   # for training
   await coll.create_index([('domain_id', 1),
                            ('doc_type', 1),
