@@ -75,8 +75,48 @@ export default class AutoComplete extends DOMAttachedObject {
     this.updateOpenState();
   }
 
-  onKeyDown() {
-    // TODO: Implement keyboard navigation
+  onKeyDown(ev) {
+    if (ev.which === 27) {
+      if (this.isOpen) {
+        ev.preventDefault();
+        this.close();
+      }
+      return;
+    }
+
+    if (!this.isOpen) {
+      return;
+    }
+
+    const $items = this.$menu.find('.menu__item');
+
+    if ($items.length === 0) {
+      return;
+    }
+
+    const $activeItem = this.$menu
+      .find('.menu__link.active')
+      .closest('.menu__item');
+
+    let idx = $items.index($activeItem);
+
+    if (ev.which === 38) {
+      ev.preventDefault();
+      idx = idx <= 0 ? $items.length - 1 : idx - 1;
+    } else if (ev.which === 40) {
+      ev.preventDefault();
+      idx = idx >= $items.length - 1 ? 0 : idx + 1;
+    } else if (ev.which === 13 && idx >= 0) {
+      ev.preventDefault();
+      $items.eq(idx).trigger('mousedown');
+      this.lastText = this.$dom.val();
+      return;
+    } else {
+      return;
+    }
+
+    this.$menu.find('.menu__link.active').removeClass('active');
+    $items.eq(idx).find('.menu__link').addClass('active');
   }
 
   onKeyUp(ev) {
