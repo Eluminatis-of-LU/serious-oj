@@ -10,7 +10,7 @@ class AboutHandler(base.Handler):
 
 
 @app.route('/wiki/help', 'wiki_help', global_route=True)
-class AboutHandler(base.Handler):
+class WikiHelpHandler(base.Handler):
   async def get(self):
     self.render('wiki_help.html')
 
