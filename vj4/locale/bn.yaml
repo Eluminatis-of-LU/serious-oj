@@ -59,7 +59,7 @@ domain_manage_join_applications: যোগদান আবেদন
 domain_manage_role: ডোমেইন রোলসমূহ
 domain_manage_user: ডোমেইন ব্যবহারকারী
 domain_manage_permission: ডোমেইন অনুমতি
-timeago_locale: en_US
+timeago_locale: bn_IN
 perm_general: সাধারণ
 perm_problem: সমস্যা
 perm_record: রেকর্ড
