@@ -1,4 +1,6 @@
+import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/PageLoader';
+import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 
 function setStarButtonState($starButton, star) {
@@ -22,8 +24,8 @@ const starPage = new AutoloadPage('starPage', () => {
         setStarButtonState($button, data.star);
       })
       .catch(() => {
-        // TODO: notify failure
         setStarButtonState($button, currentState);
+        Notification.error(i18n('Failed to update star.Please try again.'));
       });
     return false;
   });

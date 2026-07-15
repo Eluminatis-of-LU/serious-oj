@@ -1,5 +1,7 @@
+import Notification from 'vj/components/notification';
 import Rotator from 'vj/components/rotator';
 import { AutoloadPage } from 'vj/misc/PageLoader';
+import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 
 function setVoteState($container, value, status) {
@@ -29,7 +31,7 @@ const votePage = new AutoloadPage('votePage', () => {
         setVoteState($container, data.vote, data.user_vote);
       })
       .catch(() => {
-        // TODO(iceboy): notify failure
+        Notification.error(i18n('Failed to update vote.Please try again.'));
       });
     return false;
   });
