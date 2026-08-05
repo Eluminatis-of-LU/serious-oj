@@ -17,16 +17,26 @@ PROJECTION_PUBLIC = {'_id': 1,
 PROJECTION_VIEW = {'salt': 0, 'hash': 0}
 PROJECTION_ALL = None
 
+RESERVED_UNAME_KEYWORDS = {
+    'admin',
+    'administrator',
+    'system',
+    'support',
+    'root',
+    'moderator',
+}
 
 @argmethod.wrap
 async def add(uid: int, uname: str, password: str, mail: str, regip: str=''):
   """Add a user."""
   validator.check_uname(uname)
-  # TODO(iceboy): Filter uname by keywords.
+  uname_lower = uname.strip().lower()
+
+  if uname_lower in RESERVED_UNAME_KEYWORDS:
+    raise error.ValidationError('uname')
   validator.check_password(password)
   validator.check_mail(mail)
 
-  uname_lower = uname.strip().lower()
   mail_lower = mail.strip().lower()
 
   for user in builtin.USERS:
