@@ -51,15 +51,54 @@ HTML elements such as headings (`h1`, `h2`, ...), lists (`ol`, `ul`, `li`, ...) 
 
 ### Media Object
 
-TODO
+Media Object arranges a fixed-width media element, such as an avatar or image, beside flexible content. Use `media__left` or `media__right` for the media element and `media__body` for the content. Add `top` or `bottom` to change vertical alignment.
+
+Example:
+
+```html
+<div class="media">
+  <div class="media__left top">
+    <img src="avatar.png" alt="User avatar">
+  </div>
+  <div class="media__body top">
+    <h3>User Name</h3>
+    <p>User information goes here.</p>
+  </div>
+</div>
+```
 
 ### Number Box Object
 
-TODO
+Number Box Object displays a number with a short descriptive label. Add `large` or `medium` to `numbox__num` to control the number size.
+
+Example:
+
+```html
+<div class="numbox">
+  <div class="numbox__num large">128</div>
+  <div class="numbox__text">Submissions</div>
+</div>
+```
 
 ### Balancer Object
 
-TODO
+Balancer Object distributes its child elements equally across a horizontal row. Each column uses `balancer__body`; add `top` or `bottom` to change its vertical alignment.
+
+Example:
+
+```html
+<div class="balancer">
+  <div class="balancer__body">
+    Left content
+  </div>
+  <div class="balancer__body">
+    Center content
+  </div>
+  <div class="balancer__body">
+    Right content
+  </div>
+</div>
+```
 
 ## Basic Components
 
@@ -196,7 +235,13 @@ Additional class names:
 
 `expanded`: The button would occupy full width of the parent.
 
-`inverse`: TODO
+`inverse`: Removes the button background and uses a white border and white text, making it suitable for dark or immersive backgrounds.
+
+Example:
+
+```html
+<a href="#" class="inverse rounded button">Sign Up Now</a>
+```
 
 ### Input
 
@@ -204,17 +249,57 @@ Additional class names:
 <X class="textbox"></X>
 ```
 
-`X` could be `input` or `textarea`.
+`X` could be `input` or `textarea` for a normal textbox.
 
 Additional class names:
 
-`material`: TODO
+`material`: Applies the material textbox style. Add `textbox material` to a wrapping `label` and place the `input` inside it.
 
-`inverse`: TODO
+Example:
+
+```html
+<label class="material textbox">
+  Username
+  <input name="uname" type="text">
+</label>
+```
+
+`inverse`: Applies light text and border colors to a material textbox for use on dark or immersive backgrounds. It must be used together with `material` on the wrapping `label`.
+
+Example:
+
+```html
+<label class="inverse material textbox">
+  Password
+  <input name="password" type="password">
+</label>
+```
 
 ### Paginator
 
-TODO
+Paginator displays navigation links for content divided into multiple pages. Use `pager` for the list and `pager__item` for each link or indicator. Item modifiers include `first`, `previous`, `ellipsis`, `page`, `current`, `next`, and `last`; clickable items also use `link`.
+
+Example:
+
+```html
+<ul class="pager">
+  <li>
+    <a class="pager__item previous link" href="?page=1">Previous</a>
+  </li>
+  <li>
+    <a class="pager__item page link" href="?page=1">1</a>
+  </li>
+  <li>
+    <span class="pager__item current">2</span>
+  </li>
+  <li>
+    <a class="pager__item page link" href="?page=3">3</a>
+  </li>
+  <li>
+    <a class="pager__item next link" href="?page=3">Next</a>
+  </li>
+</ul>
+```
 
 ### Menu
 
@@ -288,9 +373,9 @@ A sample of sticky sidebar:
 </div>
 ```
 
-- Because the columns will be stacked when window size is smaller than `large` (tablet and mobile) and we don't want sidebars keep sticky in such cases, we have `data-sticky="large"` so that the element will be sticky ONLY when window size is `large`.
+* Because the columns will be stacked when window size is smaller than `large` (tablet and mobile) and we don't want sidebars keep sticky in such cases, we have `data-sticky="large"` so that the element will be sticky ONLY when window size is `large`.
 
-- The height of the two columns are not equal so the sticky parent should be `.row` instead.
+* The height of the two columns are not equal so the sticky parent should be `.row` instead.
 
 ### CommonMark Editor
 
@@ -303,7 +388,6 @@ Sample:
 ```
 
 > To make it work with newly added textareas, you need to trigger `vjContentNew` event for the new element. Textarea with `data-markdown` should be a children of the trigger target.
-
 
 ### Emoji
 
@@ -319,19 +403,108 @@ Sample:
 
 ### Dropdown
 
-TODO
+Dropdown displays a target element when the user hovers over a trigger. Add `data-dropdown-target` to the trigger and set its value to a CSS selector identifying an element with the `dropdown-target` class. Use the optional `data-dropdown-pos` attribute to control its position; the default is `bottom left`.
+
+Example:
+
+```html
+<div data-dropdown-target="#example-menu" data-dropdown-pos="bottom right">
+  <button class="button">Open Menu</button>
+
+  <ol class="dropdown-target menu" id="example-menu">
+    <li class="menu__item">
+      <a class="menu__link" href="#">Profile</a>
+    </li>
+    <li class="menu__item">
+      <a class="menu__link" href="#">Settings</a>
+    </li>
+  </ol>
+</div>
+```
+
+The framework creates the external dropdown wrapper automatically, so `dropdown` and `drop-content` normally do not need to be added manually.
 
 ### Navigation
 
-TODO
+Navigation provides the primary responsive navigation structure. Use `nav__list--main` for the main links, `nav__list--secondary` for links aligned on the opposite side, and `nav--active` on the active `nav__item`.
+
+Example:
+
+```html
+<nav class="nav slideout-menu" id="menu">
+  <div class="row">
+    <div class="columns clearfix">
+      <ol class="nav__list nav__list--main clearfix">
+        <li class="nav__list-item">
+          <a class="nav__item nav--active" href="#">Home</a>
+        </li>
+        <li class="nav__list-item">
+          <a class="nav__item" href="#">Problems</a>
+        </li>
+      </ol>
+
+      <ol class="nav__list nav__list--secondary clearfix">
+        <li class="nav__list-item">
+          <a class="nav__item--round" href="#">Sign Up</a>
+        </li>
+      </ol>
+    </div>
+  </div>
+</nav>
+```
 
 ### Star
 
-TODO
+Star provides an interactive control for starring and unstarring an item. Place the button inside a form containing an input named `operation`. The component changes the operation between `star` and `unstar`, submits the form asynchronously, and toggles the `activated` class.
+
+Use `starred--hide` for content shown when the item is not starred and `starred--show` for content shown when it is starred. Add `activated` to the button and use `unstar` as the initial operation when the item is initially starred.
+
+Example:
+
+```html
+<form action="/star" method="post">
+  <input type="hidden" name="operation" value="star">
+
+  <button class="star" type="submit">
+    <span class="starred--hide">
+      <span class="icon icon-star--outline"></span>
+      Star
+    </span>
+    <span class="starred--show">
+      <span class="icon icon-star"></span>
+      Unstar
+    </span>
+  </button>
+</form>
+```
 
 ### Tab
 
-TODO
+Tab organizes related content into switchable panels. Place `section__tabs` inside `section__tab-container`. Each `section__tab-item` must contain a `section__tab-title` and its corresponding `section__tab-main`.
+
+When JavaScript is enabled, the framework generates the clickable tab headers and content wrappers automatically. Without JavaScript, each tab remains visible as a normal section.
+
+Example:
+
+```html
+<div class="section__tab-container immersive">
+  <ul class="section__tabs">
+    <li class="section__tab-item">
+      <h1 class="section__tab-title">Overview</h1>
+      <div class="section__tab-main">
+        Overview content.
+      </div>
+    </li>
+
+    <li class="section__tab-item">
+      <h1 class="section__tab-title">Submissions</h1>
+      <div class="section__tab-main">
+        Submission content.
+      </div>
+    </li>
+  </ul>
+</div>
+```
 
 ### Hotkey
 
@@ -385,18 +558,59 @@ Sample:
 
 Optionally, you can specify a location by assigning `data-tooltip-pos` attribute. Available values are:
 
-- `"top left"`
-- `"top middle"` (default)
-- `"top right"`
-- `"bottom left"`
-- `"bottom middle"`
-- `"bottom right"`
+* `"top left"`
+* `"top middle"` (default)
+* `"top right"`
+* `"bottom left"`
+* `"bottom middle"`
+* `"bottom right"`
 
 ## High-Level Components
 
 ### Comment List
 
-TODO
+Comment List displays comments and nested replies using the Media Object layout. The outer list uses `dczcomments__list`, top-level comments use `dczcomments__item`, and nested replies use `dczcomments__reply` inside `dczcomments__replies`.
+
+Use `dczcomments__supplementary` for author and time information and `dczcomments__operations` for actions such as reply, edit, or delete.
+
+Example:
+
+```html
+<ul class="dczcomments__list view--discussion">
+  <li class="dczcomments__item">
+    <div class="media">
+      <div class="media__left top">
+        <img src="avatar.png" alt="User avatar" width="60" height="60">
+      </div>
+
+      <div class="media__body top no-heading">
+        <div class="clearfix">
+          <div class="supplementary dczcomments__supplementary">
+            User Name @ 5 minutes ago
+          </div>
+          <div class="dczcomments__operations">
+            <a href="#">Reply</a>
+          </div>
+        </div>
+
+        <div class="typo">
+          Comment content.
+        </div>
+
+        <ul class="dczcomments__replies">
+          <li class="dczcomments__reply">
+            <div class="media">
+              <div class="media__body top no-heading">
+                Reply content.
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </li>
+</ul>
+```
 
 ## Other
 
