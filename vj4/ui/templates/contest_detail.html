@@ -9,6 +9,11 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__body typo">
+      {% if tdoc.get('is_virtual') %}
+        <blockquote class="note">
+          <p>{{ _('Virtual Contest') }}</p>
+        </blockquote>
+      {% endif %}
         {{ tdoc['content']|markdown }}
       {% if handler.is_ongoing(tdoc) %}
         <blockquote class="warn">

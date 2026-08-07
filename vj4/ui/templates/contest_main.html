@@ -139,6 +139,18 @@
       </div>
     </div>
   {% endif %}
+  {% if handler.has_priv(vj4.model.builtin.PRIV_USER_PROFILE) %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">
+          {{ _('My Virtual Contests') }}
+        </h1>
+      </div>
+      <div class="section__body">
+        <p><a href="{{ reverse_url('virtual_contest_main') }}" class="expanded button">{{ _('View My Virtual Contests') }}</a></p>
+      </div>
+    </div>
+  {% endif %}
   </div>
 </div>
 {% endblock %}

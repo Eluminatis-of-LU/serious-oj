@@ -16,6 +16,7 @@ class ContestMainHandler(base.Handler):
     async def get(self, page: int = 1):
         query = {}
         query["hidden"] = {"$ne": True}
+        query['is_virtual'] = {"$ne": True}
         if self.has_perm(builtin.PERM_EDIT_CONTEST):
             del query["hidden"]
         tdocs = contest.get_multi(

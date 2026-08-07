@@ -574,6 +574,41 @@ def get_multi(domain_id: str, doc_type: int, fields=None, **kwargs):
                  .sort([('begin_at', -1)])
 
 
+def get_multi_virtual(domain_id: str, owner_uid: int, fields=None, **kwargs):
+  return get_multi(domain_id, document.TYPE_CONTEST, fields=fields,
+                   is_virtual=True, owner_uid=owner_uid, **kwargs)
+
+
+@argmethod.wrap
+async def clone_for_virtual(domain_id: str, tid: objectid.ObjectId, owner_uid: int):
+  tdoc = await get(domain_id, document.TYPE_CONTEST, tid)
+  if tdoc.get('is_virtual'):
+    raise error.VirtualContestNotAllowedError(tdoc['doc_id'])
+  now = datetime.datetime.utcnow()
+  duration = tdoc['end_at'] - tdoc['begin_at']
+  begin_at = now
+  end_at = now + duration
+  return await add(
+    domain_id,
+    document.TYPE_CONTEST,
+    title='Virtual Contest: {0}'.format(tdoc['title']),
+    content=tdoc['content'],
+    owner_uid=owner_uid,
+    rule=tdoc['rule'],
+    begin_at=begin_at,
+    end_at=end_at,
+    pids=tdoc['pids'],
+    password='',
+    freeze_before=tdoc.get('freeze_before', 0),
+    hidden=True,
+    is_virtual=True,
+    parent_doc_id=tdoc['doc_id'],
+    clarification_enabled=tdoc.get('clarification_enabled', False),
+    moderator_uids=tdoc.get('moderator_uids', []),
+    cf_max_scores=tdoc.get('cf_max_scores'),
+  )
+
+
 @argmethod.wrap
 async def attend(domain_id: str, doc_type: int, tid: objectid.ObjectId, uid: int):
   # TODO(iceboy): check time.

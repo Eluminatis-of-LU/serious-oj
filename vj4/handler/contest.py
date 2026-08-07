@@ -34,6 +34,7 @@ class ContestMainHandler(contest.ContestMixin, base.Handler):
     async def get(self, *, rule: int = 0, page: int = 1):
         query = {}
         query['hidden'] = {"$ne": True}
+        query['is_virtual'] = {"$ne": True}
         if self.has_perm(builtin.PERM_EDIT_CONTEST):
             del query['hidden']
         if not rule:
@@ -76,6 +77,8 @@ class ContestDetailHandler(contest.ContestMixin, base.OperationHandler):
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId, page: int = 1, announcement_page: int = 1):
         tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tsdoc, pdict = await asyncio.gather(
             contest.get_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
@@ -183,6 +186,9 @@ class ContestCodeHandler(base.OperationHandler):
     @base.require_perm(builtin.PERM_READ_RECORD_CODE)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tdoc, tsdocs = await contest.get_and_list_status(
             self.domain_id, document.TYPE_CONTEST, tid
         )
@@ -223,6 +229,8 @@ class ContestDetailProblemHandler(contest.ContestMixin, base.Handler):
             contest.get(self.domain_id, document.TYPE_CONTEST, tid),
             problem.get(self.domain_id, pid, uid),
         )
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tsdoc, udoc, dudoc = await asyncio.gather(
             contest.get_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
@@ -275,6 +283,8 @@ class ContestDetailProblemSubmitHandler(contest.ContestMixin, base.Handler):
             contest.get(self.domain_id, document.TYPE_CONTEST, tid),
             problem.get(self.domain_id, pid, uid),
         )
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tsdoc, udoc = await asyncio.gather(
             contest.get_status(
                 self.domain_id, document.TYPE_CONTEST, tdoc["doc_id"], self.user["_id"]
@@ -394,6 +404,9 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
     @base.require_perm(builtin.PERM_VIEW_CONTEST_SCOREBOARD)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tdoc, rows, udict = await self.get_scoreboard(document.TYPE_CONTEST, tid)
         page_title = self.translate("contest_scoreboard")
         path_components = self.build_path(
@@ -422,6 +435,9 @@ class ContestScoreboardHandler(contest.ContestMixin, base.Handler):
     @base.require_perm(builtin.PERM_VIEW_CONTEST_SCOREBOARD)
     @base.sanitize
     async def get(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tdoc, rows, udict = await self.get_unfrozen_scoreboard(document.TYPE_CONTEST, tid)
         page_title = self.translate("contest_scoreboard")
         path_components = self.build_path(
@@ -469,6 +485,9 @@ class ContestScoreboardDownloadHandler(contest.ContestMixin, base.Handler):
         }
         if ext not in get_status_content:
             raise error.ValidationError("ext")
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tdoc, rows, udict = await self.get_scoreboard(document.TYPE_CONTEST, tid, True)
         data = get_status_content[ext](rows)
         file_name = tdoc["title"]
@@ -500,6 +519,9 @@ class ContestScoreboardDownloadHandler(contest.ContestMixin, base.Handler):
         }
         if ext not in get_status_content:
             raise error.ValidationError("ext")
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if tdoc.get('is_virtual') and not (self.own(tdoc, builtin.PERM_EDIT_CONTEST_SELF) or self.has_perm(builtin.PERM_EDIT_CONTEST)):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
         tdoc, rows, udict = await self.get_unfrozen_scoreboard(document.TYPE_CONTEST, tid, True)
         data = get_status_content[ext](rows)
         file_name = tdoc["title"]
@@ -748,6 +770,157 @@ class ContestEditHandler(contest.ContestMixin, base.Handler):
             )
         self.json_or_redirect(self.reverse_url(
             "contest_detail", tid=tdoc["doc_id"]))
+
+
+@app.route("/contest/{tid:\w{24}}/virtual/start", "contest_virtual_start")
+class ContestVirtualStartHandler(contest.ContestMixin, base.OperationHandler):
+    @base.route_argument
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.require_perm(builtin.PERM_ATTEND_CONTEST)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(self, *, tid: objectid.ObjectId):
+        tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+        if not self.is_done(tdoc):
+            raise error.ContestNotLiveError(tdoc['doc_id'])
+        if tdoc.get('is_virtual'):
+            raise error.VirtualContestNotAllowedError(tdoc['doc_id'])
+        vtid = await contest.clone_for_virtual(self.domain_id, tid, self.user['_id'])
+        await contest.attend(self.domain_id, document.TYPE_CONTEST, vtid, self.user['_id'])
+        self.json_or_redirect(self.reverse_url('contest_detail', tid=vtid))
+
+
+@app.route("/contest/virtual", "virtual_contest_main")
+class ContestVirtualMainHandler(contest.ContestMixin, base.Handler):
+    CONTESTS_PER_PAGE = 20
+
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.require_perm(builtin.PERM_VIEW_CONTEST)
+    @base.get_argument
+    @base.sanitize
+    async def get(self, *, rule: int = 0, page: int = 1):
+        query = {'owner_uid': self.user['_id']}
+        if not rule:
+            tdocs = contest.get_multi_virtual(self.domain_id, self.user['_id'], **query)
+            qs = ''
+        else:
+            if rule not in constant.contest.CONTEST_RULES:
+                raise error.ValidationError('rule')
+            tdocs = contest.get_multi_virtual(self.domain_id, self.user['_id'], rule=rule, **query)
+            qs = 'rule={0}'.format(rule)
+        tdocs, tpcount, _ = await pagination.paginate(
+            tdocs, page, self.CONTESTS_PER_PAGE
+        )
+        tsdict = await contest.get_dict_status(
+            self.domain_id,
+            self.user['_id'],
+            document.TYPE_CONTEST,
+            (tdoc['doc_id'] for tdoc in tdocs),
+        )
+        self.render(
+            'virtual_contest_main.html',
+            page=page,
+            tpcount=tpcount,
+            qs=qs,
+            rule=rule,
+            tdocs=tdocs,
+            tsdict=tsdict,
+        )
+
+
+@app.route("/contest/virtual/create", "virtual_contest_create")
+class ContestVirtualCreateHandler(contest.ContestMixin, base.Handler):
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.require_perm(builtin.PERM_CREATE_CONTEST)
+    @base.get_argument
+    @base.sanitize
+    async def get(self, *, tid: objectid.ObjectId = None):
+        rules = list(
+            map(
+                lambda i: (i, constant.contest.RULE_TEXTS[i]),
+                constant.contest.CONTEST_RULES,
+            )
+        )
+        tdoc = None
+        pids = contest._format_pids([1000, 1001])
+        cf_default = ','.join(str(s) for s in contest._default_cf_max_scores([1000, 1001]))
+        if tid:
+            tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+            if not self.is_done(tdoc):
+                raise error.ContestNotLiveError(tdoc['doc_id'])
+            if tdoc.get('is_virtual'):
+                raise error.VirtualContestNotAllowedError(tdoc['doc_id'])
+            pids = contest._format_pids(tdoc['pids'])
+            cf_default = ','.join(str(s) for s in contest._default_cf_max_scores(tdoc['pids']))
+        self.render(
+            'virtual_contest_edit.html',
+            rules=rules,
+            tdoc=tdoc,
+            pids=pids,
+            cf_default=cf_default,
+            cf_max_scores='',
+        )
+
+    @base.require_priv(builtin.PRIV_USER_PROFILE)
+    @base.require_perm(builtin.PERM_CREATE_CONTEST)
+    @base.post_argument
+    @base.require_csrf_token
+    @base.sanitize
+    async def post(
+        self,
+        *,
+        title: str,
+        rule: int,
+        duration: float,
+        pids: str,
+        tid: objectid.ObjectId = None,
+        freeze_before: int = 0,
+        cf_max_scores: str = '',
+    ):
+        if not self.has_perm(builtin.PERM_EDIT_PROBLEM_SELF):
+            self.check_perm(builtin.PERM_EDIT_PROBLEM)
+        now = datetime.datetime.utcnow()
+        begin_at = now
+        end_at = now + datetime.timedelta(hours=duration)
+        pids = contest._parse_pids(pids)
+        await self.verify_problems(pids)
+
+        extra = {}
+        if rule == constant.contest.RULE_CF and cf_max_scores.strip():
+            try:
+                extra['cf_max_scores'] = [int(s.strip()) for s in cf_max_scores.split(',') if s.strip()]
+            except ValueError:
+                raise error.ValidationError('cf_max_scores')
+
+        if tid:
+            original_tdoc = await contest.get(self.domain_id, document.TYPE_CONTEST, tid)
+            if not self.is_done(original_tdoc):
+                raise error.ContestNotLiveError(original_tdoc['doc_id'])
+            if original_tdoc.get('is_virtual'):
+                raise error.VirtualContestNotAllowedError(original_tdoc['doc_id'])
+
+        vtid = await contest.add(
+            self.domain_id,
+            document.TYPE_CONTEST,
+            title,
+            '',
+            self.user['_id'],
+            rule,
+            begin_at,
+            end_at,
+            pids,
+            password='',
+            freeze_before=freeze_before,
+            hidden=True,
+            is_virtual=True,
+            parent_doc_id=tid,
+            clarification_enabled=False,
+            moderator_uids=[],
+            **extra,
+        )
+        await contest.attend(self.domain_id, document.TYPE_CONTEST, vtid, self.user['_id'])
+        self.json_or_redirect(self.reverse_url('contest_detail', tid=vtid))
 
 
 @app.route("/contest/{tid}/problemset/download/{ext}", "contest_problemset")
